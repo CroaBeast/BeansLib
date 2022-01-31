@@ -2,7 +2,7 @@ package me.croabeast.beanslib;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class BeansLib extends JavaPlugin {
+public class BeansLib {
 
     private static JavaPlugin plugin;
 
