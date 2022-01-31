@@ -4,14 +4,13 @@ import com.google.common.collect.*;
 import me.clip.placeholderapi.*;
 import me.croabeast.beanslib.terminals.*;
 import me.croabeast.iridiumapi.*;
-import net.md_5.bungee.api.chat.TextComponent;
-import org.apache.commons.lang.*;
+import net.md_5.bungee.api.chat.*;
 import org.bukkit.*;
 import org.bukkit.command.*;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.*;
 import org.bukkit.entity.*;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.plugin.java.*;
+import org.bukkit.scheduler.*;
 import org.jetbrains.annotations.*;
 
 import java.util.*;
@@ -26,7 +25,9 @@ public class TextUtils {
 
     public static String
             CENTER_PREFIX, LINE_SPLITTER,
-            LANG_PREFIX, LANG_PREFIX_KEY;
+            LANG_PREFIX, LANG_PREFIX_KEY,
+            ACTION_BAR_KEY, TITLE_KEY, JSON_KEY,
+            PLAYER_KEY, PLAYER_WORLD_KEY;
 
     public static String MC_FORK;
     public static int MC_VERSION;
@@ -43,21 +44,32 @@ public class TextUtils {
     public static void setCenterPrefix(String centerPrefix) {
         CENTER_PREFIX = centerPrefix;
     }
-
     public static void setLineSplitter(String lineSplitter) {
         LINE_SPLITTER = lineSplitter;
     }
-
     public static void setLangPrefix(String langPrefix) {
         LANG_PREFIX = langPrefix;
     }
-
     public static void setLangPrefixKey(String langPrefixKey) {
         LANG_PREFIX_KEY = langPrefixKey;
     }
-
     public static void setIsHardSpacing(boolean isHardSpacing) {
         TextUtils.isHardSpacing = isHardSpacing;
+    }
+    public static void setActionBarKey(String actionBarKey) {
+        ACTION_BAR_KEY = actionBarKey;
+    }
+    public static void setTitleKey(String titleKey) {
+        TITLE_KEY = titleKey;
+    }
+    public static void setJsonKey(String jsonKey) {
+        JSON_KEY = jsonKey;
+    }
+    public static void setPlayerKey(String playerKey) {
+        PLAYER_KEY = playerKey;
+    }
+    public static void setPlayerWorldKey(String playerWorldKey) {
+        PLAYER_WORLD_KEY = playerWorldKey;
     }
 
     // Use this method in your reload command.
@@ -70,6 +82,13 @@ public class TextUtils {
         LINE_SPLITTER = Pattern.quote("<n>");
         LANG_PREFIX = "&e&l MY-PLUGIN &8> ";
         LANG_PREFIX_KEY = "<P>";
+
+        ACTION_BAR_KEY = "[ACTION-BAR]";
+        TITLE_KEY = "[TITLE]";
+        JSON_KEY = "[JSON]";
+        PLAYER_KEY = "{player}";
+        PLAYER_WORLD_KEY = "{world}";
+
         isHardSpacing = true;
     }
 
@@ -160,8 +179,9 @@ public class TextUtils {
 
             if (sender != null && !(sender instanceof ConsoleCommandSender)) {
                 Player player = (Player) sender;
-                line = line.replaceAll("(?i)\\{PLAYER}", player.getName());
-                line = line.replaceAll("(?i)\\{WORLD}", player.getWorld().getName());
+                line = line.replaceAll("(?i)" + PLAYER_KEY, player.getName());
+                line = line.replaceAll(
+                        "(?i)" + PLAYER_WORLD_KEY, player.getWorld().getName());
 
                 Object chatText = mixedChat(player, line);
                 if (chatText instanceof String) player.sendMessage((String) chatText);
@@ -198,7 +218,6 @@ public class TextUtils {
     }
 
     public static String parsePrefix(String type, String message) {
-        type = "[" + type.toUpperCase() + "]";
         message = message.substring(type.length());
         return removeSpace(message);
     }
@@ -208,18 +227,18 @@ public class TextUtils {
     }
 
     public static void selectMsgType(Player player, String line) {
-        if (isStarting("[ACTION-BAR]", line)) {
-            sendActionBar(player, parsePrefix("action-bar", line));
+        if (isStarting(ACTION_BAR_KEY, line)) {
+            sendActionBar(player, parsePrefix(ACTION_BAR_KEY, line));
         }
-        else if (isStarting("[TITLE]", line)) {
-            sendTitle(player, parsePrefix("title", line).split(LINE_SPLITTER), null);
+        else if (isStarting(TITLE_KEY, line)) {
+            sendTitle(player, parsePrefix(TITLE_KEY, line).split(LINE_SPLITTER), null);
         }
-        else if (isStarting("[JSON]", line) && line.contains("{\"text\":")) {
+        else if (isStarting(JSON_KEY, line) && line.contains("{\"text\":")) {
             new BukkitRunnable() {
                 @Override
                 public void run() {
                     String cmd = "minecraft:tellraw " + player.getName() + " "
-                            + parsePrefix("json", line);
+                            + parsePrefix(JSON_KEY, line);
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
                 }
             }.runTask(main);
