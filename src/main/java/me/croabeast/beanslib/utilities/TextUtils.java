@@ -23,16 +23,18 @@ public class TextUtils {
     private static ActionBar actionBar;
     private static TitleMngr titleMngr;
 
-    public static String
+    private static String
             CENTER_PREFIX, LINE_SPLITTER,
             LANG_PREFIX, LANG_PREFIX_KEY,
             ACTION_BAR_KEY, TITLE_KEY, JSON_KEY,
             PLAYER_KEY, PLAYER_WORLD_KEY;
 
-    public static String MC_FORK;
-    public static int MC_VERSION;
+    public static final String MC_FORK =
+            Bukkit.getVersion().split("-")[1] + " " + Bukkit.getBukkitVersion().split("-")[0];
+    public static final int MC_VERSION =
+            Integer.parseInt(Bukkit.getBukkitVersion().split("-")[0].split("\\.")[1]);
 
-    public static boolean isHardSpacing;
+    private static boolean isHardSpacing;
 
     public TextUtils(JavaPlugin main) {
         TextUtils.main = main;
@@ -74,10 +76,6 @@ public class TextUtils {
 
     // Use this method in your reload command.
     public void loadTextValues() {
-        String version = Bukkit.getBukkitVersion().split("-")[0];
-        MC_VERSION = Integer.parseInt(version.split("\\.")[1]);
-        MC_FORK = Bukkit.getVersion().split("-")[1] + " " + version;
-
         CENTER_PREFIX = "<C>";
         LINE_SPLITTER = Pattern.quote("<n>");
         LANG_PREFIX = "&e&l MY-PLUGIN &8> ";
@@ -248,6 +246,37 @@ public class TextUtils {
             if (text instanceof String) player.sendMessage((String) text);
             else player.spigot().sendMessage((TextComponent) text);
         }
+    }
+
+    public static String getCenterPrefix() {
+        return CENTER_PREFIX;
+    }
+    public static String getLineSplitter() {
+        return LINE_SPLITTER;
+    }
+    public static String getLangPrefix() {
+        return LANG_PREFIX;
+    }
+    public static String getLangPrefixKey() {
+        return LANG_PREFIX_KEY;
+    }
+    public static String getActionBarKey() {
+        return ACTION_BAR_KEY;
+    }
+    public static String getTitleKey() {
+        return TITLE_KEY;
+    }
+    public static String getJsonKey() {
+        return JSON_KEY;
+    }
+    public static String getPlayerKey() {
+        return PLAYER_KEY;
+    }
+    public static String getPlayerWorldKey() {
+        return PLAYER_WORLD_KEY;
+    }
+    public static boolean isIsHardSpacing() {
+        return isHardSpacing;
     }
 
     public enum FontInfo {
