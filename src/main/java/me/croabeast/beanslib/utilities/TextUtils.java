@@ -23,16 +23,16 @@ public class TextUtils {
     private static ActionBar actionBar;
     private static TitleMngr titleMngr;
 
+    public static final String MC_FORK =
+            Bukkit.getVersion().split("-")[1] + " " + Bukkit.getBukkitVersion().split("-")[0];
+    public static final int MC_VERSION =
+            Integer.parseInt(Bukkit.getBukkitVersion().split("-")[0].split("\\.")[1]);
+
     private static String
             CENTER_PREFIX, LINE_SPLITTER,
             LANG_PREFIX, LANG_PREFIX_KEY,
             ACTION_BAR_KEY, TITLE_KEY, JSON_KEY,
             PLAYER_KEY, PLAYER_WORLD_KEY;
-
-    public static final String MC_FORK =
-            Bukkit.getVersion().split("-")[1] + " " + Bukkit.getBukkitVersion().split("-")[0];
-    public static final int MC_VERSION =
-            Integer.parseInt(Bukkit.getBukkitVersion().split("-")[0].split("\\.")[1]);
 
     private static boolean isHardSpacing;
 
