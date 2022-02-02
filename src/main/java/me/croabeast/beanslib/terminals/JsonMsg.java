@@ -38,7 +38,7 @@ public class JsonMsg {
         Matcher clickMatch = click.matcher(line);
 
         while (hoverMatch.find()) {
-            String[] textArray = hoverMatch.group(1).split(TextUtils.LINE_SPLITTER);
+            String[] textArray = hoverMatch.group(1).split(TextUtils.getLineSplitter());
             String text = hoverMatch.group(2);
             BaseComponent[] baseComps = new BaseComponent[textArray.length];
 
@@ -72,7 +72,7 @@ public class JsonMsg {
         }
     }
 
-    public String getText() {
-        return line;
+    public TextComponent build() {
+        return TextUtils.toComponent(TextUtils.centeredText(player, line));
     }
 }

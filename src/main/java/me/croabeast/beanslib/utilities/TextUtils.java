@@ -5,6 +5,7 @@ import me.clip.placeholderapi.*;
 import me.croabeast.beanslib.terminals.*;
 import me.croabeast.iridiumapi.*;
 import net.md_5.bungee.api.chat.*;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.*;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.*;
@@ -137,18 +138,23 @@ public class TextUtils {
         return new TextComponent(TextComponent.fromLegacyText(line));
     }
 
-    public static Object mixedChat(Player player, String line) {
-        line = JsonMsg.isValid(line) ? new JsonMsg(player, line).getText() : line;
-        line = line.startsWith(CENTER_PREFIX) ?
+    public static String centeredText(Player player, String line) {
+        return line.startsWith(CENTER_PREFIX) ?
                 centerMessage(player, line.replace(CENTER_PREFIX, "")) :
                 colorize(player, line);
-        return JsonMsg.isValid(line) ? toComponent(line) : line;
     }
 
     public static List<String> fileList(FileConfiguration file, String path) {
         return  !file.isList(path) ?
                 Lists.newArrayList(file.getString(path)) :
                 file.getStringList(path);
+    }
+
+    public static String stringKey(String key) {
+        if (key == null) return "empty";
+        return StringUtils.replaceEach(
+                key, new String[]{"/", ":"}, new String[]{".", "."}
+        );
     }
 
     public static String removeSpace(String line) {
@@ -177,13 +183,10 @@ public class TextUtils {
 
             if (sender != null && !(sender instanceof ConsoleCommandSender)) {
                 Player player = (Player) sender;
-                line = line.replaceAll("(?i)" + PLAYER_KEY, player.getName());
-                line = line.replaceAll(
-                        "(?i)" + PLAYER_WORLD_KEY, player.getWorld().getName());
+                line = line.replaceAll("(?i)\\{PLAYER}", player.getName());
+                line = line.replaceAll("(?i)\\{WORLD}", player.getWorld().getName());
 
-                Object chatText = mixedChat(player, line);
-                if (chatText instanceof String) player.sendMessage((String) chatText);
-                else player.spigot().sendMessage((TextComponent) chatText);
+                player.spigot().sendMessage(new JsonMsg(player, line).build());
             }
             else LogUtils.rawLog(line.replace(CENTER_PREFIX, ""));
         }
@@ -241,11 +244,7 @@ public class TextUtils {
                 }
             }.runTask(main);
         }
-        else {
-            Object text = mixedChat(player, line);
-            if (text instanceof String) player.sendMessage((String) text);
-            else player.spigot().sendMessage((TextComponent) text);
-        }
+        else player.spigot().sendMessage(new JsonMsg(player, line).build());
     }
 
     public static String getCenterPrefix() {
