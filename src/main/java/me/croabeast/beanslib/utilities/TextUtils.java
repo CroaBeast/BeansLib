@@ -183,8 +183,8 @@ public class TextUtils {
 
             if (sender != null && !(sender instanceof ConsoleCommandSender)) {
                 Player player = (Player) sender;
-                line = line.replaceAll("(?i)\\{PLAYER}", player.getName());
-                line = line.replaceAll("(?i)\\{WORLD}", player.getWorld().getName());
+                line = line.replaceAll("(?i)" + PLAYER_KEY, player.getName());
+                line = line.replaceAll("(?i)" + PLAYER_WORLD_KEY, player.getWorld().getName());
 
                 player.spigot().sendMessage(new JsonMsg(player, line).build());
             }
