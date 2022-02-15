@@ -29,11 +29,8 @@ public class TextUtils {
     public static final int MC_VERSION =
             Integer.parseInt(Bukkit.getBukkitVersion().split("-")[0].split("\\.")[1]);
 
-    private static String
-            CENTER_PREFIX, LINE_SPLITTER,
-            LANG_PREFIX, LANG_PREFIX_KEY,
-            ACTION_BAR_KEY, TITLE_KEY, JSON_KEY,
-            PLAYER_KEY, PLAYER_WORLD_KEY;
+    private static String CENTER_PREFIX, LINE_SPLITTER, LANG_PREFIX, LANG_PREFIX_KEY,
+            ACTION_BAR_KEY, TITLE_KEY, JSON_KEY, PLAYER_KEY, PLAYER_WORLD_KEY;
 
     private static boolean isHardSpacing;
 
@@ -96,52 +93,9 @@ public class TextUtils {
                 ? PlaceholderAPI.setPlaceholders(player, message) : message;
     }
 
-    public static String colorize(Player player, String message) {
+    public static String colorize(Player player, String message, boolean isChat) {
+        if (!isChat) message = JsonMsg.stripJson(message);
         return IridiumAPI.process(parsePAPI(player, message));
-    }
-
-    public static String centerMessage(Player player, String message) {
-        message = colorize(player, message);
-
-        int messagePxSize = 0;
-        boolean previousCode = false;
-        boolean isBold = false;
-
-        for (char c : message.toCharArray()) {
-            if (c == '§') previousCode = true;
-            else if (previousCode) {
-                previousCode = false;
-                isBold = c == 'l' || c == 'L';
-            } else {
-                FontInfo dFI = FontInfo.getDefaultFontInfo(c);
-                messagePxSize += isBold ?
-                        dFI.getBoldLength() : dFI.getLength();
-                messagePxSize++;
-            }
-        }
-
-        int halvedMessageSize = messagePxSize / 2;
-        int toCompensate = 154 - halvedMessageSize;
-        int spaceLength = FontInfo.SPACE.getLength() + 1;
-        int compensated = 0;
-
-        StringBuilder sb = new StringBuilder();
-        while (compensated < toCompensate) {
-            sb.append(" ");
-            compensated += spaceLength;
-        }
-
-        return sb + message;
-    }
-
-    public static TextComponent toComponent(String line) {
-        return new TextComponent(TextComponent.fromLegacyText(line));
-    }
-
-    public static String centeredText(Player player, String line) {
-        return line.startsWith(CENTER_PREFIX) ?
-                centerMessage(player, line.replace(CENTER_PREFIX, "")) :
-                colorize(player, line);
     }
 
     public static List<String> fileList(FileConfiguration file, String path) {
