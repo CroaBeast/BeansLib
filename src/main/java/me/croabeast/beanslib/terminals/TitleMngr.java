@@ -1,6 +1,5 @@
 package me.croabeast.beanslib.terminals;
 
-import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.utilities.TextUtils;
 import org.bukkit.entity.Player;
 
@@ -15,7 +14,7 @@ public class TitleMngr implements Reflection {
     private int out;
 
     public TitleMngr() {
-        title = TextUtils.MC_VERSION < 10 ? oldTitle() : newTitle();
+        title = TextUtils.MAJOR_VERSION < 10 ? oldTitle() : newTitle();
     }
 
     public interface GetTitle {

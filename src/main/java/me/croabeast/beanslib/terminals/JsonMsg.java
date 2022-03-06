@@ -2,6 +2,7 @@ package me.croabeast.beanslib.terminals;
 
 import net.md_5.bungee.api.chat.*;
 import org.bukkit.entity.*;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.regex.*;
@@ -17,49 +18,126 @@ public class JsonMsg {
 
     private BaseComponent[] baseComponents;
 
-    final static String prefix = "(hover|run|suggest|url)=\\[(.+?)]";
-    final static Pattern PATTERN =
-            Pattern.compile("(?i)<" + prefix + "(\\|" + prefix + ")?>(.+?)</text>");
+    /**
+     * A prefix used in the main pattern to identify the event.
+     */
+    final static String PATTERN_PREFIX = "(hover|run|suggest|url)=\\[(.+?)]";
 
+    /**
+     * The main pattern to identify the JSON message.
+     */
+    final static Pattern PATTERN =
+            Pattern.compile("(?i)<" + PATTERN_PREFIX + "(\\|" + PATTERN_PREFIX + ")?>(.+?)</text>");
+
+    /**
+     * Basic JSON message constructor.
+     * @param player the player for parse placeholders.
+     * @param line the line to parse the message.
+     */
     public JsonMsg(Player player, String line) {
         this.player = player;
-        this.line = centeredText(player, line, true);
+        this.line = centeredText(player, line);
         registerComponents();
     }
 
+    /**
+     * Custom JSON message constructor.
+     * You can define a hover and click inputs instead using the json format.
+     * @param player the player for parse placeholders.
+     * @param line the line to parse the message.
+     * @param click the click input line for click event
+     * @param hover the hover list for the hover event
+     */
+    public JsonMsg(Player player, String line, @Nullable String click, List<String> hover) {
+        if (isValidJson(line)) line = stripJson(line);
+
+        this.player = player;
+        this.line = centeredText(player, line);
+
+        List<BaseComponent> components = new ArrayList<>();
+        final TextComponent comp = toComponent(this.line);
+
+        if (!hover.isEmpty()) addHover(comp, hover);
+        if (click != null) {
+            String[] input = click.split(":", 2);
+            addClick(comp, input[0], input[1]);
+        }
+
+        components.add(comp);
+        baseComponents = components.toArray(new BaseComponent[0]);
+    }
+
+    /**
+     * Check if the line has a valid json format.
+     * @param line the input line to check.
+     * @return if the line is a valid json message.
+     */
+    public static boolean isValidJson(String line) {
+        return PATTERN.matcher(line).find();
+    }
+
+    /**
+     * Strips the JSON format from a line.
+     * @param line the line to strip.
+     * @return the stripped line.
+     */
     public static String stripJson(String line) {
         return line.replaceAll("(?i)<[/]?(text|hover|run|suggest|url)" +
                 "(=\\[(.+?)](\\|(hover|run|suggest|url)=\\[(.+?)])?)?>", "");
     }
 
+    /**
+     * Converts a string to a TextComponent.
+     * @param line the line to convert.
+     * @return the requested component.
+     */
     private TextComponent toComponent(String line) {
         return new TextComponent(TextComponent.fromLegacyText(line));
     }
 
-    private void addEvents(TextComponent comp, String type, String input) {
-        if (type.matches("(?i)run|suggest|url")) {
-            ClickEvent.Action action = null;
-
-            if (type.matches("(?i)run")) action = RUN_COMMAND;
-            else if (type.matches("(?i)suggest")) action = SUGGEST_COMMAND;
-            else if (type.matches("(?i)url")) action = OPEN_URL;
-
-            if (action != null) comp.setClickEvent(new ClickEvent(action, input));
-        }
-        else if (type.matches("(?i)hover")) {
-            String[] textArray = input.split(getLineSplitter());
-            BaseComponent[] array = new BaseComponent[textArray.length];
-
-            for (int i = 0; i < textArray.length; i++) {
-                String end = i == textArray.length - 1 ? "" : "\n";
-                array[i] = toComponent(
-                        colorize(player, textArray[i], false) + end);
-            }
-
-            comp.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, array));
-        }
+    /**
+     * Add a click event to a component.
+     * @param comp the component to add the event
+     * @param type the click event type
+     * @param input the input line for the click event
+     */
+    private void addClick(TextComponent comp, String type, String input) {
+        ClickEvent.Action action = null;
+        if (type.matches("(?i)run")) action = RUN_COMMAND;
+        else if (type.matches("(?i)suggest")) action = SUGGEST_COMMAND;
+        else if (type.matches("(?i)url")) action = OPEN_URL;
+        if (action != null) comp.setClickEvent(new ClickEvent(action, input));
     }
 
+    /**
+     *
+     * @param comp the component to add the event
+     * @param hover the list to add as a hover
+     */
+    private void addHover(TextComponent comp, List<String> hover) {
+        BaseComponent[] array = new BaseComponent[hover.size()];
+        for (int i = 0; i < hover.size(); i++) {
+            String end = i == hover.size() - 1 ? "" : "\n";
+            array[i] = toComponent(colorize(player, hover.get(i)) + end);
+        }
+        comp.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, array));
+    }
+
+    /**
+     * Add the event found in the formatted line.
+     * @param comp the component to add the event.
+     * @param type the event's type.
+     * @param input the input line for the event.
+     */
+    private void addEvent(TextComponent comp, String type, String input) {
+        if (type.matches("(?i)run|suggest|url")) addClick(comp, type, input);
+        else if (type.matches("(?i)hover"))
+            addHover(comp, Arrays.asList(input.split(getLineSplitter())));
+    }
+
+    /**
+     * It registers all the components of the formatted line in the basic constructor.
+     */
     private void registerComponents() {
         List<BaseComponent> components = new ArrayList<>();
         final Matcher match = PATTERN.matcher(line);
@@ -73,7 +151,7 @@ public class JsonMsg {
             final String type2 = match.group(4);
             final String input2 = match.group(5);
 
-            boolean isExtra = extra != null && extra.matches("(?i)\\|" + prefix);
+            boolean isExtra = extra != null && extra.matches("(?i)\\|" + PATTERN_PREFIX);
 
             final String text = match.group(6);
             final String before = line.substring(lastEnd, match.start());
@@ -81,8 +159,8 @@ public class JsonMsg {
             components.addAll(Arrays.asList(TextComponent.fromLegacyText(before)));
             final TextComponent comp = toComponent(text);
 
-            addEvents(comp, type, input);
-            if (isExtra) addEvents(comp, type2, input2);
+            addEvent(comp, type, input);
+            if (isExtra) addEvent(comp, type2, input2);
 
             components.add(comp);
             lastEnd = match.end();
@@ -96,12 +174,22 @@ public class JsonMsg {
         baseComponents = components.toArray(new BaseComponent[0]);
     }
 
+    /**
+     * Gets the formatted component with all the added events.
+     * @return the formatted component.
+     */
     public BaseComponent[] build() {
         return baseComponents;
     }
 
+    /**
+     * Creates a centered chat message.
+     * @param player a player to parse placeholders.
+     * @param message the input message.
+     * @return the centered chat message.
+     */
     public static String centerMessage(Player player, String message) {
-        String initial = colorize(player, message, false);
+        String initial = colorize(player, stripJson(message));
 
         int messagePxSize = 0;
         boolean previousCode = false;
@@ -131,15 +219,24 @@ public class JsonMsg {
             compensated += spaceLength;
         }
 
-        return sb + colorize(player, message, true);
+        return sb + colorize(player, message);
     }
 
-    public static String centeredText(Player player, String line, boolean isChat) {
+    /**
+     * Defines a string if is centered or not.
+     * @param player a player to parse placeholders.
+     * @param line the input line.
+     * @return the result string.
+     */
+    public static String centeredText(Player player, String line) {
         return line.startsWith(getCenterPrefix()) ?
                 centerMessage(player, line.replace(getCenterPrefix(), "")) :
-                colorize(player, line, isChat);
+                colorize(player, line);
     }
 
+    /**
+     * The enum class to manage the length of every char.
+     */
     public enum FontInfo {
         A('A', 5),
         a('a', 5),
