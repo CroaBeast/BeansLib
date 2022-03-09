@@ -1,5 +1,5 @@
 ![Cocoa Beans](https://static.wikia.nocookie.net/minecraft_gamepedia/images/8/85/Cocoa_Beans_JE4_BE3.png/revision/latest?cb=20200127083719)
-#BeansLIB
+# BeansLIB
 An essential library for your SpigotMC plugin. Features range from advanced gradient text formatting to time parsing.
 
 Please note that this is **not a plugin!**
