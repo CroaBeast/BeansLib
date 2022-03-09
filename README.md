@@ -6,7 +6,7 @@ Please note that this is **not a plugin!**
 
 Requires Java 8. Works on MC Versions 1.8 - 1.18.
 
-##Setup
+## Setup
 1. Add BeansLib into your project via Maven or Gradle (look below).
 
 2. In your onEnable or onLoad method include the following line:
@@ -17,7 +17,7 @@ Requires Java 8. Works on MC Versions 1.8 - 1.18.
 
 And you're all set!
 
-##Maven and Gradle Integration
+## Maven and Gradle Integration
 Maven - add to pom.xml
 ```xml
 <repositories>
