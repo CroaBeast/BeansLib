@@ -1,7 +1,5 @@
 package me.croabeast.beanslib.utilities;
 
-import java.util.regex.Pattern;
-
 /**
  * Basic utilities for any server.
  *
