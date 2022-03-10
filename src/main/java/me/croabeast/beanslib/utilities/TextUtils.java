@@ -7,6 +7,7 @@ import me.croabeast.beanslib.terminals.*;
 import me.croabeast.iridiumapi.*;
 import org.bukkit.*;
 import org.bukkit.command.*;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.*;
 import org.bukkit.entity.*;
 import org.bukkit.plugin.java.*;
@@ -110,7 +111,7 @@ public class TextUtils {
         return IridiumAPI.process(parsePAPI(player, parseChars(message)));
     }
 
-    public static List<String> fileList(FileConfiguration file, String path) {
+    public static List<String> fileList(ConfigurationSection file, String path) {
         return  !file.isList(path) ?
                 Lists.newArrayList(file.getString(path)) :
                 file.getStringList(path);
@@ -158,8 +159,16 @@ public class TextUtils {
         }
     }
 
+    public static void sendFileMsg(CommandSender sender, ConfigurationSection section, String path, String[] keys, String[] values) {
+        sendFileMsg(sender, fileList(section, path), keys, values);
+    }
+
     public static void sendFileMsg(CommandSender sender, List<String> list) {
         sendFileMsg(sender, list, null, null);
+    }
+
+    public static void sendFileMsg(CommandSender sender, ConfigurationSection section, String path) {
+        sendFileMsg(sender, fileList(section, path));
     }
 
     public static void sendActionBar(Player player, String message) {

@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import static me.croabeast.beanslib.utilities.TextUtils.*;
 import static me.croabeast.iridiumapi.IridiumAPI.*;
 
-public class LogUtils {
+public abstract class LogUtils {
 
     private static final boolean COLOR_SUPPORT =
             MAJOR_VERSION >= 12 && !MC_FORK.split(" ")[0].matches("(?i)Spigot");
