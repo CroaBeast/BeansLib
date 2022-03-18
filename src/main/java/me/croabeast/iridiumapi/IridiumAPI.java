@@ -2,11 +2,10 @@ package me.croabeast.iridiumapi;
 
 import com.google.common.collect.ImmutableMap;
 import me.croabeast.iridiumapi.patterns.Gradient;
-import me.croabeast.iridiumapi.patterns.Patterns;
+import me.croabeast.iridiumapi.patterns.BasePattern;
 import me.croabeast.iridiumapi.patterns.Rainbow;
 import me.croabeast.iridiumapi.patterns.SolidColor;
 import net.md_5.bungee.api.ChatColor;
-import org.bukkit.Bukkit;
 import org.jetbrains.annotations.*;
 
 import java.awt.*;
@@ -14,12 +13,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static me.croabeast.beanslib.utilities.TextUtils.*;
+
 public class IridiumAPI {
 
-    private static final int VERSION = Integer.parseInt(Bukkit.getBukkitVersion()
-            .split("-")[0].split("\\.")[1]);
-
-    private static final boolean SUPPORTS_RGB = VERSION > 15;
+    private static final boolean SUPPORTS_RGB = MAJOR_VERSION > 15;
 
     private static final List<String> SPECIAL_COLORS =
             Arrays.asList("&l", "&n", "&o", "&k", "&m", "§l", "§n", "§o", "§k", "§m");
@@ -42,12 +40,11 @@ public class IridiumAPI {
             .put(new Color(16777045), ChatColor.getByChar('e'))
             .put(new Color(16777215), ChatColor.getByChar('f')).build();
 
-    private static final List<Patterns> PATTERNS =
-            Arrays.asList(new Gradient(), new SolidColor(), new Rainbow());
+    private static final List<BasePattern> PATTERNS = Arrays.asList(new Gradient(), new SolidColor(), new Rainbow());
 
     @NotNull
     public static String process(@NotNull String string) {
-        for (Patterns pattern : PATTERNS) string = pattern.process(string);
+        for (BasePattern pattern : PATTERNS) string = pattern.process(string);
         return ChatColor.translateAlternateColorCodes('&', string);
     }
 

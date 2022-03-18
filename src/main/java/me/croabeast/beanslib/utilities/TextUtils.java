@@ -14,7 +14,6 @@ import org.bukkit.plugin.java.*;
 import org.bukkit.scheduler.*;
 import org.jetbrains.annotations.*;
 
-import java.sql.Time;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,10 +25,8 @@ public class TextUtils {
     private static ActionBar actionBar;
     private static TitleMngr titleMngr;
 
-    private static final String MC_VERSION = Bukkit.getBukkitVersion().split("-")[0];
-
-    public static final String MC_FORK = Bukkit.getVersion().split("-")[1] + " " + MC_VERSION;
-    public static final int MAJOR_VERSION = Integer.parseInt(MC_VERSION.split("\\.")[1]);
+    public static final String MC_FORK = Bukkit.getVersion().split("-")[1] + " " + getMcVersion();
+    public static final int MAJOR_VERSION = Integer.parseInt(getMcVersion().split("\\.")[1]);
 
     private static String centerPrefix, lineSplitter, langPrefix, langPrefixKey,
             actionBarKey, titleKey, jsonKey, playerKey, playerWorldKey, charPattern;
@@ -40,6 +37,18 @@ public class TextUtils {
         actionBar = new ActionBar();
         titleMngr = new TitleMngr();
         loadTextValues();
+    }
+
+    private static String getMcVersion() {
+        return Bukkit.getBukkitVersion().split("-")[0];
+    }
+
+    public static String getMcFork() {
+        return Bukkit.getVersion().split("-")[1] + " " + getMcVersion();
+    }
+
+    public static int getMajorVersion() {
+        return Integer.parseInt(getMcVersion().split("\\.")[1]);
     }
 
     public static void setCenterPrefix(String centerPrefix) {
@@ -108,7 +117,7 @@ public class TextUtils {
         return line;
     }
 
-    public static String colorize(Player player, String message) {
+    public static String colorize(@Nullable Player player, String message) {
         return IridiumAPI.process(parsePAPI(player, parseChars(message)));
     }
 
@@ -131,7 +140,7 @@ public class TextUtils {
         else return line.startsWith(" ") ? line.substring(1) : line;
     }
 
-    public static String replaceInsensitiveEach(String line, String[] keys, String[] values) {
+    public static String replaceInsensitiveEach(String line, @Nullable String[] keys, @Nullable String[] values) {
         if (keys == null || values == null) return line;
         for (int i = 0; i < keys.length; i++) {
             if (keys[i] == null || values[i] == null) continue;
@@ -140,7 +149,7 @@ public class TextUtils {
         return line;
     }
 
-    public static void sendFileMsg(CommandSender sender, List<String> list, String[] keys, String[] values) {
+    public static void sendFileMsg(CommandSender sender, List<String> list, @Nullable String[] keys, @Nullable String[] values) {
         for (String line : list) {
             if (line == null || line.equals("")) continue;
 
@@ -154,13 +163,13 @@ public class TextUtils {
                 line = replaceInsensitiveEach(line, new String[] {getPlayerKey(), getPlayerWorldKey()},
                         new String[] {player.getName(), player.getWorld().getName()});
 
-                selectMsgType(player, line);
+                selectMsgType(null, player, line);
             }
             else LogUtils.rawLog(JsonMsg.centeredText(null, line));
         }
     }
 
-    public static void sendFileMsg(CommandSender sender, ConfigurationSection section, String path, String[] keys, String[] values) {
+    public static void sendFileMsg(CommandSender sender, ConfigurationSection section, String path, @Nullable String[] keys, @Nullable String[] values) {
         sendFileMsg(sender, fileList(section, path), keys, values);
     }
 
@@ -176,22 +185,26 @@ public class TextUtils {
         actionBar.getMethod().send(player, message);
     }
 
-    private static boolean checkInts(String[] array) {
+    private static boolean checkInts(@Nullable String[] array) {
         if (array == null) return false;
-        for (String integer : array)
+        for (String integer : array) {
+            assert integer != null;
             if (!integer.matches("-?\\d+")) return false;
+        }
         return true;
     }
 
-    public static void sendTitle(Player player, String[] message, String[] times) {
+    public static void sendTitle(Player player, @NotNull String[] message, @Nullable String[] times) {
         if (message.length == 0 || message.length > 2) return;
         String subtitle = message.length == 1 ? "" : message[1];
 
         int[] i;
         if (checkInts(times) && times.length == 3) {
             i = new int[times.length];
-            for (int x = 0; x < times.length; x++)
+            for (int x = 0; x < times.length; x++) {
+                assert times[x] != null;
                 i[x] = Integer.parseInt(times[x]);
+            }
         }
         else i = new int[] {10, 50, 10};
 
@@ -207,24 +220,27 @@ public class TextUtils {
         return line.regionMatches(true, 0, prefix, 0, prefix.length());
     }
 
-    public static void selectMsgType(Player player, String line) {
+    public static void selectMsgType(@Nullable Player target, @NotNull Player player, String line) {
+        if (target == null) target = player;
+
         if (startsIgnoreCase(getActionBarKey(), line)) {
-            sendActionBar(player, parsePrefix(getActionBarKey(), line));
+            sendActionBar(target, parsePrefix(getActionBarKey(), line));
         }
         else if (startsIgnoreCase(getTitleKey(), line)) {
-            sendTitle(player, parsePrefix(getTitleKey(), line).split(getLineSplitter()), null);
+            sendTitle(target, parsePrefix(getTitleKey(), line).split(getLineSplitter()), null);
         }
         else if (startsIgnoreCase(getJsonKey(), line) && line.contains("{\"text\":")) {
+            @NotNull Player finalTarget = target;
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    String cmd = "minecraft:tellraw " + player.getName() + " "
+                    String cmd = "minecraft:tellraw " + finalTarget.getName() + " "
                             + parsePrefix(getJsonKey(), line);
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
                 }
             }.runTask(main);
         }
-        else player.spigot().sendMessage(new JsonMsg(player, line).build());
+        else target.spigot().sendMessage(new JsonMsg(player, line).build());
     }
 
     public static String getCenterPrefix() {
