@@ -8,7 +8,6 @@ import me.croabeast.iridiumapi.*;
 import org.bukkit.*;
 import org.bukkit.command.*;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.*;
 import org.bukkit.entity.*;
 import org.bukkit.plugin.java.*;
 import org.bukkit.scheduler.*;

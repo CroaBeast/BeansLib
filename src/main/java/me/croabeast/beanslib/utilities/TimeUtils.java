@@ -9,10 +9,10 @@ package me.croabeast.beanslib.utilities;
 public class TimeUtils {
 
     // formatting strings
-    private static String secondFormat = "{time} Day(s)";
-    private static String minuteFormat = "{time} Hour(s)";
-    private static String hourFormat = "{time} Minute(s)";
-    private static String dayFormat = "{time} Second(s)";
+    private static String secondFormat = "{time} Seconds(s)";
+    private static String minuteFormat = "{time} Minute(s)";
+    private static String hourFormat = "{time} Hour(s)";
+    private static String dayFormat = "{time} Day(s)";
     private static String splitterFormat = ", ";
 
     // fields needed for time formatter
