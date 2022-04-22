@@ -143,7 +143,7 @@ public class TextUtils {
         if (keys == null || values == null) return line;
         for (int i = 0; i < keys.length; i++) {
             if (keys[i] == null || values[i] == null) continue;
-            line = line.replaceAll("(?i)" + keys[i], values[i]);
+            line = line.replaceAll(keys[i], values[i]);
         }
         return line;
     }
