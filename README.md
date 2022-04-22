@@ -33,7 +33,7 @@ Maven - add to pom.xml
         <groupId>com.github.CroaBeast</groupId>
         <artifactId>BeansLib</artifactId>
         <!--Replace version with the latest release version-->
-        <version>1.1</version>
+        <version>VERSION_TAG</version>
     </dependency>
 </dependencies>
 ```
@@ -48,6 +48,6 @@ allprojects {
 ```
 ```
 dependencies {
-    implementation 'com.github.CroaBeast:BeansLib:1.1'
+    implementation 'com.github.CroaBeast:BeansLib:VERSION_TAG'
 }
 ```
