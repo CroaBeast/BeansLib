@@ -9,11 +9,12 @@ Requires Java 8. Works on MC Versions 1.8 - 1.18.
 ## Setup
 1. Add BeansLib into your project via Maven or Gradle (look below).
 
-2. In your onEnable or onLoad method include the following line:
-``BeansLib.init(yourPluginInstance);``
+2. Create a class to initialize the BeansLib integration. See this [example BeansLib class](https://github.com/CroaBeast/BeansLib/blob/master/src/main/java/example/MyTextClass.java) for more info.
+   > You can also override almost any default BeansLib method in this class.
 
-3. Optional: Set all the text placeholder variables calling the setters of the TextUtils class also in your onEnable or onLoad method. Example:
-``TextUtils.setPlayerKey("[playerName]");``
+3. Initialize your BeansLib class (the one you create) in your main class. See this [example main class](https://github.com/CroaBeast/BeansLib/blob/master/src/main/java/example/MyPlugin.java) for more info.
+
+4. Finally, you can call the methods in every class you want. See this [example class](https://github.com/CroaBeast/BeansLib/blob/master/src/main/java/example/ExampleClass.java) for more info.
 
 And you're all set!
 
