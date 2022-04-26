@@ -9,11 +9,7 @@ Requires Java 8. Works on MC Versions 1.8 - 1.18.
 ## Setup
 1. Add BeansLib into your project via Maven or Gradle (look below).
 
-2. In your onEnable or onLoad method include the following line:
-``BeansLib.init(yourPluginInstance);``
-
-3. Optional: Set all the text placeholder variables calling the setters of the TextUtils class also in your onEnable or onLoad method. Example:
-``TextUtils.setPlayerKey("[playerName]");``
+2. Comming soon...
 
 And you're all set!
 
