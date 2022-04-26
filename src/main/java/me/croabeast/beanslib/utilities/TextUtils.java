@@ -35,7 +35,7 @@ public abstract class TextUtils extends TextKeys {
 
     public void playerLog(@NotNull Player player, String... lines) {
         for (String s : lines) if (s != null)
-            player.sendMessage(process(s.replace(getLangPrefixKey(), getLangPrefix())));
+            player.sendMessage(process(s.replace(langPrefixKey(), langPrefix())));
     }
 
     public void rawLog(String... lines) {
@@ -45,7 +45,7 @@ public abstract class TextUtils extends TextKeys {
     public void doLog(@Nullable CommandSender sender, String... lines) {
         if (sender instanceof Player) playerLog((Player) sender, lines);
         for (String s : lines) if (s != null)
-            BeansLib.getPlugin().getLogger().info(colorLogger(s.replace(getLangPrefixKey(), "")));
+            BeansLib.getPlugin().getLogger().info(colorLogger(s.replace(langPrefixKey(), "")));
     }
 
     public void doLog(String... lines) {
@@ -330,8 +330,8 @@ public abstract class TextUtils extends TextKeys {
         for (String line : list) {
             if (line == null || line.equals("")) continue;
 
-            line = line.startsWith(getLangPrefixKey()) ?
-                    line.replace(getLangPrefixKey(), getLangPrefix()) : line;
+            line = line.startsWith(langPrefixKey()) ?
+                    line.replace(langPrefixKey(), langPrefix()) : line;
 
             line = replaceInsensitiveEach(line, keys, values);
 

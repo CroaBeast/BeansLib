@@ -53,22 +53,22 @@ public abstract class TextKeys {
     }
 
     /**
-     * The key that need to be replaced by the main plugin prefix: {@link #getLangPrefix()}.
+     * The key that need to be replaced by the main plugin prefix: {@link #langPrefix()}.
      * It's recommended to use a string from a .yml of your plugin.
      * <p>Example: <strong>JavaPlugin.getConfig().getString("the key path")</strong>
      * @return the prefix key
      */
     @NotNull
-    public abstract String getLangPrefixKey();
+    public abstract String langPrefixKey();
 
     /**
-     * The prefix of the plugin that will replace the prefix key: {@link #getLangPrefixKey()}.
+     * The prefix of the plugin that will replace the prefix key: {@link #langPrefixKey()}.
      * It's recommended to use a string from a .yml of your plugin.
      * <p>Example: <strong>JavaPlugin.getConfig().getString("main prefix path")</strong>
      * @return plugin prefix
      */
     @NotNull
-    public abstract String getLangPrefix();
+    public abstract String langPrefix();
 
     /**
      * If you want to remove spaces at the start of a message.
