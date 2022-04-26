@@ -21,12 +21,12 @@ public class MyTextClass extends BeansLib {
      */
 
     @Override
-    public @NotNull String getLangPrefixKey() {
+    public @NotNull String langPrefixKey() {
         return myPlugin.getConfig().getString("lang.prefix-key", "<key>");
     }
 
     @Override
-    public @NotNull String getLangPrefix() {
+    public @NotNull String langPrefix() {
         return myPlugin.getConfig().getString("lang.main-prefix", " My Plugin owo");
     }
 
