@@ -103,10 +103,10 @@ public abstract class TextUtils extends TextKeys {
         return IridiumAPI.process(parsePAPI(player, parseChars(message)));
     }
 
-    public List<String> toList(ConfigurationSection file, String path) {
-        return  !file.isList(path) ?
-                Lists.newArrayList(file.getString(path)) :
-                file.getStringList(path);
+    public List<String> toList(@Nullable ConfigurationSection section, String path) {
+        if (section == null) return new ArrayList<>();
+        return  section.isList(path) ? section.getStringList(path) :
+                Lists.newArrayList(section.getString(path));
     }
 
     /**
@@ -163,7 +163,7 @@ public abstract class TextUtils extends TextKeys {
 
     /**
      * Check if the line has a valid json format. Usage:
-     * <p> if (IS_JSON.apply(stringInput)) doSomething;
+     * <pre> if (IS_JSON.apply(stringInput)) doSomethingIdk();</pre>
      */
     public final Function<String, Boolean> IS_JSON = s -> JSON_PATTERN.matcher(s).find();
 
