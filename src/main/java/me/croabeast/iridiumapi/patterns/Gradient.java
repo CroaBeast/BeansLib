@@ -13,7 +13,7 @@ public class Gradient extends BasePattern {
     }
 
     public String process(String string) {
-        Matcher matcher = Pattern.compile(getGradientPattern()).matcher(string);
+        Matcher matcher = gradientPattern().matcher(string);
         while (matcher.find()) {
             String start = matcher.group(1);
             String end = matcher.group(3);

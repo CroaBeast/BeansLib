@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 public class Rainbow extends BasePattern {
 
     public String process(String string) {
-        Matcher matcher = Pattern.compile(getRainbowPattern()).matcher(string);
+        Matcher matcher = rainbowPattern().matcher(string);
         while (matcher.find()) {
             String saturation = matcher.group(1);
             String content = matcher.group(2);

@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 public class SolidColor extends BasePattern {
 
     public String process(String string) {
-        Matcher matcher = Pattern.compile(getSolidPattern()).matcher(string);
+        Matcher matcher = solidPattern().matcher(string);
         while (matcher.find()) {
             String color = matcher.group(1);
             if (color == null) color = matcher.group(2);

@@ -78,6 +78,16 @@ public abstract class TextUtils extends TextKeys {
                 PlaceholderAPI.setPlaceholders(player, message) : message;
     }
 
+    public static String replaceInsensitiveEach(String line, String[] keys, String[] values) {
+        if (keys == null || values == null) return line;
+        for (int i = 0; i < keys.length; i++) {
+            if (keys[i] == null | values[i] == null) continue;
+            keys[i] = Pattern.quote(keys[i]);
+            line = line.replaceAll("(?i)" + keys[i], values[i]);
+        }
+        return line;
+    }
+
     public String parseChars(String line) {
         Pattern charPattern = Pattern.compile(charPattern());
         Matcher match = charPattern.matcher(line);
@@ -269,16 +279,6 @@ public abstract class TextUtils extends TextKeys {
 
         components.add(comp);
         return components.toArray(new BaseComponent[0]);
-    }
-
-    public static String replaceInsensitiveEach(String line, @Nullable String[] keys, @Nullable String[] values) {
-        if (keys == null || values == null) return line;
-        for (int i = 0; i < keys.length; i++) {
-            if (keys[i] == null | values[i] == null) continue;
-            keys[i] = Pattern.quote(keys[i]);
-            line = line.replaceAll("(?i)" + keys[i], values[i]);
-        }
-        return line;
     }
 
     public void sendActionBar(Player player, String message) {
