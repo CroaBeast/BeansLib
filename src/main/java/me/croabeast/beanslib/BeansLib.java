@@ -4,17 +4,27 @@ import me.croabeast.beanslib.utilities.TextUtils;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
-public class BeansLib {
+public abstract class BeansLib extends TextUtils {
 
-    private static JavaPlugin plugin;
+    /**
+     * The plugin instance.
+     */
+    private static JavaPlugin instance;
 
-    @NotNull
-    public static JavaPlugin getPlugin() {
-        return plugin;
+    /**
+     * Only constructor to initialize the integration of BeansLib
+     * @param plugin plugin's instance
+     */
+    public BeansLib(@NotNull JavaPlugin plugin) {
+        instance = plugin;
     }
 
-    public static void init(final @NotNull JavaPlugin plugin) {
-        BeansLib.plugin = plugin;
-        new TextUtils();
+    /**
+     * Gets your plugin's instance when initializing the class.
+     * @return plugin's instance
+     */
+    @NotNull
+    public static JavaPlugin getPlugin() {
+        return instance;
     }
 }

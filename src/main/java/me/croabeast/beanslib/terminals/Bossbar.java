@@ -1,6 +1,7 @@
 package me.croabeast.beanslib.terminals;
 
 import me.croabeast.beanslib.BeansLib;
+import me.croabeast.iridiumapi.IridiumAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -84,7 +85,7 @@ public class Bossbar {
         if (line == null) line = "";
         line = replaceInsensitiveEach(line, new String[] {"player", "world"},
                 new String[] {player.getName(), player.getWorld().getName()});
-        this.line = colorize(player, removeSpace(line));
+        this.line = IridiumAPI.process(parsePAPI(player, line));
     }
 
     /**
@@ -128,7 +129,7 @@ public class Bossbar {
         if (line == null) line = "";
         line = replaceInsensitiveEach(line, new String[] {"player", "world"},
                 new String[] {player.getName(), player.getWorld().getName()});
-        line = colorize(player, removeSpace(line));
+        line = IridiumAPI.process(parsePAPI(player, line));
     }
 
     /**
@@ -144,7 +145,7 @@ public class Bossbar {
      * Animates the bossbar when the progress is enabled.
      */
     private void animate() {
-        double time = 1.0D / Bossbar.this.time;
+        double time = 1.0D / this.time;
         double[] percentage = {1.0D};
 
         new BukkitRunnable() {

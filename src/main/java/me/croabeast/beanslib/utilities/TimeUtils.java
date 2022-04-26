@@ -1,7 +1,9 @@
 package me.croabeast.beanslib.utilities;
 
+import me.croabeast.iridiumapi.IridiumAPI;
+
 /**
- * Basic utilities for any server.
+ * Basic time utilities for any server.
  *
  * @author Kihsomray
  * @version 1.0
@@ -16,9 +18,13 @@ public class TimeUtils {
     private static String splitterFormat = ", ";
 
     // fields needed for time formatter
-    private static String pluralRegex = "\\s*\\([^\\)]*\\)\\s*";
+    private static String pluralRegex = "\\s*\\([^)]*\\)\\s*";
     private static char startDelimiter = '(';
     private static char endDelimiter = ')';
+
+    private static String colorize(String input) {
+        return IridiumAPI.process(input);
+    }
 
     /**
      * Takes in seconds and returns a very nicely formatted string
@@ -30,7 +36,7 @@ public class TimeUtils {
     public static String formatTime(long seconds) {
 
         // if time 0, return right away
-        if (seconds <= 0) return TextUtils.colorize(null, checkPluralFormat(0, secondFormat));
+        if (seconds <= 0) return colorize(checkPluralFormat(0, secondFormat));
 
         String formattedTime = "";
         long daysTotal, hoursTotal, minutesTotal;
@@ -54,25 +60,21 @@ public class TimeUtils {
         if (seconds > 0) formattedTime += checkPluralFormat(seconds, secondFormat + splitterFormat);
 
         // returns final string
-        return TextUtils.colorize(null, formattedTime.substring(0, formattedTime.length() - splitterFormat.length()));
+        return colorize(formattedTime.substring(0, formattedTime.length() - splitterFormat.length()));
 
     }
 
     // gets proper time for a time format
     private static long getFixedTime(long seconds, long formatter) {
-
         long tempSeconds = seconds % formatter;
         return (seconds - tempSeconds) / formatter;
-
     }
 
     // checks plural formatting and applies it
     private static String checkPluralFormat(long value, String string) {
-
         string = string.replace("{time}", value + "");
         if (value == 1) return string.replaceAll(pluralRegex, "");
         else return string.replace(startDelimiter + "", "").replace(endDelimiter + "", "");
-
     }
 
     /**

@@ -1,6 +1,6 @@
 package me.croabeast.beanslib.terminals;
 
-import me.croabeast.beanslib.utilities.TextUtils;
+import me.croabeast.beanslib.utilities.TextKeys;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
@@ -12,7 +12,7 @@ public class ActionBar implements Reflection {
     private final GetActionBar actionBar;
 
     public ActionBar() {
-        actionBar = TextUtils.MAJOR_VERSION < 11 ? oldActionBar() : newActionBar();
+        actionBar = TextKeys.majorVersion() < 11 ? oldActionBar() : newActionBar();
     }
 
     public interface GetActionBar {

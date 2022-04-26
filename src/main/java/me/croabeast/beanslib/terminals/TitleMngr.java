@@ -1,6 +1,6 @@
 package me.croabeast.beanslib.terminals;
 
-import me.croabeast.beanslib.utilities.TextUtils;
+import me.croabeast.beanslib.utilities.TextKeys;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Constructor;
@@ -14,7 +14,7 @@ public class TitleMngr implements Reflection {
     private int out;
 
     public TitleMngr() {
-        title = TextUtils.MAJOR_VERSION < 10 ? oldTitle() : newTitle();
+        title = TextKeys.majorVersion() < 10 ? oldTitle() : newTitle();
     }
 
     public interface GetTitle {
@@ -27,21 +27,29 @@ public class TitleMngr implements Reflection {
 
     private void legacyMethod(Player player, String message, boolean isTitle) {
         try {
-            Object e = getNMSClass("PacketPlayOutTitle").getDeclaredClasses()[0].getField("TIMES").get(null);
-            Object chatMessage = getNMSClass("IChatBaseComponent").getDeclaredClasses()[0].getMethod("a", String.class).invoke(null, "{\"text\":\"" + message + "\"}");
-            Constructor<?> subtitleConstructor = getNMSClass("PacketPlayOutTitle").getConstructor(getNMSClass("PacketPlayOutTitle").getDeclaredClasses()[0], getNMSClass("IChatBaseComponent"), int.class, int.class, int.class);
-            Object titlePacket = subtitleConstructor.newInstance(e, chatMessage, in, stay, out);
+            Class<?> packetClass = getNMSClass("PacketPlayOutTitle"), chatClass = getNMSClass("IChatBaseComponent"),
+                    packetField = packetClass.getDeclaredClasses()[0], chatField = chatClass.getDeclaredClasses()[0];
+            
+            message = "{\"text\":\"" + message + "\"}";
+            
+            Object packetTimes = packetField.getField("TIMES").get(null);
+            Object chatMessage = chatField.getMethod("a", String.class).invoke(null, message);
+            
+            Constructor<?> subtitleConstructor = packetClass.getConstructor(packetField, chatClass, int.class, int.class, int.class);
+            Object titlePacket = subtitleConstructor.newInstance(packetTimes, chatMessage, in, stay, out);
 
             sendPacket(player, titlePacket);
 
-            e = getNMSClass("PacketPlayOutTitle").getDeclaredClasses()[0].getField((isTitle ? "" : "SUB") + "TITLE").get(null);
-            chatMessage = getNMSClass("IChatBaseComponent").getDeclaredClasses()[0].getMethod("a", String.class).invoke(null, "{\"text\":\"" + message + "\"}");
+            packetTimes = packetField.getField((isTitle ? "" : "SUB") + "TITLE").get(null);
+            chatMessage = chatField.getMethod("a", String.class).invoke(null, message);
+            
             subtitleConstructor = isTitle ?
-                    getNMSClass("PacketPlayOutTitle").getConstructor(getNMSClass("PacketPlayOutTitle").getDeclaredClasses()[0], getNMSClass("IChatBaseComponent")) :
-                    getNMSClass("PacketPlayOutTitle").getConstructor(getNMSClass("PacketPlayOutTitle").getDeclaredClasses()[0], getNMSClass("IChatBaseComponent"), int.class, int.class, int.class);
-            titlePacket = isTitle ?
-                    subtitleConstructor.newInstance(e, chatMessage) :
-                    subtitleConstructor.newInstance(e, chatMessage, Math.round((float) in / 20), Math.round((float) stay / 20), Math.round((float) out / 20));
+                    packetClass.getConstructor(packetField, chatClass) :
+                    packetClass.getConstructor(packetField, chatClass, int.class, int.class, int.class);
+            
+            titlePacket = isTitle ? subtitleConstructor.newInstance(packetTimes, chatMessage) :
+                    subtitleConstructor.newInstance(packetTimes, chatMessage, Math.round((float) in / 20),
+                            Math.round((float) stay / 20), Math.round((float) out / 20));
 
             sendPacket(player, titlePacket);
         }
