@@ -63,16 +63,6 @@ public abstract class TextKeys {
     }
 
     /**
-     * Check if a logger line can be colored or not.
-     * @return if this fix is enabled.
-     */
-    protected final boolean loggerColorSupport() {
-        String fork = serverFork().split(" ")[0];
-        return majorVersion() >= 12 && (fork.matches("(?i)Paper") &&
-                isWindows() || !fork.matches("(?i)Spigot|Paper"));
-    }
-
-    /**
      * The key that need to be replaced by the main plugin prefix: {@link #langPrefix()}.
      * It's recommended to use a string from a .yml of your plugin.
      * <pre>Example: {@code JavaPlugin.getConfig().getString("path here")}</pre>

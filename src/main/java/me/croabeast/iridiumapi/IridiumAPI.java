@@ -19,7 +19,8 @@ import java.util.regex.Pattern;
 /**
  * The class that handles all the RGB support.
  *
- * @author <strong>PeachesMLB</strong> (forked by CroaBeast)
+ * @author PeachesMLB
+ * @forkBy CroaBeast
  */
 public final class IridiumAPI {
 

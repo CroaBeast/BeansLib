@@ -2,6 +2,7 @@ package me.croabeast.beanslib.utilities;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * The exceptions checker class.
@@ -26,6 +27,7 @@ public final class Exceptions {
      * @return the player
      * @throws NullPointerException if player is null
      */
+    @NotNull
     public static Player checkPlayer(Player player) {
         if (player != null) return player;
         throw new NullPointerException("Player can not be null");

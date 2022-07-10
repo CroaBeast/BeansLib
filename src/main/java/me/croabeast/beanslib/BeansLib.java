@@ -45,16 +45,6 @@ public abstract class BeansLib extends TextKeys {
     protected abstract JavaPlugin getPlugin();
 
     /**
-     * It will color the console message if the server supports it.
-     * @param string the input line
-     * @return the formatted console message
-     */
-    private String colorLogger(@NotNull String string) {
-        string = TextUtils.stripJson(string);
-        return loggerColorSupport() ? process(string, !fixColorLogger()) : stripAll(string);
-    }
-
-    /**
      * Converts a string array to a List for the logger.
      * @param lines string array
      * @return the converted list
@@ -86,7 +76,8 @@ public abstract class BeansLib extends TextKeys {
      * @param lines the information to send
      */
     public void rawLog(String... lines) {
-        for (String s : toLogLines(lines)) Bukkit.getLogger().info(colorLogger(s));
+        for (String s : toLogLines(lines))
+            Bukkit.getLogger().info(LogUtils.colorLogger(s, fixColorLogger()));
     }
 
     /**
@@ -96,8 +87,12 @@ public abstract class BeansLib extends TextKeys {
      */
     public void doLog(@Nullable CommandSender sender, String... lines) {
         if (sender instanceof Player) playerLog((Player) sender, lines);
-        for (String s : toLogLines(lines))
-            getPlugin().getLogger().info(colorLogger(s.replace(langPrefixKey(), "")));
+
+        for (String s : toLogLines(lines)) {
+            s = s.replace(langPrefixKey(), "");
+            s = LogUtils.colorLogger(s, fixColorLogger());
+            getPlugin().getLogger().info(s);
+        }
     }
 
     /**
@@ -488,13 +483,15 @@ public abstract class BeansLib extends TextKeys {
 
         for (String line : list) {
             if (line == null || line.equals("")) continue;
-            line = Parser.to(line.replace(langPrefixKey(), langPrefix()), keys, values) + "";
+
+            line = line.replace(langPrefixKey(), langPrefix());
+            line = TextUtils.replaceInsensitiveEach(line, keys, values);
 
             if (sender != null && !(sender instanceof ConsoleCommandSender)) {
                 Player player = (Player) sender;
-                line = Parser.to(line).setKeys(playerKey(), worldKey()).
-                        setValues(player.getName(), player.getWorld().getName()) + "";
-                sendMessage(null, player, line);
+                String[] k = {playerKey(), worldKey()},
+                        v = {player.getName(), player.getWorld().getName()};
+                sendMessage(null, player, TextUtils.replaceInsensitiveEach(line, k, v));
             }
             else rawLog(centeredText(null, line));
         }
@@ -529,38 +526,5 @@ public abstract class BeansLib extends TextKeys {
      */
     public void sendMessageList(CommandSender sender, ConfigurationSection section, String path) {
         sendMessageList(sender, TextUtils.toList(section, path));
-    }
-
-    private static class Parser {
-
-        private final String string;
-        private String[] keys = null, values = null;
-
-        private Parser(String string) {
-            this.string = string;
-        }
-
-        public Parser setKeys(String... keys) {
-            this.keys = keys;
-            return this;
-        }
-
-        public Parser setValues(String... values) {
-            this.values = values;
-            return this;
-        }
-
-        @Override
-        public String toString() {
-            return TextUtils.replaceInsensitiveEach(string, keys, values);
-        }
-
-        public static Parser to(String string) {
-            return new Parser(string);
-        }
-
-        public static Parser to(String string, String[] keys, String[] values) {
-            return to(string).setKeys(keys).setValues(values);
-        }
     }
 }
