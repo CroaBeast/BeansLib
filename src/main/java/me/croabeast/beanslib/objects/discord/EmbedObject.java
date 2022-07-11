@@ -13,7 +13,7 @@ import java.util.List;
  * An object that represents embed messages.
  * Only accessible inside the package.
  * @author Kihsomray
- * @forkBy CroaBeast
+ * @fork CroaBeast
  * @since 1.1
  */
 @Getter
@@ -27,9 +27,6 @@ class EmbedObject {
     private final String token;
     private final String message;
 
-    /**
-     * Value necessary to use.
-     */
     private String
             title, description, url,
             image, thumbnail,

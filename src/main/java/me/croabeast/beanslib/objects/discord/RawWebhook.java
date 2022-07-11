@@ -17,7 +17,7 @@ import java.util.List;
  * The object that handles the webhook items to display.
  * Only accessible inside the package.
  * @author Kihsomray
- * @forkBy CroaBeast
+ * @fork CroaBeast
  * @since 1.1
  */
 @Getter
@@ -91,7 +91,7 @@ class RawWebhook {
      * @return the object's instance
      */
     public RawWebhook setContent(String text) {
-        content = text;
+        content = replace(text);
         return this;
     }
 
@@ -101,7 +101,7 @@ class RawWebhook {
      * @return the object's instance
      */
     public RawWebhook setUsername(String text) {
-        username = text;
+        username = replace(text);
         return this;
     }
 
@@ -111,7 +111,7 @@ class RawWebhook {
      * @return the object's instance
      */
     public RawWebhook setAvatarUrl(String url) {
-        avatarUrl = url;
+        avatarUrl = replace(url);
         return this;
     }
 

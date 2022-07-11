@@ -106,7 +106,7 @@ public abstract class TextKeys {
 
     /**
      * The size of the chat box of the player's client for centered chat messages.
-     * <p>This can be overridden, if you want to set a custom value.
+     * <p> This can be overridden, if you want to set a custom value.
      * @return chat box's size
      */
     public int chatBoxSize() {

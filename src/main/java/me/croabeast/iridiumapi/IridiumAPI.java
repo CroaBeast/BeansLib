@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
  * The class that handles all the RGB support.
  *
  * @author PeachesMLB
- * @forkBy CroaBeast
+ * @fork CroaBeast
  */
 public final class IridiumAPI {
 

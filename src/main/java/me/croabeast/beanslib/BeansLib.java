@@ -260,6 +260,11 @@ public abstract class BeansLib extends TextKeys {
         return new TextComponent(TextComponent.fromLegacyText(string));
     }
 
+    /**
+     * Gets a {@link ClickEvent.Action} from a string.
+     * @param input an input string
+     * @return the click action, can be null
+     */
     private ClickEvent.Action parseAction(String input) {
         input = input.toUpperCase();
 
@@ -300,15 +305,30 @@ public abstract class BeansLib extends TextKeys {
             addHover(player, comp, Arrays.asList(string.split(lineSeparator())));
     }
 
-
+    /**
+     * Removes the last char from a string using a start index.
+     * @param string an input string
+     * @param start a start index
+     * @return the stripped string
+     */
     private String removeLastChar(String string, int start) {
         return string.substring(start, string.length() - 1);
     }
 
+    /**
+     * Removes the last char from a string using the start of the string.
+     * @param string an input string
+     * @return the stripped string
+     */
     private String removeLastChar(String string) {
         return removeLastChar(string, 0);
     }
 
+    /**
+     * Creates a list of {@link BaseComponent} from a string.
+     * @param string an input string
+     * @return the requested list of components
+     */
     List<BaseComponent> compList(String string) {
         return Arrays.asList(TextComponent.fromLegacyText(string));
     }
@@ -345,7 +365,7 @@ public abstract class BeansLib extends TextKeys {
             return Lists.newArrayList(comp).toArray(new BaseComponent[0]);
         }
 
-        String legacyJson = "(?i)(hover|run|suggest|url)=\\[(.[^|]+)]";
+        String legacyJson = "(?i)(hover|run|suggest|url)=\\[(.[^|\\[\\]]*)]";
         Matcher old = Pattern.compile(legacyJson).matcher(string);
 
         while (old.find()) {

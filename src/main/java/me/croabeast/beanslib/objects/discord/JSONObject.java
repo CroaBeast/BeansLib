@@ -9,7 +9,7 @@ import java.util.Set;
  * The object that handles JSON messages.
  * Only accessible inside the package.
  * @author Kihsomray
- * @forkBy CroaBeast
+ * @fork CroaBeast
  * @since 1.1
  */
 class JSONObject {
