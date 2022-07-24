@@ -6,6 +6,7 @@ import me.clip.placeholderapi.PlaceholderAPI;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.terminals.ActionBar;
 import me.croabeast.beanslib.terminals.TitleMngr;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -70,13 +71,18 @@ public class TextUtils {
      * @param values the array of values
      * @return the parsed string with the respective values
      */
+    @NotNull
     public static String replaceInsensitiveEach(String string, String[] keys, String[] values) {
+        if (StringUtils.isBlank(string)) return "";
+
         if (keys == null || values == null) return string;
         if (keys.length > values.length) return string;
 
         for (int i = 0; i < keys.length; i++) {
             if (keys[i] == null | values[i] == null) continue;
+
             String newKey = Pattern.quote(keys[i]);
+            if (StringUtils.isBlank(newKey)) continue;
 
             Matcher matcher = Pattern.compile("(?i)" + newKey).matcher(string);
             if (!matcher.find()) continue;

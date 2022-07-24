@@ -54,7 +54,7 @@ public abstract class BeansLib extends TextKeys {
         String sp = lineSeparator();
 
         for (String line : lines) {
-            if (StringUtils.isBlank(line)) continue;
+            if (line == null) continue;
             line = centeredText(null, stripPrefix(line));
             list.add(line.replace(sp, "&f" + sp));
         }
@@ -502,7 +502,7 @@ public abstract class BeansLib extends TextKeys {
         if (list.isEmpty()) return;
 
         for (String line : list) {
-            if (line == null || line.equals("")) continue;
+            if (StringUtils.isBlank(line)) continue;
 
             line = line.replace(langPrefixKey(), langPrefix());
             line = TextUtils.replaceInsensitiveEach(line, keys, values);
@@ -511,7 +511,9 @@ public abstract class BeansLib extends TextKeys {
                 Player player = (Player) sender;
                 String[] k = {playerKey(), worldKey()},
                         v = {player.getName(), player.getWorld().getName()};
-                sendMessage(null, player, TextUtils.replaceInsensitiveEach(line, k, v));
+
+                sendMessage(null, player,
+                        TextUtils.replaceInsensitiveEach(line, k, v));
             }
             else rawLog(centeredText(null, line));
         }
