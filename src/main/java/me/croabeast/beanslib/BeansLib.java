@@ -1,31 +1,27 @@
 package me.croabeast.beanslib;
 
-import com.google.common.collect.Lists;
-import me.clip.placeholderapi.PlaceholderAPI;
-import me.croabeast.beanslib.utilities.TextKeys;
+import com.google.common.collect.*;
+import me.clip.placeholderapi.*;
+import me.croabeast.beanslib.utilities.*;
 import me.croabeast.iridiumapi.IridiumAPI;
 import me.croabeast.beanslib.objects.*;
 import me.croabeast.beanslib.utilities.*;
 import me.croabeast.beanslib.utilities.chars.*;
 import net.md_5.bungee.api.chat.*;
 import org.apache.commons.lang.*;
-import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.bukkit.*;
+import org.bukkit.command.*;
+import org.bukkit.configuration.*;
+import org.bukkit.entity.*;
+import org.bukkit.plugin.java.*;
+import org.jetbrains.annotations.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
+import java.util.regex.*;
+import java.util.stream.*;
 
-import static me.croabeast.iridiumapi.IridiumAPI.process;
-import static me.croabeast.iridiumapi.IridiumAPI.stripAll;
+import static me.croabeast.beanslib.utilities.TextUtils.*;
+import static me.croabeast.iridiumapi.IridiumAPI.*;
 import static net.md_5.bungee.api.chat.ClickEvent.Action.*;
 
 /**
@@ -160,7 +156,7 @@ public abstract class BeansLib extends TextKeys {
      */
     public String colorize(Player target, Player parser, String string) {
         if (target == null) target = parser;
-        return IridiumAPI.process(target, TextUtils.parsePAPI(parser, parseChars(string)));
+        return IridiumAPI.process(target, parsePAPI(parser, parseChars(string)));
     }
 
     /**
@@ -185,7 +181,7 @@ public abstract class BeansLib extends TextKeys {
      * @return the centered chat message.
      */
     public String centerMessage(Player target, Player parser, String string) {
-        String initial = colorize(target, parser, TextUtils.stripJson(string));
+        String initial = colorize(target, parser, stripJson(string));
 
         int messagePxSize = 0;
         boolean previousCode = false;
@@ -350,11 +346,11 @@ public abstract class BeansLib extends TextKeys {
      * @return the converted json object
      */
     public BaseComponent[] stringToJson(Player target, Player parser, String string, String click, List<String> hover) {
-        string = TextUtils.parseInteractiveChat(parser, string);
+        string = parseInteractiveChat(parser, string);
         string = centeredText(target, parser, string);
 
         if (!hover.isEmpty() || click != null) {
-            final TextComponent comp = toComponent(TextUtils.stripJson(string));
+            final TextComponent comp = toComponent(stripJson(string));
             if (!hover.isEmpty()) addHover(parser, comp, hover);
 
             if (click != null) {
@@ -402,7 +398,14 @@ public abstract class BeansLib extends TextKeys {
     }
 
     /**
-     * See {@link #stringToJson(Player, Player, String, String, List)} for more info.
+     * Converts a line to a {@link BaseComponent} array and use it to send a json message.
+     * Uses an input string to apply a click event and a string list to apply a hover event.
+     * <p> Keep in mind that the click string has this format:
+     * <pre> {@code Available Actions: RUN, SUGGEST, URL
+     * "<ACTION>:<the click string>" -> "RUN:/me click to run"}</pre>
+     * Send this {@link BaseComponent} array using:
+     *     <pre>{@code player.spigot().sendMessage(stringToJson(...))}</pre>
+     *
      * @param parser a player
      * @param string the input string
      * @param click the click string
@@ -448,8 +451,9 @@ public abstract class BeansLib extends TextKeys {
 
         if (matcher.find()) {
             String prefix = removeLastChar(matcher.group(1), 1);
-
             String line = removeSpace(string.substring(prefix.length() + 2));
+
+            if (StringUtils.isBlank(line)) line = "&7 ";
             line = colorize(target, parser, line);
 
             if (prefix.matches("(?i)" + titleKey())) {
@@ -465,7 +469,7 @@ public abstract class BeansLib extends TextKeys {
                     if (t != null) time = Integer.parseInt(t) * 20;
                 } catch (Exception ignored) {}
 
-                TextUtils.sendTitle(target, line.split(lineSeparator()),
+                sendTitle(target, line.split(lineSeparator()),
                         defaultTitleTicks()[0], time, defaultTitleTicks()[2]);
             }
             else if (prefix.matches("(?i)" + jsonKey())) {
@@ -475,7 +479,7 @@ public abstract class BeansLib extends TextKeys {
             else if (prefix.matches("(?i)" + bossbarKey()))
                 new Bossbar(getPlugin(), target, string).display();
             else if (prefix.matches("(?i)" + actionBarKey()))
-                TextUtils.sendActionBar(target, line);
+                sendActionBar(target, line);
             else target.spigot().sendMessage(stringToJson(parser, line));
         }
         else target.spigot().sendMessage(stringToJson(parser, string));
@@ -499,28 +503,28 @@ public abstract class BeansLib extends TextKeys {
      * @param values a values array
      */
     public void sendMessageList(CommandSender sender, List<String> list, String[] keys, String[] values) {
+        list = list.stream().filter(Objects::nonNull).collect(Collectors.toList());
         if (list.isEmpty()) return;
 
         for (String line : list) {
-            if (StringUtils.isBlank(line)) continue;
-
             line = line.replace(langPrefixKey(), langPrefix());
-            line = TextUtils.replaceInsensitiveEach(line, keys, values);
+            line = replaceInsensitiveEach(line, keys, values);
 
             if (sender != null && !(sender instanceof ConsoleCommandSender)) {
                 Player player = (Player) sender;
                 String[] k = {playerKey(), worldKey()},
                         v = {player.getName(), player.getWorld().getName()};
 
-                sendMessage(null, player,
-                        TextUtils.replaceInsensitiveEach(line, k, v));
+                sendMessage(player,
+                        replaceInsensitiveEach(line, k, v));
             }
             else rawLog(centeredText(null, line));
         }
     }
 
     /**
-     * See {@link #sendMessageList(CommandSender, List, String[], String[])} to more info.
+     * Sends a message list using {@link #sendMessage(Player, Player, String)}.
+     * Parse keys and values using {@link TextUtils#replaceInsensitiveEach(String, String[], String[])}
      * @param sender a player to format and send the message
      * @param section the config file or section
      * @param path the path of the string or string list
@@ -528,11 +532,12 @@ public abstract class BeansLib extends TextKeys {
      * @param values a values array
      */
     public void sendMessageList(CommandSender sender, ConfigurationSection section, String path, String[] keys, String[] values) {
-        sendMessageList(sender, TextUtils.toList(section, path), keys, values);
+        sendMessageList(sender, toList(section, path), keys, values);
     }
 
     /**
-     * See {@link #sendMessageList(CommandSender, List, String[], String[])} to more info.
+     * Sends a message list using {@link #sendMessage(Player, Player, String)}.
+     * Parse keys and values using {@link TextUtils#replaceInsensitiveEach(String, String[], String[])}
      * @param sender a player to format and send the message
      * @param list the message list
      */
@@ -541,12 +546,13 @@ public abstract class BeansLib extends TextKeys {
     }
 
     /**
-     * See {@link #sendMessageList(CommandSender, List, String[], String[])} to more info.
+     * Sends a message list using {@link #sendMessage(Player, Player, String)}.
+     * Parse keys and values using {@link TextUtils#replaceInsensitiveEach(String, String[], String[])}
      * @param sender a player to format and send the message
      * @param section the config file or section
      * @param path the path of the string or string list
      */
     public void sendMessageList(CommandSender sender, ConfigurationSection section, String path) {
-        sendMessageList(sender, TextUtils.toList(section, path));
+        sendMessageList(sender, toList(section, path));
     }
 }
