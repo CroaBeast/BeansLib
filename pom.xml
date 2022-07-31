@@ -6,7 +6,7 @@
 
     <groupId>io.github.croabeast</groupId>
     <artifactId>BeansLib</artifactId>
-    <version>1.2.5</version>
+    <version>1.2.7</version>
     <packaging>jar</packaging>
 
     <name>BeansLib</name>

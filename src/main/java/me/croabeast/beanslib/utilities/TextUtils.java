@@ -6,6 +6,7 @@ import me.clip.placeholderapi.PlaceholderAPI;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.terminals.ActionBar;
 import me.croabeast.beanslib.terminals.TitleMngr;
+import me.croabeast.iridiumapi.IridiumAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -43,9 +44,22 @@ public class TextUtils {
      * @param message the input line
      * @return the parsed message
      */
-    public static String parsePAPI(@Nullable Player player, String message) {
+    public static String parsePAPI(Player player, String message) {
         return Exceptions.isPluginEnabled("PlaceholderAPI") ?
                 PlaceholderAPI.setPlaceholders(player, message) : message;
+    }
+
+    /**
+     * Formats an input string parsing first {@link PlaceholderAPI}
+     * placeholders and then applying the respective colors.
+     * @param target a target to parse colors depending on its client, can be null
+     * @param parser a player, can be null
+     * @param string the input message
+     * @return the formatted message
+     */
+    public static String colorize(Player target, Player parser, String string) {
+        if (target == null) target = parser;
+        return IridiumAPI.process(target, parsePAPI(parser, string));
     }
 
     /**
@@ -73,7 +87,7 @@ public class TextUtils {
      */
     @NotNull
     public static String replaceInsensitiveEach(String string, String[] keys, String[] values) {
-        if (StringUtils.isBlank(string)) return "";
+        if (StringUtils.isBlank(string)) return string;
 
         if (keys == null || values == null) return string;
         if (keys.length > values.length) return string;
@@ -118,20 +132,39 @@ public class TextUtils {
     }
 
     /**
+     * Converts the old JSON format to the new one.
+     * @param string an input string
+     * @return the converted string
+     */
+    public static String convertOldJson(String string) {
+        String s = "(?i)(hover|run|suggest|url)=\\[(.[^|\\[\\]]*)]";
+        Matcher old = Pattern.compile(s).matcher(string);
+
+        while (old.find()) {
+            String temp = old.group(1) + ":\"" + old.group(2) + "\"";
+            string = string.replace(old.group(), temp);
+        }
+        return string;
+    }
+
+    /**
      * Check if the line has a valid json format. Usage:
      * <pre> if (IS_JSON.apply(stringInput)) doSomethingIdk();</pre>
      */
-    public static final Function<String, Boolean> IS_JSON = s -> TextKeys.JSON_PATTERN.matcher(s).find();
+    public static final Function<String, Boolean> IS_JSON =
+            s -> TextKeys.JSON_PATTERN.matcher(convertOldJson(s)).find();
 
     /**
      * Strips the JSON format from a line.
-     * @param line the line to strip.
+     * @param string an input string.
      * @return the stripped line.
      */
-    public static String stripJson(String line) {
-        if (!IS_JSON.apply(line)) return line;
-        Matcher m = TextKeys.JSON_PATTERN.matcher(line);
-        return m.find() ? m.group(7) : line;
+    public static String stripJson(String string) {
+        string = convertOldJson(string);
+        if (!IS_JSON.apply(string)) return string;
+
+        Matcher matcher = TextKeys.JSON_PATTERN.matcher(string);
+        return matcher.find() ? matcher.group(7) : string;
     }
 
     /**

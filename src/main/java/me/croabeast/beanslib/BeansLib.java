@@ -144,7 +144,7 @@ public abstract class BeansLib extends TextKeys {
     }
 
     /**
-     * Parses the requested message using:
+     * Parses the requested message using this sequence:
      * <blockquote><pre>
      * 1. First, parses characters using {@link #parseChars(String)}
      * 2. Then, parses {@link PlaceholderAPI} placeholders using {@link TextUtils#parsePAPI(Player, String)}
@@ -155,8 +155,7 @@ public abstract class BeansLib extends TextKeys {
      * @return the formatted message
      */
     public String colorize(Player target, Player parser, String string) {
-        if (target == null) target = parser;
-        return IridiumAPI.process(target, parsePAPI(parser, parseChars(string)));
+        return TextUtils.colorize(target, parser, parseChars(string));
     }
 
     /**
@@ -361,13 +360,7 @@ public abstract class BeansLib extends TextKeys {
             return Lists.newArrayList(comp).toArray(new BaseComponent[0]);
         }
 
-        String legacyJson = "(?i)(hover|run|suggest|url)=\\[(.[^|\\[\\]]*)]";
-        Matcher old = Pattern.compile(legacyJson).matcher(string);
-
-        while (old.find()) {
-            String temp = old.group(1) + ":\"" + old.group(2) + "\"";
-            string = string.replace(old.group(), temp);
-        }
+        string = convertOldJson(string);
 
         Matcher match = JSON_PATTERN.matcher(string);
         int lastEnd = 0;
@@ -453,7 +446,6 @@ public abstract class BeansLib extends TextKeys {
             String prefix = removeLastChar(matcher.group(1), 1);
             String line = removeSpace(string.substring(prefix.length() + 2));
 
-            if (StringUtils.isBlank(line)) line = "&7 ";
             line = colorize(target, parser, line);
 
             if (prefix.matches("(?i)" + titleKey())) {
@@ -512,11 +504,11 @@ public abstract class BeansLib extends TextKeys {
 
             if (sender != null && !(sender instanceof ConsoleCommandSender)) {
                 Player player = (Player) sender;
+
                 String[] k = {playerKey(), worldKey()},
                         v = {player.getName(), player.getWorld().getName()};
 
-                sendMessage(player,
-                        replaceInsensitiveEach(line, k, v));
+                sendMessage(player, replaceInsensitiveEach(line, k, v));
             }
             else rawLog(centeredText(null, line));
         }
