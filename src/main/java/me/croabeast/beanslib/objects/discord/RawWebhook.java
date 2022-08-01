@@ -15,13 +15,12 @@ import java.util.List;
 
 /**
  * The object that handles the webhook items to display.
- * Only accessible inside the package.
  * @author Kihsomray
  * @fork CroaBeast
  * @since 1.1
  */
 @Getter
-class RawWebhook {
+public class RawWebhook {
 
     /**
      * List of embed objects to display.

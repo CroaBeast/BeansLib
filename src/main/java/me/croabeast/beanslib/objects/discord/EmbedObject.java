@@ -2,7 +2,6 @@ package me.croabeast.beanslib.objects.discord;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -11,13 +10,12 @@ import java.util.List;
 
 /**
  * An object that represents embed messages.
- * Only accessible inside the package.
  * @author Kihsomray
  * @fork CroaBeast
  * @since 1.1
  */
 @Getter
-class EmbedObject {
+public class EmbedObject {
 
     /**
      * The stored fields of the embed message.
@@ -147,7 +145,16 @@ class EmbedObject {
      * @return the object instance
      */
     public EmbedObject setColor(String color) {
-        Color c = DefaultColor.to(color);
+        Color c = null;
+        try {
+            try {
+                c = Color.decode(color);
+            } catch (Exception e) {
+                Class<?> clazz = Class.forName("java.awt.Color");
+                c = ((Color) clazz.getField(color).get(null));
+            }
+        } catch (Exception ignored) {}
+
         this.color = c != null ? c : Color.getColor(color);
         return this;
     }
@@ -194,44 +201,5 @@ class EmbedObject {
         private final String name;
         private final String url;
         private final String iconUrl;
-    }
-
-    /**
-     * An enum to get the default color variables.
-     */
-    enum DefaultColor {
-        WHITE(Color.WHITE),
-        LIGHT_GRAY(Color.LIGHT_GRAY),
-        GRAY(Color.GRAY),
-        DARK_GRAY(Color.DARK_GRAY),
-        BLACk(Color.BLACK),
-        RED(Color.RED),
-        PINK(Color.PINK),
-        ORANGE(Color.ORANGE),
-        YELLOW(Color.YELLOW),
-        GREEN(Color.GREEN),
-        MAGENTA(Color.MAGENTA),
-        CYAN(Color.CYAN),
-        BLUE(Color.BLUE);
-
-        private final Color color;
-
-        DefaultColor(Color color) {
-            this.color = color;
-        }
-
-        /**
-         * Gets the default by its name.
-         * @param name a string
-         * @return the color, can be null
-         */
-        static Color to(String name) {
-            if (StringUtils.isBlank(name)) return null;
-            for (DefaultColor d : values()) {
-                if (!name.matches("(?i)" + d)) continue;
-                return d.color;
-            }
-            return null;
-        }
     }
 }

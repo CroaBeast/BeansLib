@@ -108,10 +108,16 @@ public class Webhook {
                     setColor(em.getString("color"));
 
             em = em.getConfigurationSection("fields");
-            if (em == null) continue;
+            if (em == null) {
+                hook.addEmbed(embed);
+                continue;
+            }
 
             List<String> fields = new ArrayList<>(em.getKeys(false));
-            if (fields.isEmpty()) continue;
+            if (fields.isEmpty()) {
+                hook.addEmbed(embed);
+                continue;
+            }
 
             for (String f : fields) {
                 ConfigurationSection fl = em.getConfigurationSection(f);
