@@ -1,6 +1,7 @@
-package me.croabeast.beanslib.objects;
+package me.croabeast.beanslib.object;
 
-import me.croabeast.beanslib.utilities.Exceptions;
+import lombok.Getter;
+import me.croabeast.beanslib.utility.Exceptions;
 import me.croabeast.iridiumapi.IridiumAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
@@ -16,7 +17,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static me.croabeast.beanslib.utilities.TextUtils.*;
+import static me.croabeast.beanslib.utility.TextUtils.*;
 
 /**
  * The object to handle Bossbar messages.
@@ -31,7 +32,12 @@ public class Bossbar {
     private final Player player;
     private String line;
 
+    @Getter @Nullable
+    /*
+     * The bukkit bossbar object, can be null.
+     */
     private BossBar bar = null;
+
     private BarColor color = null;
     private BarStyle style = null;
     private Integer time = null;
@@ -45,7 +51,7 @@ public class Bossbar {
     /**
      * The map to get all the players that have a bossbar message displayed.
      */
-    private static final Map<Player, BossBar> BOSSBAR_MAP = new HashMap<>();
+    private static final Map<Player, Bossbar> BOSSBAR_MAP = new HashMap<>();
 
     /**
      * Bossbar message constructor if using the PATTERN
@@ -71,11 +77,11 @@ public class Bossbar {
      * @param line the message that will be displayed
      * @param color the color of the bossbar
      * @param style the style of the bossbar
-     * @param seconds the seconds that the bossbar will be visible
-     * @param progress if the bossbar will decrease overtime
+     * @param s the seconds that the bossbar will be visible
+     * @param p if the bossbar will decrease overtime
      * @throws NullPointerException if player is null
      */
-    public Bossbar(JavaPlugin plugin, Player player, String line, String color, String style, int seconds, boolean progress) {
+    public Bossbar(JavaPlugin plugin, Player player, String line, String color, String style, int s, boolean p) {
         this.plugin = plugin;
         this.player = Exceptions.checkPlayer(player);
         this.line = line == null ? "" : line;
@@ -83,8 +89,8 @@ public class Bossbar {
         this.color = ifValidColor(color) ? BarColor.valueOf(color) : BarColor.WHITE;
         this.style = ifValidStyle(style) ? BarStyle.valueOf(style) : BarStyle.SOLID;
 
-        if (seconds > 0) this.time = seconds * 20;
-        this.progress = progress;
+        if (s > 0) this.time = s * 20;
+        this.progress = p;
 
         setDefaultsIfValuesNull();
     }
@@ -175,15 +181,19 @@ public class Bossbar {
      * Unregisters the bossbar from the player.
      */
     public void unregister() {
+        if (bar == null) return;
+
         bar.removePlayer(player);
-        BOSSBAR_MAP.remove(player);
         bar = null;
+        BOSSBAR_MAP.remove(player);
     }
 
     /**
      * Animates the bossbar when the progress is enabled.
      */
     public void animate() {
+        if (bar == null) return;
+
         double time = 1.0D / this.time;
         double[] percentage = {1.0D};
 
@@ -211,27 +221,19 @@ public class Bossbar {
 
         bar.addPlayer(player);
         bar.setVisible(true);
-        BOSSBAR_MAP.put(player, bar);
+        BOSSBAR_MAP.put(player, this);
 
         if (progress && time > 0) animate();
         else Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, this::unregister, time);
     }
 
     /**
-     * Gets the bukkit bossbar object from the bossbar map.
+     * Gets the BeansLib bossbar object from the bossbar map.
      * @param player the player that has the bossbar.
      * @return the bossbar, if the player exists or has a bossbar displayed; null otherwise
      */
     @Nullable
-    public static BossBar getBossbar(Player player) {
+    public static Bossbar getBossbar(Player player) {
         return player == null ? null : BOSSBAR_MAP.getOrDefault(player, null);
-    }
-
-    /**
-     * Gets the bossbar map stored in cache.
-     * @return the bossbar map
-     */
-    public static Map<Player, BossBar> getBossbarMap() {
-        return BOSSBAR_MAP;
     }
 }

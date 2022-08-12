@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.objects.discord;
+package me.croabeast.beanslib.object.discord;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,17 +14,18 @@ import java.util.List;
  * @fork CroaBeast
  * @since 1.1
  */
-@Getter
 public class EmbedObject {
 
     /**
      * The stored fields of the embed message.
      */
+    @Getter
     private final List<Field> fields = new ArrayList<>();
 
     private final String token;
     private final String message;
 
+    @Getter
     private String
             title, description, url,
             image, thumbnail,
@@ -33,14 +34,17 @@ public class EmbedObject {
     /**
      * The color of the embed message.
      */
+    @Getter
     private Color color;
     /**
      * The author of the embed message.
      */
+    @Getter
     private Author author;
 
     /**
      * Constructs an object with a message token and a message.
+     * @param token a token
      * @param message a message
      */
     public EmbedObject(String token, String message) {
@@ -80,7 +84,7 @@ public class EmbedObject {
     /**
      * Set the title for the embed object.
      * @param text a text
-     * @return the object instance
+     * @return a reference of this object
      */
     public EmbedObject setTitle(String text) {
         title = replace(text);
@@ -90,7 +94,7 @@ public class EmbedObject {
     /**
      * Set the description for the embed object.
      * @param text a text
-     * @return the object instance
+     * @return a reference of this object
      */
     public EmbedObject setDescription(String text) {
         description = replace(text);
@@ -100,7 +104,7 @@ public class EmbedObject {
     /**
      * Set the URL for the embed object.
      * @param text a text
-     * @return the object instance
+     * @return a reference of this object
      */
     public EmbedObject setUrl(String text) {
         url = replace(text);
@@ -110,7 +114,7 @@ public class EmbedObject {
     /**
      * Set the thumbnail for the embed object.
      * @param url an url
-     * @return the object instance
+     * @return a reference of this object
      */
     public EmbedObject setThumbnail(String url) {
         thumbnail = replace(url);
@@ -120,7 +124,7 @@ public class EmbedObject {
     /**
      * Set the image URL for the embed object.
      * @param url an url
-     * @return the object instance
+     * @return a reference of this object
      */
     public EmbedObject setImage(String url) {
         image = replace(url);
@@ -131,7 +135,7 @@ public class EmbedObject {
      * Set the footer for the embed object.
      * @param text a text
      * @param icon an icon url
-     * @return the object instance
+     * @return a reference of this object
      */
     public EmbedObject setFooter(String text, String icon) {
         footerText = replace(text);
@@ -142,7 +146,7 @@ public class EmbedObject {
     /**
      * Set the color for the embed object.
      * @param color a color
-     * @return the object instance
+     * @return a reference of this object
      */
     public EmbedObject setColor(String color) {
         Color c = null;
@@ -164,7 +168,7 @@ public class EmbedObject {
      * @param name a text
      * @param url an url
      * @param icon an url icon
-     * @return the object instance
+     * @return a reference of this object
      */
     public EmbedObject setAuthor(String name, String url, String icon) {
         this.author = new Author(replace(name), replace(url), replace(icon));

@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.objects.discord;
+package me.croabeast.beanslib.object.discord;
 
 import java.lang.reflect.Array;
 import java.util.HashMap;
@@ -23,7 +23,7 @@ class JSONObject {
      * Adds an object in the {@link #map} of the object.
      * @param key a key for the object
      * @param value the object
-     * @return the JSON object instance
+     * @return a reference of this object
      */
     JSONObject put(String key, Object value) {
         if (value != null) map.put(key, value);

@@ -1,7 +1,8 @@
-package me.croabeast.beanslib.utilities;
+package me.croabeast.beanslib.utility;
 
 import me.croabeast.beanslib.BeansLib;
-import me.croabeast.beanslib.objects.Bossbar;
+import me.croabeast.beanslib.object.Bossbar;
+import net.md_5.bungee.api.chat.ClickEvent;
 import org.apache.commons.lang.SystemUtils;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
@@ -20,14 +21,26 @@ public abstract class TextKeys {
      * A prefix used in the main pattern to identify the event.
      * This can't be overridden.
      */
-    protected static final String JSON_PREFIX = "(.[^|]+):\"(.[^|]+)\"";
+    protected static final String JSON_PREFIX = "(.[^|]*?):\"(.[^|]*?)\"";
 
     /**
-     * The main pattern to identify the JSON message.
-     * This can't be overridden.
+     * The main pattern to identify the JSON message in a string.
+     * <strong>This can't be overridden.</strong>
+     * <p> Keep in mind that every string can only have one {@link ClickEvent.Action};
+     * a click action has this format:
+     * <pre> {@code
+     * Available Actions: RUN, SUGGEST, URL and all ClickAction values.
+     * "<ACTION>:<the click string>" -> "RUN:/me click to run"
+     * }</pre>
+     * <p> Examples:
+     * <pre> {@code
+     * String hover = "<hover:\"a hover line\">text to apply</text>";
+     * String click = "<run:\"/click me\">text to apply</text>";
+     * String mixed = "<hover:\"a hover line<n>another line\"|run:\"/command\">text to apply</text>";
+     * }</pre>
      */
     public static final Pattern JSON_PATTERN =
-            Pattern.compile("(?i)<(" + JSON_PREFIX + "([|]" + JSON_PREFIX + ")?)>(.+)</text>");
+            Pattern.compile("(?i)<(" + JSON_PREFIX + "([|]" + JSON_PREFIX + ")?)>(.+?)</text>");
 
     /**
      * Gets the server's version. Example: 1.8.8, 1.16.5
@@ -63,18 +76,10 @@ public abstract class TextKeys {
     }
 
     /**
-     * The key that need to be replaced by the main plugin prefix: {@link #langPrefix()}.
-     * It's recommended to use a string from a .yml of your plugin.
-     * <pre>Example: {@code JavaPlugin.getConfig().getString("path here")}</pre>
-     * @return the prefix key
-     */
-    @NotNull
-    public abstract String langPrefixKey();
-
-    /**
      * The prefix of the plugin that will replace the prefix key: {@link #langPrefixKey()}.
      * It's recommended to use a string from a .yml of your plugin.
-     * <pre>Example: {@code JavaPlugin.getConfig().getString("path here")}</pre>
+     * <p> Example:
+     * <pre> {@code return JavaPlugin.getConfig().getString("path here")}</pre>
      * @return plugin prefix
      */
     @NotNull
@@ -83,7 +88,8 @@ public abstract class TextKeys {
     /**
      * It will fix an RGB issue is some servers that RGB not working correctly.
      * It's recommended to use a boolean from a .yml of your plugin.
-     * <pre>Example:{@code JavaPlugin.getConfig().getBoolean("path here")}</pre>
+     * <p> Example:
+     * <pre> {@code return JavaPlugin.getConfig().getBoolean("path here")}</pre>
      * @return if this fix is enabled
      */
     public abstract boolean fixColorLogger();
@@ -91,7 +97,8 @@ public abstract class TextKeys {
     /**
      * If you want to remove spaces at the start of a message.
      * It's recommended to use a boolean from a .yml of your plugin.
-     * <pre>Example:{@code JavaPlugin.getConfig().getBoolean("path here")}</pre>
+     * <p> Example:
+     * <pre> {@code return JavaPlugin.getConfig().getBoolean("path here");}</pre>
      * @return if hard spacing is enabled
      */
     public abstract boolean isHardSpacing();
@@ -105,12 +112,12 @@ public abstract class TextKeys {
     public abstract boolean isStripPrefix();
 
     /**
-     * The size of the chat box of the player's client for centered chat messages.
-     * <p> This can be overridden, if you want to set a custom value.
-     * @return chat box's size
+     * A key that will be replaced by the main plugin prefix: {@link #langPrefix()}.
+     * @return the prefix key
      */
-    public int chatBoxSize() {
-        return 154;
+    @NotNull
+    public String langPrefixKey() {
+        return "<P>";
     }
 
     /**

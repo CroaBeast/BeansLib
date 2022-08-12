@@ -1,4 +1,4 @@
-package me.croabeast.iridiumapi.patterns;
+package me.croabeast.iridiumapi.pattern;
 
 import me.croabeast.iridiumapi.*;
 
@@ -14,7 +14,7 @@ public final class Rainbow extends BasePattern {
 
     @Override
     public String process(String string, boolean useRGB) {
-        Matcher matcher = rainbowPattern().matcher(string);
+        Matcher matcher = BasePattern.RAINBOW_PATTERN.matcher(string);
         while (matcher.find()) {
             String saturation = matcher.group(1), content = matcher.group(2);
             string = string.replace(matcher.group(),

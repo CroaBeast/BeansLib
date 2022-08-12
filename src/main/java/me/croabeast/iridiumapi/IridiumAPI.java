@@ -1,9 +1,9 @@
 package me.croabeast.iridiumapi;
 
 import com.google.common.collect.ImmutableMap;
-import me.croabeast.iridiumapi.patterns.*;
+import me.croabeast.iridiumapi.pattern.*;
 import me.croabeast.beanslib.*;
-import me.croabeast.beanslib.objects.*;
+import me.croabeast.beanslib.object.*;
 import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
@@ -28,14 +28,6 @@ public final class IridiumAPI {
      * Checks if the server can use RGB colors.
      */
     private static final boolean SUPPORTS_RGB = BeansLib.majorVersion() > 15;
-
-    /**
-     * Color regex strings to check.
-     */
-    private static final String
-            BUKKIT_REGEX = "[&§][a-f\\dk-or]", GRADIENT_REGEX = "</?[gr](:\\d{1,3})?>",
-            RGB_REGEX = "\\{#[\\dA-F]{6}}|<#[\\dA-F]{6}>|&#[\\dA-F]{6}|#[\\dA-F]{6}",
-            COLOR_REGEX = "(?i)" + BUKKIT_REGEX + "|" + GRADIENT_REGEX + "|" + RGB_REGEX;
 
     /**
      * A map that handles all the Bukkit colors by its hex value.
@@ -109,7 +101,7 @@ public final class IridiumAPI {
     /**
      * Applies a single color to a string.
      *
-     * @param color  the requested color to apply
+     * @param color the requested color to apply
      * @param string an input string
      * @return the colored string
      */
@@ -122,8 +114,8 @@ public final class IridiumAPI {
      * Applies a gradient color to an input string.
      *
      * @param string an input string
-     * @param start  the start color
-     * @param end    the end color
+     * @param start the start color
+     * @param end the end color
      * @param useRGB if false, it will convert all RGB to its closest bukkit color
      * @return the string with the applied gradient
      */
@@ -136,9 +128,9 @@ public final class IridiumAPI {
     /**
      * Applies a rainbow gradient with a specific saturation to an input string.
      *
-     * @param string     an input string
+     * @param string an input string
      * @param saturation the saturation for the rainbow gradient
-     * @param useRGB     if false, it will convert all RGB to its closest bukkit color
+     * @param useRGB if false, it will convert all RGB to its closest bukkit color
      * @return the string with the applied rainbow gradient
      */
     @NotNull
@@ -190,7 +182,20 @@ public final class IridiumAPI {
      */
     @NotNull
     public static String stripRGB(@NotNull String string) {
-        return string.replaceAll("(?i)" + RGB_REGEX + "|" + GRADIENT_REGEX, "");
+        string = Gradient.convertLegacy(string);
+
+        Matcher gradient = Gradient.GRADIENT_PATTERN.matcher(string);
+        while (gradient.find())
+            string = string.replace(gradient.group(), gradient.group(2));
+
+        Matcher rgb = BasePattern.SOLID_PATTERN.matcher(string);
+        while (rgb.find()) string = string.replace(rgb.group(), "");
+
+        Matcher rainbow = BasePattern.RAINBOW_PATTERN.matcher(string);
+        while (rainbow.find())
+            string = string.replace(rainbow.group(), rainbow.group(2));
+
+        return string;
     }
 
     /**
@@ -201,7 +206,7 @@ public final class IridiumAPI {
      */
     @NotNull
     public static String stripAll(@NotNull String string) {
-        return string.replaceAll(COLOR_REGEX, "");
+        return stripRGB(stripSpecial(stripBukkit(string)));
     }
 
     /**
@@ -229,7 +234,7 @@ public final class IridiumAPI {
         if (hasKey) key = Pattern.quote(key);
 
         String special = getSpecial ? "([&§][k-or])*" : "",
-                regex = "(?i)(([&§][a-f\\d]|" + RGB_REGEX + ")" + special + ")",
+                regex = "(?i)(([&§][a-f\\d]|[{&<]?#([\\da-f]{6})[}>]?)" + special + ")",
                 input = hasKey ? string.split(regex + "?" + key)[0] : string;
 
         Matcher match = Pattern.compile(regex).matcher(input);

@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.utilities.chars;
+package me.croabeast.beanslib.utility.chars;
 
 /**
  * The class to store a character's information.

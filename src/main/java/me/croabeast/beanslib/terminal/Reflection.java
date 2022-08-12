@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.terminals;
+package me.croabeast.beanslib.terminal;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;

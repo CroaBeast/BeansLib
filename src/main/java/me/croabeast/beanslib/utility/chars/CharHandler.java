@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.utilities.chars;
+package me.croabeast.beanslib.utility.chars;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

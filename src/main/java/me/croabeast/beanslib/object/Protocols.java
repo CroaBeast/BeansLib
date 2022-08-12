@@ -1,15 +1,11 @@
-package me.croabeast.beanslib.objects;
+package me.croabeast.beanslib.object;
 
 import com.viaversion.viaversion.api.*;
-import me.croabeast.beanslib.utilities.Exceptions;
-import org.bukkit.Bukkit;
+import me.croabeast.beanslib.utility.*;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * The enum class for checking the client's protocol version.

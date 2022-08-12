@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.utilities;
+package me.croabeast.beanslib.utility;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;

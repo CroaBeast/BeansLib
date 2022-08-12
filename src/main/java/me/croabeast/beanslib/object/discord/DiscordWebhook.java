@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.objects.discord;
+package me.croabeast.beanslib.object.discord;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;

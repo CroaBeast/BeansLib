@@ -1,6 +1,6 @@
 package example;
 
-import me.croabeast.beanslib.utilities.TextUtils;
+import me.croabeast.beanslib.utility.TextUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 

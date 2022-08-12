@@ -1,4 +1,4 @@
-package me.croabeast.iridiumapi.patterns;
+package me.croabeast.iridiumapi.pattern;
 
 import me.croabeast.iridiumapi.*;
 
@@ -14,7 +14,7 @@ public final class SolidColor extends BasePattern {
 
     @Override
     public String process(String string, boolean useRGB) {
-        Matcher matcher = solidPattern().matcher(string);
+        Matcher matcher = BasePattern.SOLID_PATTERN.matcher(string);
         while (matcher.find()) {
             string = string.replace(matcher.group(),
                     IridiumAPI.getColor(matcher.group(1), useRGB) + "");

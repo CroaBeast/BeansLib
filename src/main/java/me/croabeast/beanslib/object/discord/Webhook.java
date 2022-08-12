@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.objects.discord;
+package me.croabeast.beanslib.object.discord;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The class for sending discord webhooks.
+ * An object for sending discord webhooks.
  * @author Kihsomray
  * @fork CroaBeast
  * @since 1.1

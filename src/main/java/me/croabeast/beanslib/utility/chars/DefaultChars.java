@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.utilities.chars;
+package me.croabeast.beanslib.utility.chars;
 
 /**
  * The enum class to manage the length of every char.

@@ -6,7 +6,7 @@
 
     <groupId>io.github.croabeast</groupId>
     <artifactId>BeansLib</artifactId>
-    <version>1.2.7</version>
+    <version>1.3.0</version>
     <packaging>jar</packaging>
 
     <name>BeansLib</name>
@@ -118,6 +118,7 @@
                         <tag>
                             <name>fork</name>
                             <placement>a</placement>
+                            <head>Fork by:</head>
                         </tag>
                     </tags>
                 </configuration>

@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.objects.discord;
+package me.croabeast.beanslib.object.discord;
 
 import lombok.Getter;
 import org.apache.commons.lang.StringUtils;

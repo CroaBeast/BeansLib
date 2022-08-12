@@ -1,7 +1,7 @@
-package me.croabeast.beanslib.terminals;
+package me.croabeast.beanslib.terminal;
 
-import me.croabeast.beanslib.utilities.Exceptions;
-import me.croabeast.beanslib.utilities.TextKeys;
+import me.croabeast.beanslib.utility.Exceptions;
+import me.croabeast.beanslib.utility.TextKeys;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Constructor;
