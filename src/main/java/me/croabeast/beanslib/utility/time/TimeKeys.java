@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+import java.util.regex.Pattern;
+
 @Getter
 @Setter
 @Accessors(chain = true)
@@ -27,9 +29,9 @@ public class TimeKeys {
             setYearFormat("Año(s)");
 
     private String splitter = ", ";
-    private String pluralRegex = "\\s*\\([^)]*\\)\\s*";
-    private String startDelimiter = "(";
-    private String endDelimiter = ")";
+
+    private final Pattern pluralPattern = Pattern.compile("\\s*(\\()([^)(]+)(\\))\\s*");
+    private final String pluralRegex = "\\s*\\([^)]*\\)\\s*";
 
     private String secondFormat = "Second(s)";
     private String minuteFormat = "Minute(s)";

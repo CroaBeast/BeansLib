@@ -1,15 +1,15 @@
 package me.croabeast.iridiumapi;
 
 import com.google.common.collect.ImmutableMap;
+import me.croabeast.beanslib.utility.key.LibKeys;
 import me.croabeast.iridiumapi.pattern.*;
-import me.croabeast.beanslib.*;
 import me.croabeast.beanslib.object.*;
 import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -24,10 +24,12 @@ import java.util.regex.Pattern;
  */
 public final class IridiumAPI {
 
+    private IridiumAPI() {}
+
     /**
      * Checks if the server can use RGB colors.
      */
-    private static final boolean SUPPORTS_RGB = BeansLib.majorVersion() > 15;
+    private static final boolean SUPPORTS_RGB = LibKeys.majorVersion() > 15;
 
     /**
      * A map that handles all the Bukkit colors by its hex value.
@@ -61,6 +63,7 @@ public final class IridiumAPI {
      *
      * @param s an input string
      * @param useRGB if false, it will convert all RGB to its closest bukkit color
+     *
      * @return the processed string
      */
     @NotNull
@@ -72,12 +75,12 @@ public final class IridiumAPI {
     /**
      * Process a string to apply the correct colors using the RGB format.
      *
-     * @param s an input string
+     * @param string an input string
      * @return the processed string
      */
     @NotNull
-    public static String process(@NotNull String s) {
-        return process(s, SUPPORTS_RGB);
+    public static String process(@NotNull String string) {
+        return process(string, SUPPORTS_RGB);
     }
 
     /**
@@ -86,6 +89,7 @@ public final class IridiumAPI {
      *
      * @param player a player
      * @param s an input string
+     *
      * @return the processed string
      */
     @NotNull
@@ -103,6 +107,7 @@ public final class IridiumAPI {
      *
      * @param color the requested color to apply
      * @param string an input string
+     *
      * @return the colored string
      */
     @NotNull
@@ -117,6 +122,7 @@ public final class IridiumAPI {
      * @param start the start color
      * @param end the end color
      * @param useRGB if false, it will convert all RGB to its closest bukkit color
+     *
      * @return the string with the applied gradient
      */
     @NotNull
@@ -131,6 +137,7 @@ public final class IridiumAPI {
      * @param string an input string
      * @param saturation the saturation for the rainbow gradient
      * @param useRGB if false, it will convert all RGB to its closest bukkit color
+     *
      * @return the string with the applied rainbow gradient
      */
     @NotNull
@@ -144,6 +151,7 @@ public final class IridiumAPI {
      *
      * @param string an input string
      * @param useRGB if false, it will convert all RGB to its closest bukkit color
+     *
      * @return the requested chat color
      */
     @NotNull
@@ -191,9 +199,7 @@ public final class IridiumAPI {
         Matcher rgb = BasePattern.SOLID_PATTERN.matcher(string);
         while (rgb.find()) string = string.replace(rgb.group(), "");
 
-        Matcher rainbow = BasePattern.RAINBOW_PATTERN.matcher(string);
-        while (rainbow.find())
-            string = string.replace(rainbow.group(), rainbow.group(2));
+        string = string.replaceAll("(?i)(<R:\\d{1,3}>|</R>)", "");
 
         return string;
     }
@@ -211,20 +217,24 @@ public final class IridiumAPI {
 
     /**
      * Gets the last used color (bukkit or RGB) in its string format in an unformatted input string.
-     * <pre>  {@code getLastColor("&bmy name is &aJosh", null, false) = "&a";
-     * getLastColor("&b&k&lThis is cool", null, true) = "&b&k&l";
-     * getLastColor("&b&k&lThis is cool", null, false) = "&b";
-     * getLastColor("{#FFFFFF}hi, &fChris", "Chris", false) = "{#FFFFFF}";
-     * getLastColor("{#FFFFFF}hi, &fChris", "Not found", false) = "&f";}</pre>
+     * <pre> {@code
+     * getLastColor("&bmy name is &aJosh", null, false, false) = "&a";
+     * getLastColor("&b&k&lThis is cool", null, true, false) = "&b&k&l";
+     * getLastColor("&b&k&lThis is cool", null, false, false) = "&b";
+     * getLastColor("{#FFFFFF}hi, &fChris", "Chris", false, false) = "{#FFFFFF}";
+     * getLastColor("{#FFFFFF}hi, &fChris", "Chris", false, true) = "&f";
+     * }</pre>
      *
-     * @param string an input string, can not be null
-     * @param key a key to search in the string
-     * @param getSpecial if you want to get special format
-     * @throws IndexOutOfBoundsException if string is empty
+     * @param string an input string, can not be null neither empty
+     * @param key a key to search in the string, can be null
+     * @param getSpecial if it gets the special color format
+     * @param checkBefore checks a color before the key if true
+     *
      * @return the last color used, returns an empty string if not found
+     * @throws IndexOutOfBoundsException if string is empty
      */
     @NotNull
-    public static String getLastColor(String string, String key, boolean getSpecial) {
+    public static String getLastColor(String string, String key, boolean getSpecial, boolean checkBefore) {
         if (string == null || string.length() < 1)
             throw new IndexOutOfBoundsException("String can not be empty");
 
@@ -233,11 +243,13 @@ public final class IridiumAPI {
         boolean hasKey = key != null && key.length() >= 1;
         if (hasKey) key = Pattern.quote(key);
 
-        String special = getSpecial ? "([&§][k-or])*" : "",
-                regex = "(?i)(([&§][a-f\\d]|[{&<]?#([\\da-f]{6})[}>]?)" + special + ")",
-                input = hasKey ? string.split(regex + "?" + key)[0] : string;
+        String regex = "(?i)(([&§][a-f\\d]|[{&<]?#([\\da-f]{6})[}>]?)" +
+                (getSpecial ? "([&§][k-or])*" : "") + ")";
 
-        Matcher match = Pattern.compile(regex).matcher(input);
+        String[] inputs = !hasKey ? new String[] {string} :
+                string.split((checkBefore ? "" : (regex + "?")) + key);
+
+        Matcher match = Pattern.compile(regex).matcher(inputs[0]);
 
         while (match.find()) lastColor = match.group();
         return lastColor;
@@ -248,6 +260,7 @@ public final class IridiumAPI {
      *
      * @param source a string
      * @param colors the requested colors array
+     *
      * @return the formatted string
      */
     @NotNull
@@ -261,17 +274,16 @@ public final class IridiumAPI {
         int outIndex = 0;
 
         for (int i = 0; i < characters.length; i++) {
-            if (!characters[i].matches("[&§]") || i + 1 >= characters.length)
-                builder.append(colors[outIndex++])
-                        .append(specials).append(characters[i]);
-            else {
-                if (!characters[i + 1].equals("r")) {
-                    specials.append(characters[i]);
-                    specials.append(characters[i + 1]);
-                }
-                else specials.setLength(0);
-                i++;
+            if (!characters[i].matches("[&§]") || i + 1 >= characters.length) {
+                builder.append(colors[outIndex++]).
+                        append(specials).
+                        append(characters[i]);
+                continue;
             }
+
+            if (characters[i + 1].equals("r")) specials.setLength(0);
+            else specials.append(characters[i]).append(characters[i + 1]);
+            i++;
         }
 
         return builder.toString();
@@ -283,6 +295,7 @@ public final class IridiumAPI {
      * @param step the string's length
      * @param saturation the saturation for the rainbow
      * @param useRGB if false, it will convert all RGB to its closest bukkit color
+     *
      * @return the rainbow color array
      */
     @NotNull
@@ -304,6 +317,7 @@ public final class IridiumAPI {
      * @param end an end color
      * @param step the string's length
      * @param useRGB if false, it will convert all RGB to its closest bukkit color
+     *
      * @return the rainbow color array
      */
     @NotNull
@@ -341,15 +355,18 @@ public final class IridiumAPI {
         Color nearestColor = null;
         double nearestDistance = Integer.MAX_VALUE;
 
-        for (Color color1 : COLORS.keySet()) {
-            double distance = Math.pow(color.getRed() - color1.getRed(), 2)
-                    + Math.pow(color.getGreen() - color1.getGreen(), 2)
-                    + Math.pow(color.getBlue() - color1.getBlue(), 2);
-            if (nearestDistance > distance) {
-                nearestColor = color1;
-                nearestDistance = distance;
-            }
+        for (Color c : COLORS.keySet()) {
+            double distance =
+                    Math.pow(color.getRed() - c.getRed(), 2) +
+                    Math.pow(color.getGreen() - c.getGreen(), 2) +
+                    Math.pow(color.getBlue() - c.getBlue(), 2);
+
+            if (nearestDistance <= distance) continue;
+
+            nearestColor = c;
+            nearestDistance = distance;
         }
+
         return COLORS.get(nearestColor);
     }
 }

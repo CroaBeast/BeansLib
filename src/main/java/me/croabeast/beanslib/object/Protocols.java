@@ -101,6 +101,7 @@ public enum Protocols {
 
     /**
      * Gets the protocols list of the major version.
+     *
      * @return protocols list
      */
     public List<Integer> protocols() {
@@ -109,6 +110,7 @@ public enum Protocols {
 
     /**
      * Gets the major version.
+     *
      * @return major version
      */
     public int majorVersion() {
@@ -118,6 +120,7 @@ public enum Protocols {
     /**
      * Converts an array of numbers to a list.
      * If there are 2 numbers, it will get all the numbers between those numbers.
+     *
      * @param numbers numbers' array
      * @return the number list
      */
@@ -141,6 +144,7 @@ public enum Protocols {
 
     /**
      * Gets the major version from a protocol's number.
+     *
      * @param i protocol
      * @return the major version
      */
@@ -163,7 +167,9 @@ public enum Protocols {
 
     /**
      * Gets the major version from a UUID.
+     *
      * @param uuid a uuid
+     *
      * @return the major version
      * @throws UnsupportedOperationException if ViaVersion is not enabled
      */
@@ -176,7 +182,9 @@ public enum Protocols {
 
     /**
      * Gets the major version from a player's client.
+     *
      * @param player a player
+     *
      * @return the major version
      * @throws UnsupportedOperationException if ViaVersion is not enabled
      * @throws NullPointerException if player is null

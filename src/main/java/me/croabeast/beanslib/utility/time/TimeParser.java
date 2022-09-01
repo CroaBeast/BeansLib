@@ -5,16 +5,7 @@ import org.bukkit.entity.Player;
 
 /**
  * An object that handles a time in seconds and converts it in a formatted string.
- * <p> You can see a very basic example here:
- * <pre>{@code player.sendMessage(new TimeParser(56981).formatTime())}</pre>
- * You can also have custom keys creating a new instance of the {@link TimeKeys} object.
- * <pre>{@code
- * TimeKeys keys = new TimeKeys();
- * // Here I'm changing the splitter.
- * keys = keys.setSplitter("; ");
- * // Then I set it on an instance of TimeParser.
- * TimeParser parser = new TimeParser(keys, 2132);
- * }</pre>
+ *
  * @author Kihsomray
  * @fork CroaBeast
  * @version 1.3
@@ -49,19 +40,50 @@ public class TimeParser {
     private final TimeKeys keys;
     private final long seconds;
 
+    /**
+     * Basic TimeUtils constructor. You can see a very basic example here:
+     * <pre>{@code player.sendMessage(new TimeParser(56981).formatTime())}</pre>
+     * You can also have custom keys creating a new instance of the {@link TimeKeys} object.
+     * <pre>{@code
+     * TimeKeys keys = new TimeKeys();
+     * // Here I'm changing the splitter.
+     * keys = keys.setSplitter("; ");
+     * // Then I set it on an instance of TimeParser.
+     * TimeParser parser = new TimeParser(keys, 2132);
+     * }</pre>
+     *
+     * @param keys a {@link TimeKeys} instance
+     * @param seconds time in seconds
+     */
     public TimeParser(TimeKeys keys, long seconds) {
         this.keys = keys == null ? TimeKeys.DEFAULT_KEYS : keys;
         this.seconds = seconds;
     }
 
+    /**
+     * Basic TimeUtils constructor. You can see a very basic example here:
+     * <pre>{@code player.sendMessage(new TimeParser(56981).formatTime())}</pre>
+     * You can also have custom keys creating a new instance of the {@link TimeKeys} object.
+     * <pre>{@code
+     * TimeKeys keys = new TimeKeys();
+     * // Here I'm changing the splitter.
+     * keys = keys.setSplitter("; ");
+     * // Then I set it on an instance of TimeParser.
+     * TimeParser parser = new TimeParser(keys, 2132);
+     * }</pre>
+     *
+     * @param seconds time in seconds
+     */
     public TimeParser(long seconds) {
         this(null, seconds);
     }
 
     /**
      * Gets a proper time for a time format.
+     *
      * @param seconds the time in seconds
      * @param formatter a seconds format
+     *
      * @return the fixed time
      */
     private long getFixedTime(long seconds, long formatter) {
@@ -70,8 +92,10 @@ public class TimeParser {
 
     /**
      * Checks if a string is in its plural format.
+     *
      * @param value a value in seconds
      * @param string the string to check
+     *
      * @return the converted string
      */
     private String checkPlural(long value, String string) {
@@ -79,14 +103,13 @@ public class TimeParser {
         if (value == 1)
             return string.replaceAll(keys.getPluralRegex(), "");
 
-        return string.
-                replace(keys.getStartDelimiter(), "").
-                replace(keys.getEndDelimiter(), "");
+        return string.replace("(", "").replace(")", "");
     }
 
     /**
      * Takes in a value in seconds and returns a very nicely formatted string
-     * that can contain seconds, minutes, hours and days.
+     * that can contain seconds, minutes, hours, days, weeks, months and years.
+     *
      * @param parser a player to parse colors and placeholders
      * @return formatted string with seconds, minutes, hours and days
      */
@@ -153,7 +176,8 @@ public class TimeParser {
 
     /**
      * Takes in a value in seconds and returns a very nicely formatted string
-     * that can contain seconds, minutes, hours and days.
+     * that can contain seconds, minutes, hours, days, weeks, months and years.
+     *
      * @return formatted string with seconds, minutes, hours and days
      */
     public String formatTime() {

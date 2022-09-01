@@ -33,9 +33,6 @@ public class Bossbar {
     private String line;
 
     @Getter @Nullable
-    /*
-     * The bukkit bossbar object, can be null.
-     */
     private BossBar bar = null;
 
     private BarColor color = null;
@@ -56,9 +53,11 @@ public class Bossbar {
     /**
      * Bossbar message constructor if using the PATTERN
      * to recognize a valid bossbar message.
+     *
      * @param plugin the plugin's instance
      * @param player the player that will see the bossbar
      * @param line the bossbar message to validate
+     *
      * @throws NullPointerException if player is null
      */
     public Bossbar(JavaPlugin plugin, Player player, String line) {
@@ -72,6 +71,7 @@ public class Bossbar {
     /**
      * Bossbar message constructor if you are setting every
      * parameter for the bossbar to be created.
+     *
      * @param plugin the plugin's instance
      * @param player the player that will see the bossbar
      * @param line the message that will be displayed
@@ -79,6 +79,7 @@ public class Bossbar {
      * @param style the style of the bossbar
      * @param s the seconds that the bossbar will be visible
      * @param p if the bossbar will decrease overtime
+     *
      * @throws NullPointerException if player is null
      */
     public Bossbar(JavaPlugin plugin, Player player, String line, String color, String style, int s, boolean p) {
@@ -97,6 +98,7 @@ public class Bossbar {
 
     /**
      * Checks if an input string is a valid {@link BarColor} enum.
+     *
      * @param input an input string
      * @return if the input string is valid
      */
@@ -112,6 +114,7 @@ public class Bossbar {
 
     /**
      * Checks if an input string is a valid {@link BarStyle} enum.
+     *
      * @param input an input string
      * @return if the input string is valid
      */
@@ -127,6 +130,7 @@ public class Bossbar {
 
     /**
      * Registers all the values depending on an input string line.
+     *
      * @param input an input string
      */
     private void registerValues(String input) {
@@ -229,6 +233,7 @@ public class Bossbar {
 
     /**
      * Gets the BeansLib bossbar object from the bossbar map.
+     *
      * @param player the player that has the bossbar.
      * @return the bossbar, if the player exists or has a bossbar displayed; null otherwise
      */

@@ -33,9 +33,11 @@ public class RawWebhook {
 
     /**
      * Constructs an object using an url.
+     *
      * @param url an url, can not be null
      * @param token a token to replace the message
      * @param message a basic message
+     *
      * @throws NullPointerException if the url is null
      */
     public RawWebhook(String url, String token, String message) throws NullPointerException {
@@ -126,6 +128,7 @@ public class RawWebhook {
 
     /**
      * Registers the content of the {@link #embeds} list to a {@link JSONObject}.
+     *
      * @param json a json object
      * @return the updated json object
      */
@@ -194,6 +197,7 @@ public class RawWebhook {
 
     /**
      * Executes the webhook and display it to the requested URL.
+     *
      * @throws IOException if it has an error connecting to the url or if the url is invalid
      * @throws NullPointerException if there is no content or embeds to display
      */

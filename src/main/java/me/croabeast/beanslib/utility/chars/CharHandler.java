@@ -16,7 +16,7 @@ public final class CharHandler {
     private static final HashMap<Character, CharacterInfo> VALUES = new HashMap<>();
 
     /**
-     * The default information if a char doesn't exist in the {@link #getValues()} map.
+     * The default information if a char doesn't exist in the {@link #VALUES} map.
      */
     private static final CharacterInfo DEFAULT = new CharacterInfo('a', 5);
 
@@ -25,35 +25,28 @@ public final class CharHandler {
      */
     static {
         for (DefaultChars d : DefaultChars.values()) {
-            char c = d.character();
-            VALUES.put(c, new CharacterInfo(c, d.length()));
+            char c = d.getCharacter();
+            VALUES.put(c, new CharacterInfo(c, d.getLength()));
         }
     }
 
     /**
-     * Gets the values HashMap of all the stored characters.
-     * This is private to avoid clearing the entire map.
-     * @return the map
-     */
-    private static HashMap<Character, CharacterInfo> getValues() {
-        return VALUES;
-    }
-
-    /**
      * Gets the requested {@link CharacterInfo} instance of an input character.
-     * <p> Returns the {@link #DEFAULT} value if the character isn't found in the {@link #getValues()} map.
+     * <p> Returns the {@link #DEFAULT} value if the character isn't found in the {@link #VALUES} map.
+     *
      * @param c an input character
      * @return the requested info
      */
     @NotNull
     public static CharacterInfo getInfo(char c) {
-        CharacterInfo info = getValues().getOrDefault(c, null);
+        CharacterInfo info = VALUES.getOrDefault(c, null);
         return info == null ? DEFAULT : info;
     }
 
     /**
      * Converts a string in a single character.
      * <p> Returns null if the string is null, empty or has more than 1 characters.
+     *
      * @param input an input string
      * @return the converted character
      */
@@ -67,6 +60,7 @@ public final class CharHandler {
     /**
      * Gets the requested {@link CharacterInfo} instance of an input string.
      * <p> Returns the {@link #DEFAULT} value if the string is null, empty or has more than 1 characters.
+     *
      * @param input an input string
      * @return the requested info
      */
@@ -77,24 +71,27 @@ public final class CharHandler {
     }
 
     /**
-     * Adds a new character in the {@link #getValues()} map.
+     * Adds a new character in the {@link #VALUES} map.
+     *
      * @param c a character
      * @param length the char's length
      */
     public static void addChar(char c, int length) {
-        getValues().put(c, new CharacterInfo(c, length));
+        VALUES.put(c, new CharacterInfo(c, length));
     }
 
     /**
-     * Removes a character from the {@link #getValues()} map.
+     * Removes a character from the {@link #VALUES} map.
+     *
      * @param c a character
      */
     public static void removeChar(char c) {
-        getValues().remove(c);
+        VALUES.remove(c);
     }
 
     /**
-     * Adds a new character from a string in the {@link #getValues()} map.
+     * Adds a new character from a string in the {@link #VALUES} map.
+     *
      * @param input an input string
      * @param length the char's length
      */
@@ -104,7 +101,8 @@ public final class CharHandler {
     }
 
     /**
-     * Removes a character from a string from the {@link #getValues()} map.
+     * Removes a character from a string from the {@link #VALUES} map.
+     *
      * @param input an input string
      */
     public static void removeChar(String input) {

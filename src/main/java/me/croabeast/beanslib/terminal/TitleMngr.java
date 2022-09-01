@@ -1,7 +1,7 @@
 package me.croabeast.beanslib.terminal;
 
 import me.croabeast.beanslib.utility.Exceptions;
-import me.croabeast.beanslib.utility.TextKeys;
+import me.croabeast.beanslib.utility.key.LibKeys;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Constructor;
@@ -14,16 +14,16 @@ import java.lang.reflect.Constructor;
  */
 public final class TitleMngr extends Reflection {
 
-    private final GetTitle title;
+    private final Handler title;
 
     /**
      * Basic constructor.
      */
     public TitleMngr() {
-        title = TextKeys.majorVersion() < 10 ? oldTitle() : newTitle();
+        title = LibKeys.majorVersion() < 10 ? oldTitle() : newTitle();
     }
 
-    private interface GetTitle {
+    private interface Handler {
         void send(Player player, String title, String subtitle, int in, int stay, int out);
     }
 
@@ -60,25 +60,27 @@ public final class TitleMngr extends Reflection {
         }
     }
 
-    private GetTitle oldTitle() {
+    private Handler oldTitle() {
         return (player, title, subtitle, in, stay, out) -> {
             legacyMethod(player, title, in, stay, out, true);
             legacyMethod(player, subtitle, in, stay, out, false);
         };
     }
 
-    private GetTitle newTitle() {
+    private Handler newTitle() {
         return Player::sendTitle;
     }
 
     /**
-     * Send an action bar message.
+     * Send a title message.
+     *
      * @param player a player
      * @param title a title
      * @param subtitle a subtitle
      * @param in fade in time in ticks
      * @param stay stay time in ticks
      * @param out fade out time in ticks
+     *
      * @throws NullPointerException if player is null
      */
     public void send(Player player, String title, String subtitle, int in, int stay, int out) {

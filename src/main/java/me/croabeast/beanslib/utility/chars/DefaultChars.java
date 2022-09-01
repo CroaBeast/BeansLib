@@ -1,8 +1,11 @@
 package me.croabeast.beanslib.utility.chars;
 
+import lombok.Getter;
+
 /**
  * The enum class to manage the length of every char.
  */
+@Getter
 enum DefaultChars {
     A('A', 5),
     a('a', 5),
@@ -110,13 +113,5 @@ enum DefaultChars {
     DefaultChars(char character, int length) {
         this.character = character;
         this.length = length;
-    }
-
-    public char character() {
-        return character;
-    }
-
-    public int length() {
-        return length;
     }
 }

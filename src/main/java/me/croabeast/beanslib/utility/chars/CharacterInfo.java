@@ -1,11 +1,22 @@
 package me.croabeast.beanslib.utility.chars;
 
+import lombok.Getter;
+
 /**
  * The class to store a character's information.
  */
+@Getter
 public class CharacterInfo {
 
+    /**
+     * The character.
+     * @return the char
+     */
     private final char character;
+    /**
+     * The char's length.
+     * @return the length
+     */
     private final int length;
 
     /**
@@ -21,23 +32,7 @@ public class CharacterInfo {
     }
 
     /**
-     * Gets the character.
-     * @return the char
-     */
-    public char getCharacter() {
-        return character;
-    }
-
-    /**
-     * Gets the char's length.
-     * @return the length
-     */
-    public int getLength() {
-        return length;
-    }
-
-    /**
-     * Gets the char's length when is bold.
+     * The char's length when is bold.
      * @return the length in bold
      */
     public int getBoldLength() {
