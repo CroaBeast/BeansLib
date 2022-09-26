@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.utility.key;
+package me.croabeast.beanslib.object.key;
 
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -44,7 +44,6 @@ public class PlayerKeys {
      * @param gamemodeKey a key
      */
     private String gamemodeKey = "{playerGameMode}";
-
     /**
      * The key of the player's "x" coordinate.
      *

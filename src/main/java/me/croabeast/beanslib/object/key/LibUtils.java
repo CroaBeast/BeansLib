@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.utility.key;
+package me.croabeast.beanslib.object.key;
 
 import net.md_5.bungee.api.chat.ClickEvent;
 import org.apache.commons.lang.SystemUtils;
@@ -6,14 +6,18 @@ import org.bukkit.Bukkit;
 
 import java.util.regex.Pattern;
 
-public final class LibKeys {
-
-    private LibKeys() {}
+/**
+ * The class that stores static keys for easy access and management.
+ *
+ * @author CroaBeast
+ * @since 1.0
+ */
+public final class LibUtils {
 
     /**
-     * A default {@link TextKeys} instance for static methods.
+     * Initializing this class is not available.
      */
-    public static final TextKeys DEFAULTS = new TextKeys();
+    private LibUtils() {}
 
     /**
      * A prefix used in the main pattern to identify the event.
@@ -23,7 +27,6 @@ public final class LibKeys {
 
     /**
      * The main pattern to identify the JSON message in a string.
-     * <strong>This can't be overridden.</strong>
      * <p> Keep in mind that every string can only have one {@link ClickEvent.Action};
      * a click action has this format:
      * <pre> {@code
@@ -40,11 +43,6 @@ public final class LibKeys {
     public static final Pattern JSON_PATTERN =
             Pattern.compile("(?i)<(" + JSON_PREFIX + "([|]" + JSON_PREFIX + ")?)>(.+?)</text>");
 
-    /**
-     * Gets the server's version. Example: 1.8.8, 1.16.5
-     *
-     * @return server's version
-     */
     private static String serverVersion() {
         return Bukkit.getBukkitVersion().split("-")[0];
     }

@@ -1,6 +1,8 @@
 package me.croabeast.beanslib.utility.time;
 
+import me.croabeast.beanslib.BeansMethods;
 import me.croabeast.beanslib.utility.TextUtils;
+import me.croabeast.beanslib.object.key.TimeKeys;
 import org.bukkit.entity.Player;
 
 /**
@@ -78,27 +80,11 @@ public class TimeParser {
         this(null, seconds);
     }
 
-    /**
-     * Gets a proper time for a time format.
-     *
-     * @param seconds the time in seconds
-     * @param formatter a seconds format
-     *
-     * @return the fixed time
-     */
     private long getFixedTime(long seconds, long formatter) {
         return (seconds - (seconds % formatter)) / formatter;
     }
 
-    /**
-     * Checks if a string is in its plural format.
-     *
-     * @param value a value in seconds
-     * @param string the string to check
-     *
-     * @return the converted string
-     */
-    private String checkPlural(long value, String string) {
+    private String isPlural(long value, String string) {
         string = value + " " + string;
         if (value == 1)
             return string.replaceAll(keys.getPluralRegex(), "");
@@ -118,7 +104,7 @@ public class TimeParser {
         long result = this.seconds;
 
         if (result <= 0)
-            return TextUtils.colorize(null, parser, checkPlural(0, keys.getSecondFormat()));
+            return BeansMethods.DEFAULTS.colorize(null, parser, isPlural(0, keys.getSecondFormat()));
 
         StringBuilder formattedTime = new StringBuilder();
         long years, months, weeks, days, hours, mins;
@@ -127,48 +113,48 @@ public class TimeParser {
         result = result - (years * YEAR);
 
         if (years > 0) formattedTime.
-                append(checkPlural(years, keys.getYearFormat())).
+                append(isPlural(years, keys.getYearFormat())).
                 append(split);
 
         months = getFixedTime(result, MONTH);
         result = result - (months * MONTH);
 
         if (months > 0) formattedTime.
-                append(checkPlural(months, keys.getMonthFormat())).
+                append(isPlural(months, keys.getMonthFormat())).
                 append(split);
 
         weeks = getFixedTime(result, WEEK);
         result = result - (weeks * WEEK);
 
         if (weeks > 0) formattedTime.
-                append(checkPlural(weeks, keys.getWeekFormat())).
+                append(isPlural(weeks, keys.getWeekFormat())).
                 append(split);
 
         days = getFixedTime(result, DAY);
         result = result - (days * DAY);
 
         if (days > 0) formattedTime.
-                append(checkPlural(days, keys.getDayFormat())).
+                append(isPlural(days, keys.getDayFormat())).
                 append(split);
 
         hours = getFixedTime(result, HOUR);
         result = result - (hours * HOUR);
 
         if (hours > 0) formattedTime.
-                append(checkPlural(hours, keys.getHourFormat())).
+                append(isPlural(hours, keys.getHourFormat())).
                 append(split);
 
         mins = getFixedTime(result, MINUTE);
         result = result - (mins * MINUTE);
 
         if (mins > 0) formattedTime.
-                    append(checkPlural(mins, keys.getMinuteFormat())).
+                    append(isPlural(mins, keys.getMinuteFormat())).
                     append(split);
 
         if (result > 0) formattedTime.
-                append(checkPlural(result, keys.getSecondFormat() + split));
+                append(isPlural(result, keys.getSecondFormat() + split));
 
-        return TextUtils.colorize(null, parser,
+        return BeansMethods.DEFAULTS.colorize(null, parser,
                 formattedTime.substring(0,
                 formattedTime.length() - split.length())
         );

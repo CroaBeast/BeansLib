@@ -2,7 +2,8 @@ package me.croabeast.beanslib.utility.time;
 
 /**
  * Basic time utilities for any server.
- * <p> Use {@link TimeParser} for better management.
+ *
+ * @deprecated See {@link TimeParser}.
  *
  * @author Kihsomray
  * @version 1.0

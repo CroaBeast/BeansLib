@@ -1,7 +1,7 @@
-package me.croabeast.beanslib.terminal;
+package me.croabeast.beanslib.object.terminal;
 
 import me.croabeast.beanslib.utility.Exceptions;
-import me.croabeast.beanslib.utility.key.LibKeys;
+import me.croabeast.beanslib.object.key.LibUtils;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
@@ -22,7 +22,7 @@ public final class ActionBar extends Reflection {
      * Basic constructor.
      */
     public ActionBar() {
-        actionBar = LibKeys.majorVersion() < 11 ? oldActionBar() : newActionBar();
+        actionBar = LibUtils.majorVersion() < 11 ? oldActionBar() : newActionBar();
     }
 
     private interface Handler {

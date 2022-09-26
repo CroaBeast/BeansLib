@@ -1,7 +1,7 @@
 package me.croabeast.iridiumapi;
 
 import com.google.common.collect.ImmutableMap;
-import me.croabeast.beanslib.utility.key.LibKeys;
+import me.croabeast.beanslib.object.key.LibUtils;
 import me.croabeast.iridiumapi.pattern.*;
 import me.croabeast.beanslib.object.*;
 import net.md_5.bungee.api.ChatColor;
@@ -26,14 +26,8 @@ public final class IridiumAPI {
 
     private IridiumAPI() {}
 
-    /**
-     * Checks if the server can use RGB colors.
-     */
-    private static final boolean SUPPORTS_RGB = LibKeys.majorVersion() > 15;
+    private static final boolean SUPPORTS_RGB = LibUtils.majorVersion() > 15;
 
-    /**
-     * A map that handles all the Bukkit colors by its hex value.
-     */
     private static final Map<Color, ChatColor> COLORS = ImmutableMap.<Color, ChatColor>builder()
             .put(new Color(0), ChatColor.getByChar('0'))
             .put(new Color(170), ChatColor.getByChar('1'))
@@ -52,9 +46,6 @@ public final class IridiumAPI {
             .put(new Color(16777045), ChatColor.getByChar('e'))
             .put(new Color(16777215), ChatColor.getByChar('f')).build();
 
-    /**
-     * A list with all the {@link BasePattern} classes.
-     */
     private static final List<BasePattern> PATTERNS =
             Arrays.asList(new Gradient(), new Rainbow(), new SolidColor());
 
@@ -179,7 +170,7 @@ public final class IridiumAPI {
      */
     @NotNull
     public static String stripSpecial(@NotNull String string) {
-        return string.replaceAll("(?i)[&§][k-o]", "");
+        return string.replaceAll("(?i)[&§][k-or]", "");
     }
 
     /**
@@ -255,14 +246,6 @@ public final class IridiumAPI {
         return lastColor;
     }
 
-    /**
-     * Applies every color in an array to a source string.
-     *
-     * @param source a string
-     * @param colors the requested colors array
-     *
-     * @return the formatted string
-     */
     @NotNull
     private static String apply(@NotNull String source, @NotNull ChatColor[] colors) {
         StringBuilder specials = new StringBuilder(),
@@ -289,15 +272,6 @@ public final class IridiumAPI {
         return builder.toString();
     }
 
-    /**
-     * Creates an array of colors for the rainbow gradient.
-     *
-     * @param step the string's length
-     * @param saturation the saturation for the rainbow
-     * @param useRGB if false, it will convert all RGB to its closest bukkit color
-     *
-     * @return the rainbow color array
-     */
     @NotNull
     private static ChatColor[] createRainbow(int step, float saturation, boolean useRGB) {
         ChatColor[] colors = new ChatColor[step];
@@ -310,16 +284,6 @@ public final class IridiumAPI {
         return colors;
     }
 
-    /**
-     * Creates an array of colors for the gradient.
-     *
-     * @param start a start color
-     * @param end an end color
-     * @param step the string's length
-     * @param useRGB if false, it will convert all RGB to its closest bukkit color
-     *
-     * @return the rainbow color array
-     */
     @NotNull
     private static ChatColor[] createGradient(@NotNull Color start, @NotNull Color end, int step, boolean useRGB) {
         ChatColor[] colors = new ChatColor[step];
@@ -344,12 +308,6 @@ public final class IridiumAPI {
         return colors;
     }
 
-    /**
-     * Gets the closest bukkit color from a normal color.
-     *
-     * @param color an input color
-     * @return the closest bukkit color
-     */
     @NotNull
     private static ChatColor getClosestColor(Color color) {
         Color nearestColor = null;

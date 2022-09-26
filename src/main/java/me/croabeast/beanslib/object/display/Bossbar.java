@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.object;
+package me.croabeast.beanslib.object.display;
 
 import lombok.Getter;
 import me.croabeast.beanslib.utility.Exceptions;

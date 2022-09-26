@@ -1,21 +1,18 @@
 package me.croabeast.beanslib.utility;
 
-import me.croabeast.beanslib.utility.key.LibKeys;
-import me.croabeast.beanslib.utility.key.TextKeys;
+import me.croabeast.beanslib.BeansMethods;
+import me.croabeast.beanslib.object.key.LibUtils;
+import me.croabeast.beanslib.BeansVariables;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.SystemUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 
-import static me.croabeast.beanslib.utility.TextUtils.centerMessage;
 import static me.croabeast.iridiumapi.IridiumAPI.process;
 import static me.croabeast.iridiumapi.IridiumAPI.stripAll;
 
@@ -25,52 +22,52 @@ import static me.croabeast.iridiumapi.IridiumAPI.stripAll;
 public final class LogUtils {
 
     /**
-     * Initializing this class is prohibited.
+     * Initializing this class is blocked.
      */
     private LogUtils() {}
 
     private static String colorLogger(String string, boolean fixColor) {
         if (StringUtils.isBlank(string)) return string;
 
-        boolean doColor = LibKeys.majorVersion() >= 12 && SystemUtils.IS_OS_WINDOWS &&
-                !LibKeys.serverFork().split(" ")[0].matches("(?i)Bukkit|Spigot");
+        boolean doColor = LibUtils.majorVersion() >= 12 &&
+                !LibUtils.serverFork().split(" ")[0].matches("(?i)Bukkit|Spigot");
 
         string = TextUtils.stripJson(string);
         return doColor ? process(string, !fixColor) : stripAll(string);
     }
 
-    private static String[] toLogLines(TextKeys keys, Player player, boolean isLog, String... lines) {
-        if (keys == null) keys = LibKeys.DEFAULTS;
+    private static String[] toLogLines(BeansMethods m, Player player, boolean isLog, String... lines) {
+        if (m == null) m = BeansMethods.DEFAULTS;
 
         List<String> list = new ArrayList<>();
 
-        String value = isLog ? "" : keys.langPrefix(),
-                sp = keys.lineSeparator();
+        String value = isLog ? "" : m.langPrefix(),
+                sp = m.lineSeparator();
 
         for (String line : lines) {
             if (line == null) continue;
-            line = line.replace(keys.langPrefixKey(), value);
+            line = line.replace(m.langPrefixKey(), value);
 
-            line = centerMessage(keys, null, player, line);
+            line = m.centerMessage(null, player, line);
             list.add(line.replace(sp, "&f" + sp));
         }
 
         return list.toArray(new String[0]);
     }
 
-    private static String[] toLogLines(TextKeys keys, String... lines) {
-        return toLogLines(keys, null, true, lines);
+    private static String[] toLogLines(BeansMethods m, String... lines) {
+        return toLogLines(m, null, true, lines);
     }
 
     /**
      * Sends requested information for a {@link Player}.
      *
-     * @param keys the {@link TextKeys} instance
+     * @param m the {@link BeansMethods} instance
      * @param player a valid online player
      * @param lines the information to send
      */
-    public static void playerLog(TextKeys keys, Player player, String... lines) {
-        for (String s : toLogLines(keys, player, false, lines))
+    public static void playerLog(BeansMethods m, Player player, String... lines) {
+        for (String s : toLogLines(m, player, false, lines))
             player.sendMessage(process(s));
     }
 
@@ -87,12 +84,12 @@ public final class LogUtils {
     /**
      * Sends requested information using {@link Bukkit#getLogger()} to the console.
      *
-     * @param keys the {@link TextKeys} instance
+     * @param m the {@link BeansMethods} instance
      * @param lines the information to send
      */
-    public static void rawLog(TextKeys keys, String... lines) {
-        boolean fix = keys != null && keys.fixColorLogger();
-        for (String s : toLogLines(keys, lines))
+    public static void rawLog(BeansMethods m, String... lines) {
+        boolean fix = m != null && m.fixColorLogger();
+        for (String s : toLogLines(m, lines))
             Bukkit.getLogger().info(colorLogger(s, fix));
     }
 
@@ -108,19 +105,19 @@ public final class LogUtils {
     /**
      * Sends requested information to a {@link CommandSender}.
      *
-     * @param keys the {@link TextKeys} instance
+     * @param m the {@link BeansMethods} instance
      * @param plugin the plugin's instance
      * @param sender a valid sender, can be the console or a player
      * @param lines the information to send
      */
-    public static void doLog(TextKeys keys, @NotNull JavaPlugin plugin, CommandSender sender, String... lines) {
+    public static void doLog(BeansMethods m, @NotNull JavaPlugin plugin, CommandSender sender, String... lines) {
         if (sender instanceof Player)
-            playerLog(keys, (Player) sender, lines);
+            playerLog(m, (Player) sender, lines);
 
-        JavaPlugin p = keys != null ? keys.getPlugin() : plugin;
-        boolean fix = keys != null && keys.fixColorLogger();
+        JavaPlugin p = m != null ? m.getPlugin() : plugin;
+        boolean fix = m != null && m.fixColorLogger();
 
-        for (String s : toLogLines(keys, lines))
+        for (String s : toLogLines(m, lines))
             p.getLogger().info(colorLogger(s, fix));
     }
 

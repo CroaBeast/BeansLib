@@ -1,7 +1,7 @@
-package me.croabeast.beanslib.terminal;
+package me.croabeast.beanslib.object.terminal;
 
 import me.croabeast.beanslib.utility.Exceptions;
-import me.croabeast.beanslib.utility.key.LibKeys;
+import me.croabeast.beanslib.object.key.LibUtils;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Constructor;
@@ -20,7 +20,7 @@ public final class TitleMngr extends Reflection {
      * Basic constructor.
      */
     public TitleMngr() {
-        title = LibKeys.majorVersion() < 10 ? oldTitle() : newTitle();
+        title = LibUtils.majorVersion() < 10 ? oldTitle() : newTitle();
     }
 
     private interface Handler {

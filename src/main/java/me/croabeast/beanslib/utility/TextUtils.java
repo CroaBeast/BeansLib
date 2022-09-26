@@ -4,18 +4,13 @@ import com.google.common.collect.Lists;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.croabeast.beanslib.BeansLib;
-import me.croabeast.beanslib.terminal.ActionBar;
-import me.croabeast.beanslib.terminal.TitleMngr;
-import me.croabeast.beanslib.utility.chars.CharHandler;
-import me.croabeast.beanslib.utility.chars.CharacterInfo;
-import me.croabeast.beanslib.utility.key.LibKeys;
-import me.croabeast.beanslib.utility.key.TextKeys;
-import me.croabeast.beanslib.utility.sender.Displayer;
-import me.croabeast.iridiumapi.IridiumAPI;
+import me.croabeast.beanslib.BeansMethods;
+import me.croabeast.beanslib.object.terminal.ActionBar;
+import me.croabeast.beanslib.object.terminal.TitleMngr;
+import me.croabeast.beanslib.object.key.LibUtils;
+import me.croabeast.beanslib.object.display.Displayer;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +21,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * The class for static methods of the {@link BeansLib} class.
@@ -37,7 +31,7 @@ import java.util.stream.Collectors;
 public final class TextUtils {
 
     /**
-     * Avoid initializing this class.
+     * Initializing this class is blocked.
      */
     private TextUtils() {}
 
@@ -55,6 +49,7 @@ public final class TextUtils {
      *
      * @param player a player, can be null
      * @param message the input line
+     *
      * @return the parsed message
      */
     public static String parsePAPI(Player player, String message) {
@@ -81,143 +76,8 @@ public final class TextUtils {
     }
 
     /**
-     * Use a char pattern to find unicode values and
-     * replace them with its respective characters.
-     *
-     * @param keys the {@link TextKeys} instance
-     * @param string the input line
-     * @return the parsed message with the new characters
-     */
-    public static String parseChars(TextKeys keys, String string) {
-        if (keys == null) keys = LibKeys.DEFAULTS;
-
-        if (StringUtils.isBlank(keys.charRegex()) ||
-                StringUtils.isBlank(string)) return string;
-
-        Pattern charPattern = Pattern.compile(keys.charRegex());
-        Matcher m = charPattern.matcher(string);
-
-        while (m.find()) {
-            char s = (char) Integer.parseInt(m.group(1), 16);
-            string = string.replace(m.group(), s + "");
-        }
-
-        return string;
-    }
-
-    /**
-     * Use a default {@link TextKeys#charRegex()} to find unicode values and
-     * replace them with its respective characters.
-     *
-     * @param string the input line
-     * @return the parsed message with the new characters
-     */
-    public static String parseChars(String string) {
-        return parseChars(null, string);
-    }
-
-    /**
-     * Formats an input string parsing first {@link PlaceholderAPI} placeholders,
-     * replaced chars and then applying the respective colors.
-     *
-     * @param target a target to parse colors depending on its client, can be null
-     * @param parser a player, can be null
-     * @param string the input message
-     *
-     * @return the formatted message
-     */
-    public static String colorize(TextKeys keys, Player target, Player parser, String string) {
-        if (target == null) target = parser;
-        string = parsePAPI(parser, parseChars(keys, string));
-        return IridiumAPI.process(target, string);
-    }
-
-    /**
-     * Formats an input string parsing first {@link PlaceholderAPI}
-     * placeholders, replaced chars using {@link TextKeys#charRegex()}
-     * and then applying the respective colors.
-     *
-     * @param target a target to parse colors depending on its client, can be null
-     * @param parser a player, can be null
-     * @param string the input message
-     *
-     * @return the formatted message
-     */
-    public static String colorize(Player target, Player parser, String string) {
-        return colorize(null, target, parser, string);
-    }
-
-    /**
-     * Creates a centered chat message.
-     *
-     * @param target a target to parse colors depending on its client, can be null
-     * @param parser a player to parse placeholders.
-     * @param string the input message
-     *
-     * @return the centered chat message.
-     */
-    public static String centerMessage(TextKeys keys, Player target, Player parser, String string) {
-        if (keys == null) keys = LibKeys.DEFAULTS;
-        String prefix = keys.centerPrefix();
-
-        final String output = colorize(target, parser, string);
-        if (!string.startsWith(prefix)) return output;
-
-        string = string.substring(prefix.length());
-
-        String initial = parseChars(keys, stripJson(string));
-        initial = colorize(target, parser, initial);
-
-        int messagePxSize = 0;
-        boolean previousCode = false;
-        boolean isBold = false;
-
-        for (char c : initial.toCharArray()) {
-            if (c == '§') {
-                previousCode = true;
-                continue;
-            }
-
-            else if (previousCode) {
-                previousCode = false;
-                isBold = c == 'l' || c == 'L';
-                continue;
-            }
-
-            CharacterInfo dFI = CharHandler.getInfo(c);
-            messagePxSize += isBold ?
-                    dFI.getBoldLength() : dFI.getLength();
-            messagePxSize++;
-        }
-
-        int halvedMessageSize = messagePxSize / 2;
-        int toCompensate = 154 - halvedMessageSize;
-        int compensated = 0;
-
-        StringBuilder sb = new StringBuilder();
-        while (compensated < toCompensate) {
-            sb.append(" ");
-            compensated += 4; // 4 is the SPACE char length (3) + 1
-        }
-
-        return sb + output.substring(prefix.length());
-    }
-
-    /**
-     * Creates a centered chat message.
-     *
-     * @param target a target to parse colors depending on its client, can be null
-     * @param parser a player to parse placeholders.
-     * @param string the input message
-     *
-     * @return the centered chat message.
-     */
-    public static String centerMessage(Player target, Player parser, String string) {
-        return centerMessage(null, target, parser, string);
-    }
-
-    /**
-     * Combines two arrays into a new array of the same type.
+     * Combines an array with one or more additional arrays
+     * into a new array of the same type.
      *
      * @author Kihsomray
      * @since 1.3
@@ -231,7 +91,7 @@ public final class TextUtils {
     @SuppressWarnings("unchecked")
     @SafeVarargs
     public static <T> T[] combineArrays(@NotNull T[] array, @Nullable T[]... additionalArrays) {
-        if (additionalArrays == null) return array;
+        if (additionalArrays == null) return Arrays.copyOf(array, array.length);
 
         List<T> resultList = new ArrayList<>();
         Collections.addAll(resultList, array);
@@ -252,6 +112,7 @@ public final class TextUtils {
      * @param string an input string
      * @param keys the array of keys
      * @param values the array of values
+     * @param caseSensitive if keys are case-sensitive
      *
      * @return the parsed string with the respective values
      */
@@ -279,12 +140,13 @@ public final class TextUtils {
     }
 
     /**
-     * Replace a {@link String} array of keys with another {@link String} array of values.
+     * Replace a {@link String} key with a {@link String} value.
      * <p> Special characters are quoted to avoid errors.
      *
      * @param string an input string
      * @param key a key
      * @param value a value
+     * @param caseSensitive if key is case-sensitive
      *
      * @return the parsed string with the respective value
      */
@@ -308,7 +170,7 @@ public final class TextUtils {
     }
 
     /**
-     * Replace a {@link String} array of keys with another {@link String} array of values.
+     * Replace a {@link String} key with a {@link String} value.
      * <p> It's case-insensitive and special characters are quoted to avoid errors.
      *
      * @param string an input string
@@ -319,15 +181,6 @@ public final class TextUtils {
      */
     public static String replaceInsensitiveEach(String string, String key, String value) {
         return replaceInsensitiveEach(string, new String[] {key}, new String[] {value});
-    }
-    
-    public static String replacePlayerValues(TextKeys keys, Player parser, String string, boolean c) {
-        if (keys == null) keys = LibKeys.DEFAULTS;
-        return keys.playerKeys().parseKeys(parser, string, c);
-    }
-
-    public static String replacePlayerValues(String string, Player parser, boolean caseSensitive) {
-        return replacePlayerValues(null, parser, string, caseSensitive);
     }
 
     /**
@@ -352,6 +205,8 @@ public final class TextUtils {
      * @return the converted string
      */
     public static String convertOldJson(String string) {
+        if (StringUtils.isBlank(string)) return string;
+
         String s = "(?i)(hover|run|suggest|url)=\\[(.[^|\\[\\]]*)]";
         Matcher old = Pattern.compile(s).matcher(string);
 
@@ -367,20 +222,25 @@ public final class TextUtils {
      * <pre> {@code if (IS_JSON.apply("a string")) doSomethingIdk();}</pre>
      */
     public static final Function<String, Boolean> IS_JSON =
-            s -> LibKeys.JSON_PATTERN.matcher(convertOldJson(s)).find();
+            s -> LibUtils.JSON_PATTERN.matcher(convertOldJson(s)).find();
 
     /**
-     * Strips the JSON format from a line.
+     * Strips the JSON format from an input string.
      *
      * @param string an input string.
      * @return the stripped line.
      */
     public static String stripJson(String string) {
+        if (StringUtils.isBlank(string)) return string;
+
         string = convertOldJson(string);
         if (!IS_JSON.apply(string)) return string;
 
-        Matcher matcher = LibKeys.JSON_PATTERN.matcher(string);
-        return matcher.find() ? matcher.group(7) : string;
+        Matcher m = LibUtils.JSON_PATTERN.matcher(string);
+        while (m.find())
+            string = string.replace(m.group(), m.group(7));
+
+        return string;
     }
 
     /**
@@ -388,6 +248,7 @@ public final class TextUtils {
      *
      * @param player the requested player
      * @param line the line to parse
+     *
      * @return the line with the parsed placeholders.
      */
     public static String parseInteractiveChat(Player player, String line) {
@@ -413,7 +274,7 @@ public final class TextUtils {
     }
 
     /**
-     * Sends a title message to a player
+     * Sends a title message to a player.
      *
      * @param player a player
      * @param title a title
@@ -427,7 +288,8 @@ public final class TextUtils {
     }
 
     /**
-     * Sends a title message to a player
+     * Sends a title message to a player.
+     *
      * @param player a player
      * @param message an array of title and subtitle
      * @param in the fadeIn number in ticks
@@ -440,57 +302,14 @@ public final class TextUtils {
         sendTitle(player, message[0], subtitle, in, stay, out);
     }
 
-    /**
-     * Sends a message depending on its prefix.
-     *
-     * @param target a target player to send, can be null
-     * @param parser a player to format the message
-     * @param string the input string
-     */
-    public static void sendMessage(TextKeys keys, Player target, Player parser, String string) {
-        new Displayer(keys, target, parser, Lists.newArrayList(string)).display();
-    }
-
-    public static void sendMessage(Player target, Player parser, String string) {
-        sendMessage(null, target, parser, string);
-    }
-
     public static void sendMessageList(
-            TextKeys text, CommandSender target, Player parser,
-            List<String> list, String[] keys, String[] values
+            BeansMethods methods, CommandSender target, Player parser, List<String> list,
+            String[] keys, String[] values, boolean caseSensitive, String... flags
     ) {
-
-    }
-
-    public static void sendMessageList(
-            BeansLib lib, CommandSender sender, List<String> list, String[] keys, String[] values
-    ) {
-        list = list.stream().filter(Objects::nonNull).collect(Collectors.toList());
-        if (list.isEmpty()) return;
-
-        for (String line : list) {
-            line = line.replace(
-                    lib != null ? lib.langPrefixKey() : LibKeys.DEFAULTS.langPrefixKey(),
-                    lib != null ? lib.langPrefix() : LibKeys.DEFAULTS.langPrefix()
-            );
-            line = replaceInsensitiveEach(line, keys, values);
-
-            if (sender == null || sender instanceof ConsoleCommandSender) {
-                String l = centerMessage(lib, null, null, line);
-                if (lib != null) lib.rawLog(l);
-                else LogUtils.rawLog(l);
-                continue;
-            }
-
-            Player player = (Player) sender;
-            line = replacePlayerValues(lib, player, line, false);
-
-            sendMessage(lib, null, player, line);
-        }
-    }
-
-    public static void sendMessageList(CommandSender sender, List<String> list, String[] keys, String[] values) {
-        sendMessageList(null, sender, list, keys, values);
+        new Displayer(methods, target, parser, list, flags).
+                setKeys(keys).setKeys(values).
+                setCaseSensitive(caseSensitive).
+                display();
     }
 
     /**
@@ -500,6 +319,7 @@ public final class TextUtils {
      * @param split the splitter
      * @param use use quotes in every object
      * @param args values for the object
+     *
      * @return the formatted class
      */
     public static String classFormat(Object obj, String split, boolean use, Object... args) {
@@ -523,6 +343,7 @@ public final class TextUtils {
      *
      * @param obj the object to format
      * @param args values for the object
+     *
      * @return the formatted class
      */
     public static String classFormat(Object obj, Object... args) {

@@ -1,21 +1,27 @@
-package me.croabeast.beanslib.utility.key;
+package me.croabeast.beanslib;
 
-import me.croabeast.beanslib.BeansLib;
-import me.croabeast.beanslib.object.Bossbar;
+import me.croabeast.beanslib.object.display.Bossbar;
+import me.croabeast.beanslib.object.display.Displayer;
+import me.croabeast.beanslib.object.key.PlayerKeys;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.regex.Pattern;
 
 /**
- * The keys for the {@link BeansLib} class.
+ * The variables for the {@link BeansLib} class.
+ * The name before BeansVariables was TextKeys.
  *
  * @author CroaBeast
  * @since 1.0
  */
-public class TextKeys {
+public class BeansVariables {
+
+    /**
+     * A default {@link BeansVariables} instance for static methods.
+     */
+    public static final BeansVariables DEFAULTS = new BeansVariables();
 
     /**
      * The {@link JavaPlugin} instance of your project.
@@ -120,35 +126,41 @@ public class TextKeys {
     }
 
     /*
-     * Message type regex keys below. All those keys are case-insensitive.
+     * Message type prefixes below. All those keys are case-insensitive.
      * Chat messages doesn't need a key.
      */
 
     /**
-     * <strong>[MESSAGE TYPE REGEX KEY]</strong>
+     * <strong>[MESSAGE TYPE PREFIX]</strong>
      * <p> The title key to search if you want to send a title message. If the
      * regex doesn't have a group to catch the duration in seconds, it will
      * use the default one in {@link #defaultTitleTicks defaultTitleTicks}.
      *
-     * @return the title regex key
+     * @param isRegex is the key is in regex format
+     * @return the title prefix key
      */
     @NotNull
-    public String titleRegex(boolean startsIgnoreCase) {
-        String temp = Pattern.quote("[") + "title(:\\d+)?" + Pattern.quote("]");
-        return (startsIgnoreCase ? "(?i)^" : "") + temp;
+    public String titlePrefix(boolean isRegex) {
+        final String prefix = "title(:\\d+)?";
+
+        if (isRegex)
+            return "(?i)^" + Pattern.quote("[") +
+                    prefix + Pattern.quote("]");
+
+        return "[" + prefix.split("[(]")[0] + "]";
     }
 
     /**
-     * <strong>[MESSAGE TYPE REGEX KEY]</strong>
+     * <strong>[MESSAGE TYPE PREFIX]</strong>
      * <p> The title key to search if you want to send a title message. If the
      * regex doesn't have a group to catch the duration in seconds, it will
-     * use the default one in {@link #defaultTitleTicks defaultTitleTicks}.
+     * use the default one in {@link #defaultTitleTicks}.
      *
-     * @return the title regex key
+     * @return the title prefix key
      */
     @NotNull
-    public String titleRegex() {
-        return titleRegex(false);
+    public String titlePrefix() {
+        return titlePrefix(false);
     }
 
     /**
@@ -168,19 +180,25 @@ public class TextKeys {
     }
 
     /**
-     * <strong>[MESSAGE TYPE REGEX KEY]</strong>
+     * <strong>[MESSAGE TYPE PREFIX]</strong>
      * <p> The json key to search if you want to send a json message.
      *
-     * @return json key
+     * @param isRegex is the key is in regex format
+     * @return the json prefix key
      */
     @NotNull
-    public String jsonRegex(boolean startsIgnoreCase) {
-        String temp = Pattern.quote("[") + "json" + Pattern.quote("]");
-        return (startsIgnoreCase ? "(?i)^" : "") + temp;
+    public String jsonRegex(boolean isRegex) {
+        final String prefix = "json";
+
+        if (isRegex)
+            return "(?i)^" + Pattern.quote("[") +
+                    prefix + Pattern.quote("]");
+
+        return "[" + prefix + "]";
     }
 
     /**
-     * <strong>[MESSAGE TYPE REGEX KEY]</strong>
+     * <strong>[MESSAGE TYPE PREFIX]</strong>
      * <p> The json key to search if you want to send a json message.
      *
      * @return json key
@@ -191,22 +209,28 @@ public class TextKeys {
     }
 
     /**
-     * <strong>[MESSAGE TYPE REGEX KEY]</strong>
+     * <strong>[MESSAGE TYPE PREFIX]</strong>
      * <p> The action bar to search if you want to send a action-bar message.
      *
-     * @return action bar key
+     * @param isRegex is the key is in regex format
+     * @return the action bar prefix key
      */
     @NotNull
-    public String actionBarRegex(boolean startsIgnoreCase) {
-        String temp = Pattern.quote("[") + "action-bar" + Pattern.quote("]");
-        return (startsIgnoreCase ? "(?i)^" : "") + temp;
+    public String actionBarRegex(boolean isRegex) {
+        final String prefix = "action-bar";
+
+        if (isRegex)
+            return "(?i)^" + Pattern.quote("[") +
+                    prefix + Pattern.quote("]");
+
+        return "[" + prefix + "]";
     }
 
     /**
-     * <strong>[MESSAGE TYPE REGEX KEY]</strong>
+     * <strong>[MESSAGE TYPE PREFIX]</strong>
      * <p> The action bar to search if you want to send a action-bar message.
      *
-     * @return action bar key
+     * @return the action bar prefix key
      */
     @NotNull
     public String actionBarRegex() {
@@ -214,35 +238,59 @@ public class TextKeys {
     }
 
     /**
-     * <strong>[MESSAGE TYPE REGEX KEY]</strong>
+     * <strong>[MESSAGE TYPE PREFIX]</strong>
      * <p> The bossbar key to search if you want to send a bossbar message.
      * <p> This is mainly a regex string to not have conflicts with {@link Bossbar#PATTERN}
      *
-     * @return bossbar key
+     * @param isRegex is the key is in regex format
+     * @return the bossbar prefix key
      */
     @NotNull
-    public String bossbarRegex(boolean startsIgnoreCase) {
-        String temp = Pattern.quote("[") + "bossbar(.+)?" + Pattern.quote("]");
-        return (startsIgnoreCase ? "(?i)^" : "") + temp;
+    public String bossbarRegex(boolean isRegex) {
+        final String prefix = "bossbar(.+)?";
+
+        if (isRegex)
+            return "(?i)^" + Pattern.quote("[") +
+                    prefix + Pattern.quote("]");
+
+        return "[" + prefix.split("[(]")[0] + "]";
     }
 
     /**
-     * <strong>[MESSAGE TYPE REGEX KEY]</strong>
+     * <strong>[MESSAGE TYPE PREFIX]</strong>
      * <p> The bossbar key to search if you want to send a bossbar message.
      * <p> This is mainly a regex string to not have conflicts with {@link Bossbar#PATTERN}
      *
-     * @return bossbar key
+     * @return the bossbar prefix key
      */
     @NotNull
     public String bossbarRegex() {
         return bossbarRegex(false);
     }
 
-    public String webhookRegex(boolean startsIgnoreCase) {
-        String temp = Pattern.quote("[") + "webhook(:.+)?" + Pattern.quote("]");
-        return (startsIgnoreCase ? "(?i)^" : "") + temp;
+    /**
+     * <strong>[MESSAGE TYPE PREFIX]</strong>
+     * <p> The bossbar key to search if you want to send a webhook to Discord.
+     *
+     * @param isRegex is the key is in regex format
+     * @return the webhook prefix key
+     */
+    public String webhookRegex(boolean isRegex) {
+        final String prefix = "webhook(:.+)?";
+
+        if (isRegex)
+            return "(?i)^" + Pattern.quote("[") +
+                    prefix + Pattern.quote("]");
+
+        return "[" + prefix.split("[(]")[0] + "]";
     }
 
+    /**
+     * <strong>[MESSAGE TYPE PREFIX]</strong>
+     * <p> The bossbar key to search if you want to send a webhook to Discord.
+     *
+     * @return the webhook prefix key
+     */
     public String webhookRegex() {
         return webhookRegex(false);
     }
@@ -250,13 +298,14 @@ public class TextKeys {
     /**
      * The main pattern to check the message type in the input line.
      * You can also override this pattern to use your own one.
-     * <p>WARNING: If you want to override this, you <strong>NEED</strong>
-     * to have exactly 3 groups to catch.
-     * <blockquote><pre>
-     * 1. The prefix with the delimiters.
-     * 2. The prefix without the delimiters.
-     * 3. The message without the prefix.</pre></blockquote>
-     * Examples that works in {@link BeansLib#sendMessage(Player, String)}:
+     * <p> <i>WARNING:</i> If you want to override this, you should
+     * have exactly 3 groups to catch.
+     * <ul>
+     *     <li> The prefix with the delimiters.
+     *     <li> The prefix without the delimiters.
+     *     <li> The message without the prefix.
+     * </ul>
+     * Examples that works in {@link Displayer}:
      * <pre> {@code
      * "[action-bar] my action bar message" // Sends an action bar message
      * "[title] a simple title" // Sends a cool title message

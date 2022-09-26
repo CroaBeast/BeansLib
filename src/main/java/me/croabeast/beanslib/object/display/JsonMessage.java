@@ -1,9 +1,10 @@
-package me.croabeast.beanslib.object;
+package me.croabeast.beanslib.object.display;
 
 import com.google.common.collect.*;
+import me.croabeast.beanslib.BeansMethods;
 import me.croabeast.beanslib.utility.*;
-import me.croabeast.beanslib.utility.key.LibKeys;
-import me.croabeast.beanslib.utility.key.TextKeys;
+import me.croabeast.beanslib.object.key.LibUtils;
+import me.croabeast.beanslib.BeansVariables;
 import net.md_5.bungee.api.chat.*;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.*;
@@ -21,7 +22,7 @@ import static net.md_5.bungee.api.chat.ClickEvent.Action.*;
  */
 public class JsonMessage {
 
-    private final TextKeys keys;
+    private final BeansMethods m;
 
     private final Player target;
     private final Player parser;
@@ -29,15 +30,15 @@ public class JsonMessage {
 
     /**
      * Converts a {@link String} line to a {@code JsonMessage} object.
-     * <p> Parses all the required keys from {@link TextKeys} and formats colors.
+     * <p> Parses all the required keys from {@link BeansVariables} and formats colors.
      *
-     * @param keys the {@link TextKeys} instance
+     * @param m the {@link BeansMethods} instance
      * @param target a target to send a message, can be null
      * @param parser a parser to parse placeholders
      * @param string an input string
      */
-    public JsonMessage(TextKeys keys, Player target, Player parser, String string) {
-        this.keys = keys != null ? keys : LibKeys.DEFAULTS;
+    public JsonMessage(BeansMethods m, Player target, Player parser, String string) {
+        this.m = m != null ? m : BeansMethods.DEFAULTS;
         this.target = target == null ? parser : target;
 
         this.parser = parser;
@@ -46,7 +47,7 @@ public class JsonMessage {
 
     /**
      * Converts a {@link String} line to a {@code JsonMessage} object.
-     * <p> Parses all the required keys from {@link LibKeys#DEFAULTS} and formats colors.
+     * <p> Parses all the required keys and methods from {@link BeansMethods#DEFAULTS}.
      *
      * @param target a target to send a message, can be null
      * @param parser a parser to parse placeholders
@@ -77,21 +78,22 @@ public class JsonMessage {
     @SuppressWarnings("deprecation")
     void addHover(TextComponent comp, List<String> hover) {
         BaseComponent[] array = new BaseComponent[hover.size()];
+
         for (int i = 0; i < hover.size(); i++) {
             String end = i == hover.size() - 1 ? "" : "\n";
-            array[i] = toComponent(
-                    TextUtils.colorize(keys, target, parser, hover.get(i)) + end);
+            array[i] = toComponent(m.colorize(target, parser, hover.get(i)) + end);
         }
+
         comp.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, array));
     }
 
     void addEvent(TextComponent comp, String type, String string) {
-        if (parseAction(type) != null)
-            comp.setClickEvent(new ClickEvent(parseAction(type), string));
-        else if (type.matches("(?i)hover")) {
-            String[] array = string.split(keys.lineSeparator());
+        if (type.matches("(?i)hover")) {
+            String[] array = string.split(m.lineSeparator());
             addHover(comp, Lists.newArrayList(array));
         }
+        else if (parseAction(type) != null)
+            comp.setClickEvent(new ClickEvent(parseAction(type), string));
     }
 
     List<BaseComponent> compList(String string) {
@@ -100,7 +102,7 @@ public class JsonMessage {
 
     BaseComponent[] convertString(String click, List<String> hover) {
         String line = TextUtils.parseInteractiveChat(parser, string);
-        line = TextUtils.centerMessage(keys, target, parser, line);
+        line = m.centerMessage(target, parser, line);
 
         if (!hover.isEmpty() || StringUtils.isNotBlank(click)) {
             final TextComponent comp = toComponent(TextUtils.stripJson(line));
@@ -115,7 +117,7 @@ public class JsonMessage {
         }
 
         line = TextUtils.convertOldJson(line);
-        Matcher match = LibKeys.JSON_PATTERN.matcher(line);
+        Matcher match = LibUtils.JSON_PATTERN.matcher(line);
 
         int lastEnd = 0;
         List<BaseComponent> components = new ArrayList<>();
@@ -151,7 +153,7 @@ public class JsonMessage {
      * <p> Uses an input string to apply a click event and a
      * string list to apply a hover event.
      * <p> If click and hover values are null/empty, it will use
-     * the {@link LibKeys#JSON_PATTERN} to parse the respective actions
+     * the {@link LibUtils#JSON_PATTERN} to parse the respective actions
      * and add then in the chat component.
      * <p> After all the actions are set in the chat component,
      * the message is sent to the target player.
@@ -173,7 +175,7 @@ public class JsonMessage {
     /**
      * Sends the {@code JsonMessage} object to the target player,
      * if not defined will be to the parser player.
-     * <p> Uses the {@link LibKeys#JSON_PATTERN} to parse the
+     * <p> Uses the {@link LibUtils#JSON_PATTERN} to parse the
      * respective actions and add then in the chat component.
      * <p> After all the actions are set in the chat component,
      * the message is sent to the target player.
@@ -189,7 +191,7 @@ public class JsonMessage {
     }
 
     /**
-     * Converts a line to a {@link BaseComponent} array using the {@link LibKeys#JSON_PATTERN}.
+     * Converts a line to a {@link BaseComponent} array using the {@link LibUtils#JSON_PATTERN}.
      * <p> Example of how to use it:
      * <pre> {@code
      * String text = "<hover:\"a hover line\">text to apply</text>";
@@ -207,7 +209,7 @@ public class JsonMessage {
     }
 
     /**
-     * Converts a line to a {@link BaseComponent} array using the {@link LibKeys#JSON_PATTERN}.
+     * Converts a line to a {@link BaseComponent} array using the {@link LibUtils#JSON_PATTERN}.
      * <p> Example of how to use it:
      * <pre> {@code
      * String text = "<hover:\"a hover line\">text to apply</text>";
