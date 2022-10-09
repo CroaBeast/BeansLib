@@ -16,45 +16,20 @@ import java.util.regex.Pattern;
  */
 public final class Gradient extends BasePattern {
 
-    /**
-     * The hex basic format.
-     */
     static final String HEX = "[\\da-f]{6}";
 
-    /**
-     * Compiles the gradient pattern.
-     * <p> Deprecated to use the new gradient format that has support for multiple gradients.
-     * <p> See {@link #GRADIENT_PATTERN} for more info.
-     */
     static final Pattern LEGACY_GRADIENT =
             Pattern.compile("(?i)<G:(" + HEX + ")>(.+?)</G:(" + HEX + ")>");
 
-    /**
-     * Creates a gradient format from a string.
-     * @param string an input string
-     * @param isRegex if the format is a regex string
-     * @param isEnding if is an ending format type
-     * @return the gradient format
-     */
     static String gradient(String string, boolean isRegex, boolean isEnding) {
         return "<" + (isEnding ? "/" : "") + "#" +
                 (isRegex ? "(" : "") + string + (isRegex ? ")" : "") + ">";
     }
 
-    /**
-     * Creates a gradient format from a string.
-     * @param string an input string
-     * @param isRegex if the format is a regex string
-     * @return the gradient format
-     */
     static String gradient(String string, boolean isRegex) {
         return gradient(string, isRegex, false);
     }
 
-    /**
-     * Creates a gradient regex format using {@link #HEX} string.
-     * @return the gradient format
-     */
     static String gradient() {
         return gradient(HEX, true);
     }
@@ -92,26 +67,32 @@ public final class Gradient extends BasePattern {
     @Override
     public String process(String string, boolean useRGB) {
         string = convertLegacy(string);
+
         Matcher match = GRADIENT_PATTERN.matcher(string);
 
         while (match.find()) {
-            String x = match.group(1), text = match.group(2), z = match.group(3);
+            String x = match.group(1), text = match.group(2),
+                    z = match.group(3), r = "(?i)" + gradient();
 
-            Matcher insideMatch = Pattern.compile("(?i)" + gradient()).matcher(text);
-            String[] array = text.split("(?i)" + gradient());
+            Matcher insideMatch = Pattern.compile(r).matcher(text);
+            String[] array = text.split(r);
 
             List<String> ids = new ArrayList<>();
+
+            ids.add(x);
             while (insideMatch.find()) ids.add(insideMatch.group(1));
+            ids.add(z);
 
             StringBuilder result = new StringBuilder();
+            int i = 0;
 
-            for (int i = 0; i <= ids.size(); i++) {
-                boolean canPass = i < ids.size();
-                Color end = getColor(canPass ? ids.get(i) : z);
-
+            while (i < ids.size() - 1) {
                 result.append(IridiumAPI.color(
-                        array[i], getColor(x), end, useRGB));
-                if (canPass) x = ids.get(i);
+                        array[i],
+                        getColor(ids.get(i)),
+                        getColor(ids.get(i + 1)),
+                        useRGB));
+                i++;
             }
 
             string = string.replace(match.group(), result + "");

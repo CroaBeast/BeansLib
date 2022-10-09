@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,10 +59,10 @@ public class Bossbar {
      * @param player the player that will see the bossbar
      * @param line the bossbar message to validate
      *
-     * @throws NullPointerException if player is null
+     * @throws NullPointerException if plugin and/or player are null
      */
     public Bossbar(JavaPlugin plugin, Player player, String line) {
-        this.plugin = plugin;
+        this.plugin = Objects.requireNonNull(plugin);
         this.player = Exceptions.checkPlayer(player);
 
         registerValues(line == null ? "" : line);
@@ -80,10 +81,10 @@ public class Bossbar {
      * @param s the seconds that the bossbar will be visible
      * @param p if the bossbar will decrease overtime
      *
-     * @throws NullPointerException if player is null
+     * @throws NullPointerException if plugin and/or player are null
      */
     public Bossbar(JavaPlugin plugin, Player player, String line, String color, String style, int s, boolean p) {
-        this.plugin = plugin;
+        this.plugin = Objects.requireNonNull(plugin);
         this.player = Exceptions.checkPlayer(player);
         this.line = line == null ? "" : line;
 

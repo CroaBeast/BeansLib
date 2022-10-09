@@ -7,6 +7,9 @@ import me.croabeast.beanslib.utility.TextUtils;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+
 /**
  * The object to handles the player's keys and values.
  */
@@ -82,14 +85,21 @@ public class PlayerKeys {
         };
     }
 
+    private <T extends Number> String round(T number) {
+        DecimalFormat format = new DecimalFormat("#.##");
+        format.setRoundingMode(RoundingMode.CEILING);
+
+        return format.format(number);
+    }
+
     private String[] getValues(Player player) {
         Location location = Exceptions.checkPlayer(player).getLocation();
 
         return new String[] {
                 player.getName(), player.getDisplayName(), player.getUniqueId() + "",
                 player.getWorld().getName(), player.getGameMode() + "",
-                location.getX() + "", location.getY() + "", location.getZ() + "",
-                location.getYaw() + "", location.getPitch() + ""
+                round(location.getX()), round(location.getY()), round(location.getZ()),
+                round(location.getYaw()), round(location.getPitch())
         };
     }
 

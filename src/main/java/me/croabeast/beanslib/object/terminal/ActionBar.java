@@ -1,7 +1,7 @@
 package me.croabeast.beanslib.object.terminal;
 
 import me.croabeast.beanslib.utility.Exceptions;
-import me.croabeast.beanslib.object.key.LibUtils;
+import me.croabeast.beanslib.utility.LibUtils;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;

@@ -7,7 +7,6 @@ import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.BeansMethods;
 import me.croabeast.beanslib.object.terminal.ActionBar;
 import me.croabeast.beanslib.object.terminal.TitleMngr;
-import me.croabeast.beanslib.object.key.LibUtils;
 import me.croabeast.beanslib.object.display.Displayer;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.CommandSender;
@@ -300,16 +299,6 @@ public final class TextUtils {
         if (message.length <= 0 || message.length > 2) return;
         String subtitle = message.length == 1 ? "" : message[1];
         sendTitle(player, message[0], subtitle, in, stay, out);
-    }
-
-    public static void sendMessageList(
-            BeansMethods methods, CommandSender target, Player parser, List<String> list,
-            String[] keys, String[] values, boolean caseSensitive, String... flags
-    ) {
-        new Displayer(methods, target, parser, list, flags).
-                setKeys(keys).setKeys(values).
-                setCaseSensitive(caseSensitive).
-                display();
     }
 
     /**

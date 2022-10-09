@@ -1,20 +1,20 @@
 package me.croabeast.beanslib.object.display;
 
 import com.google.common.collect.Sets;
+import com.loohp.interactivechat.libs.org.apache.commons.compress.utils.Lists;
 import me.croabeast.beanslib.object.discord.Webhook;
 import me.croabeast.beanslib.utility.LogUtils;
 import me.croabeast.beanslib.BeansMethods;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.beanslib.BeansVariables;
 import me.croabeast.iridiumapi.IridiumAPI;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -53,36 +53,34 @@ public class Displayer {
      * This flag allows to display action bar messages.
      */
     public static final String ACTION_BAR = "ACTION_BAR";
-    /**
-     * This flag allows to display every message type.
-     */
-    public static final String ALL = "ALL";
 
     private final BeansMethods m;
 
-    private final CommandSender target;
+    private final Collection<? extends CommandSender> targets;
     private final Player parser;
 
-    private final AccessChecker checker;
-    private List<String> list;
+    private final List<String> list;
+    private final Set<String> flags;
 
     private String[] keys = null, values = null;
     private UnaryOperator<String>[] operators = null;
 
     private boolean isRegistered = false,
-            caseSensitive = true,
-            stripPrefix = false;
+            isLogger = true,
+            caseSensitive = true;
 
-    public Displayer(BeansMethods m, CommandSender target, Player parser, List<String> list, String... flags) {
+    public Displayer(BeansMethods m, Collection<? extends CommandSender> targets, Player parser, List<String> list, String... flags) {
         this.m = m == null ? BeansMethods.DEFAULTS : m;
-        this.target = target == null ?
-                Bukkit.getConsoleSender() : target;
 
-        Player t = target instanceof Player ? (Player) target : null;
-        this.parser = (parser == null && t != null) ? t : parser;
+        this.targets = targets;
+        this.parser = parser;
 
         this.list = list;
-        checker = new AccessChecker(this.m, flags);
+        this.flags = Sets.newHashSet(flags);
+    }
+
+    public Displayer(BeansMethods m, CommandSender target, Player parser, List<String> list, String... flags) {
+        this(m, target == null ? null : Collections.singletonList(target), parser, list, flags);
     }
 
     public Displayer(BeansMethods m, Player parser, List<String> list, String... flags) {
@@ -105,13 +103,13 @@ public class Displayer {
         return this;
     }
 
-    public Displayer setCaseSensitive(boolean b) {
-        caseSensitive = b;
+    public Displayer setLogger(boolean b) {
+        isLogger = b;
         return this;
     }
 
-    public Displayer setStripPrefix(boolean b) {
-        stripPrefix = b;
+    public Displayer setCaseSensitive(boolean b) {
+        caseSensitive = b;
         return this;
     }
 
@@ -129,25 +127,26 @@ public class Displayer {
 
     private void registerValues() {
         if (isRegistered) return;
+        if (list.isEmpty()) return;
 
-        List<String> list = new ArrayList<>();
-        if (this.list.isEmpty()) return;
+        List<String> l = new ArrayList<>();
 
-        for (String s : this.list) {
+        for (String s : list) {
             if (s == null) continue;
-
             s = s.replace(m.langPrefixKey(), m.langPrefix());
-            list.add(parseOperatorsAndValues(s));
+            l.add(parseOperatorsAndValues(s));
         }
 
-        this.list = list;
+        list.clear();
+        list.addAll(l);
+
         isRegistered = true;
     }
 
-    private String parseFormat(String regex, String string, boolean color) {
+    private String parseFormat(Player target, String regex, String string, boolean color) {
         Matcher m = Pattern.compile(regex).matcher(string);
-        if (m.find()) string = string.replace(m.group(), "");
 
+        while (m.find()) string = string.replace(m.group(), "");
         string = TextUtils.removeSpace(string);
 
         if (!color) {
@@ -155,134 +154,117 @@ public class Displayer {
             return IridiumAPI.stripAll(stripJson(s));
         }
 
-        return this.m.colorize(target instanceof Player ?
-                (Player) target : null, parser, string);
+        return this.m.colorize(target, parser, string);
+    }
+
+    private boolean checkMatch(String s, String p) {
+        Matcher m = Pattern.compile(p).matcher(s);
+        return m.find();
     }
 
     public void display() {
-        registerValues(); // register the values and operators
+        registerValues(); // register the values and operators in each line
+
         if (list.isEmpty()) return;
+        if (list.size() == 1 && StringUtils.isBlank(list.get(0))) return;
 
-        Player t = target instanceof Player ? (Player) target : null;
-
-        if (t == null) {
+        if (targets == null || targets.isEmpty()) {
             for (String s : list) LogUtils.rawLog(m, s);
             return;
         }
 
-        for (String s : list) {
-            if (checker.isTitle(s)) {
-                Matcher m = Pattern.compile(this.m.titlePrefix(true)).matcher(s);
+        String abp = m.actionBarRegex(true), tp = m.titleRegex(true),
+                jp = m.jsonRegex(true), bp = m.bossbarRegex(true),
+                wp = m.webhookRegex(true);
 
-                String tm = null;
-                try {
-                    if (m.find()) tm = m.group(1).substring(1);
-                } catch (Exception ignored) {}
+        if (isLogger) for (String s : list) LogUtils.rawLog(m, s);
 
-                int[] ticks = this.m.defaultTitleTicks();
-                int time = ticks[1];
+        for (CommandSender target : targets) {
+            if (target == null) continue;
 
-                try {
-                    if (tm != null) time = Integer.parseInt(tm) * 20;
-                } catch (Exception ignored) {}
+            Player t = target instanceof Player ? (Player) target : null;
 
-                String temp = parseFormat(this.m.titlePrefix(true), s, true);
+            for (String s : list) {
+                if (checkMatch(s, abp)) {
+                    if (!flags.isEmpty() && !flags.contains(ACTION_BAR)) continue;
 
-                sendTitle(t,
-                        temp.split(this.m.lineSeparator()),
-                        ticks[0], time, ticks[2]
-                );
-            }
-            else if (checker.isActionBar(s)) {
-                String temp = parseFormat(m.actionBarRegex(true), s, true);
-                sendActionBar(t, temp);
-            }
-            else if (checker.isJson(s)) {
-                String cmd = parseFormat(m.jsonRegex(true), s, false);
+                    sendActionBar(t, parseFormat(t, abp, s, true));
+                    continue;
+                }
 
-                Bukkit.dispatchCommand(
-                        Bukkit.getConsoleSender(),
-                        "minecraft:tellraw " +
-                        target.getName() + " " + cmd
-                );
-            }
-            else if (checker.isBossbar(s)) {
-                new Bossbar(m.getPlugin(), t, s).display();
-            }
-            else if (checker.isWebhook(s)) {
-                ConfigurationSection id = m.getWebhookSection();
+                if (checkMatch(s, tp)) {
+                    if (!flags.isEmpty() && !flags.contains(TITLE)) continue;
+                    Matcher r = Pattern.compile(tp).matcher(s);
 
-                List<String> list = new ArrayList<>(id.getKeys(false));
-                if (list.isEmpty()) continue;
+                    String tm = null;
+                    try {
+                        if (r.find()) tm = r.group(1).substring(1);
+                    } catch (Exception ignored) {}
 
-                Matcher m = Pattern.compile(this.m.webhookRegex(true)).matcher(s);
-                String n = m.find() ? m.group(1) : null;
+                    int[] ticks = this.m.defaultTitleTicks();
+                    int time = ticks[1];
 
-                String line = parseFormat(this.m.webhookRegex(true), s, false);
+                    try {
+                        if (tm != null) time = Integer.parseInt(tm) * 20;
+                    } catch (Exception ignored) {}
 
-                if (n == null) {
-                    n = list.get(0);
+                    String temp1 = parseFormat(t, tp, s, true);
+
+                    sendTitle(t,
+                            temp1.split(m.lineSeparator()),
+                            ticks[0], time, ticks[2]
+                    );
+                    continue;
+                }
+
+                if (checkMatch(s, jp)) {
+                    if (!flags.isEmpty() && !flags.contains(JSON)) continue;
+                    String cmd = parseFormat(t, jp, s, false);
+
+                    Bukkit.dispatchCommand(
+                            Bukkit.getConsoleSender(),
+                            "minecraft:tellraw " +
+                                    target.getName() + " " + cmd
+                    );
+                    continue;
+                }
+
+                if (checkMatch(s, bp)) {
+                    if (!flags.isEmpty() && !flags.contains(BOSSBAR)) continue;
+                    if (m.getPlugin() == null) continue;
+
+                    new Bossbar(m.getPlugin(), t, s).display();
+                    continue;
+                }
+
+                if (checkMatch(s, wp)) {
+                    if (!flags.isEmpty() && !flags.contains(WEBHOOK)) continue;
+                    ConfigurationSection id = m.getWebhookSection();
+
+                    if (id == null) continue;
+
+                    List<String> list = new ArrayList<>(id.getKeys(false));
+                    if (list.isEmpty()) continue;
+
+                    Matcher r1 = Pattern.compile(wp).matcher(s);
+                    String n = r1.find() ? r1.group(1) : null;
+
+                    String line = parseFormat(t, wp, s, false);
+
+                    if (n == null) {
+                        n = list.get(0);
+                        new Webhook(id.getConfigurationSection(n), line).send();
+                        continue;
+                    }
+
+                    for (String l : list) if (n.equals(l)) n = l;
                     new Webhook(id.getConfigurationSection(n), line).send();
                     continue;
                 }
 
-                for (String l : list) if (n.equals(l)) n = l;
-                new Webhook(id.getConfigurationSection(n), line).send();
-            }
-            else if (checker.isChat())
+                if (!flags.isEmpty() && !flags.contains(CHAT)) continue;
                 new JsonMessage(m, t, parser, removeSpace(s)).send();
-        }
-    }
-
-    public static void display(Player target, Player parser, List<String> list) {
-        new Displayer(null, target, parser, list).display();
-    }
-
-    static class AccessChecker {
-
-        private final BeansMethods methods;
-        private final Set<String> flags;
-
-        AccessChecker(BeansMethods methods, String... flags) {
-            this.methods = methods;
-            this.flags = flags == null || flags.length == 0 ?
-                    Sets.newHashSet(ALL) :
-                    Sets.newHashSet(flags);
-        }
-
-        private boolean isAll() {
-            return flags.contains(ALL);
-        }
-
-        public boolean isChat() {
-            return isAll() || flags.contains(CHAT);
-        }
-
-        public boolean isActionBar(String s) {
-            boolean allow = isAll() || flags.contains(ACTION_BAR);
-            return (allow) && s.matches(methods.actionBarRegex(true));
-        }
-
-        public boolean isTitle(String s) {
-            boolean allow = isAll() || flags.contains(TITLE);
-            return (allow) && s.matches(methods.titlePrefix(true));
-        }
-
-        public boolean isBossbar(String s) {
-            boolean allow = isAll() || flags.contains(BOSSBAR);
-            allow = (allow) && s.matches(methods.bossbarRegex(true));
-            return allow && methods.getPlugin() != null;
-        }
-
-        public boolean isJson(String s) {
-            boolean allow = isAll() || flags.contains(JSON);
-            return (allow) && s.matches(methods.jsonRegex(true));
-        }
-
-        public boolean isWebhook(String s) {
-            boolean allow = isAll() || flags.contains(WEBHOOK);
-            allow = (allow) && s.matches(methods.webhookRegex(true));
-            return allow && methods.getWebhookSection() != null;
+            }
         }
     }
 }

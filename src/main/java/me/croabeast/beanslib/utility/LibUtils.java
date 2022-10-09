@@ -1,7 +1,8 @@
-package me.croabeast.beanslib.object.key;
+package me.croabeast.beanslib.utility;
 
 import net.md_5.bungee.api.chat.ClickEvent;
 import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
 
 import java.util.regex.Pattern;
@@ -44,7 +45,10 @@ public final class LibUtils {
             Pattern.compile("(?i)<(" + JSON_PREFIX + "([|]" + JSON_PREFIX + ")?)>(.+?)</text>");
 
     private static String serverVersion() {
-        return Bukkit.getBukkitVersion().split("-")[0];
+        String temp = Bukkit.getVersion();
+
+        temp = TextUtils.removeSpace(temp.substring(temp.indexOf("MC:") + 3));
+        return temp.substring(0, temp.length() - 1);
     }
 
     /**
@@ -53,7 +57,7 @@ public final class LibUtils {
      * @return server version and fork
      */
     public static String serverFork() {
-        return Bukkit.getVersion().split("-")[1] + " " + serverVersion();
+        return WordUtils.capitalize(Bukkit.getName()) + " " + serverVersion();
     }
 
     /**

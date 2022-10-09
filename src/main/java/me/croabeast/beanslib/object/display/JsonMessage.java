@@ -3,7 +3,7 @@ package me.croabeast.beanslib.object.display;
 import com.google.common.collect.*;
 import me.croabeast.beanslib.BeansMethods;
 import me.croabeast.beanslib.utility.*;
-import me.croabeast.beanslib.object.key.LibUtils;
+import me.croabeast.beanslib.utility.LibUtils;
 import me.croabeast.beanslib.BeansVariables;
 import net.md_5.bungee.api.chat.*;
 import org.apache.commons.lang.StringUtils;

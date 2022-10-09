@@ -54,7 +54,6 @@ public abstract class BeansLib extends BeansMethods {
      *
      * @return the requested section
      */
-    @NotNull
     public abstract ConfigurationSection getWebhookSection();
 
     /**
@@ -107,7 +106,7 @@ public abstract class BeansLib extends BeansMethods {
      */
     @Deprecated
     public void sendMessageList(CommandSender sender, List<String> list, String[] keys, String[] values) {
-        TextUtils.sendMessageList(this, sender, null, list, keys, values, false);
+        new Displayer(this, sender, null, list).setKeys(keys).setValues(values).setCaseSensitive(false).display();
     }
 
     /**
@@ -151,9 +150,5 @@ public abstract class BeansLib extends BeansMethods {
     @Deprecated
     public void sendMessageList(CommandSender sender, ConfigurationSection section, String path) {
         sendMessageList(sender, TextUtils.toList(section, path));
-    }
-
-    public Displayer newDisplayer(CommandSender target, Player parser, List<String> list, String... flags) {
-        return new Displayer(this, target, parser, list, flags);
     }
 }

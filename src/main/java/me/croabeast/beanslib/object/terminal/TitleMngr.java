@@ -1,7 +1,7 @@
 package me.croabeast.beanslib.object.terminal;
 
 import me.croabeast.beanslib.utility.Exceptions;
-import me.croabeast.beanslib.object.key.LibUtils;
+import me.croabeast.beanslib.utility.LibUtils;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Constructor;

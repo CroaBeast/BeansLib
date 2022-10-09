@@ -140,7 +140,7 @@ public class BeansVariables {
      * @return the title prefix key
      */
     @NotNull
-    public String titlePrefix(boolean isRegex) {
+    public String titleRegex(boolean isRegex) {
         final String prefix = "title(:\\d+)?";
 
         if (isRegex)
@@ -159,8 +159,8 @@ public class BeansVariables {
      * @return the title prefix key
      */
     @NotNull
-    public String titlePrefix() {
-        return titlePrefix(false);
+    public String titleRegex() {
+        return titleRegex(false);
     }
 
     /**
