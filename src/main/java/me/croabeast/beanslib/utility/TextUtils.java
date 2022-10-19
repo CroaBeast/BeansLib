@@ -326,16 +326,4 @@ public final class TextUtils {
 
         return name + "=[" + builder + "]";
     }
-
-    /**
-     * Formats a class to a string defined format.
-     *
-     * @param obj the object to format
-     * @param args values for the object
-     *
-     * @return the formatted class
-     */
-    public static String classFormat(Object obj, Object... args) {
-        return classFormat(obj, ":", true, args);
-    }
 }

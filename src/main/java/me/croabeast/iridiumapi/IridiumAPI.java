@@ -147,8 +147,8 @@ public final class IridiumAPI {
      */
     @NotNull
     public static ChatColor getColor(@NotNull String string, boolean useRGB) {
-        return useRGB ? ChatColor.of(new Color(Integer.parseInt(string, 16)))
-                : getClosestColor(new Color(Integer.parseInt(string, 16)));
+        Color c = new Color(Integer.parseInt(string, 16));
+        return useRGB ? ChatColor.of(c) : getClosestColor(c);
     }
 
     /**
