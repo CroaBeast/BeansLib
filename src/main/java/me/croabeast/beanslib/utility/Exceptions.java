@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -38,19 +39,21 @@ public final class Exceptions {
      *
      * @return the respective value
      */
-    public static boolean arePluginsEnabled(boolean isInclusive, List<String> names) {
+    public static boolean arePluginsEnabled(boolean isInclusive, Collection<? extends String> names) {
         if (names.size() == 0) return false;
 
-        if (names.size() == 1)
-            return isPluginEnabled(names.get(0));
+        if (names.size() == 1) {
+            String s = names.toArray(new String[0])[0];
+            return isPluginEnabled(s);
+        }
 
         for (String name : names) {
             boolean isEnabled = isPluginEnabled(name);
 
-            if (isInclusive) {
-                if (!isEnabled) return false;
-            } else {
+            if (!isInclusive) {
                 if (isEnabled) return true;
+            } else {
+                if (!isEnabled) return false;
             }
         }
 

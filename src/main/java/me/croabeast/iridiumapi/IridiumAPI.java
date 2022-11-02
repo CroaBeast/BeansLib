@@ -46,7 +46,7 @@ public final class IridiumAPI {
             .put(new Color(16777045), ChatColor.getByChar('e'))
             .put(new Color(16777215), ChatColor.getByChar('f')).build();
 
-    private static final List<BasePattern> PATTERNS =
+    private static final List<BasePattern> BASE_PATTERNS =
             Arrays.asList(new Gradient(), new Rainbow(), new SolidColor());
 
     /**
@@ -59,19 +59,9 @@ public final class IridiumAPI {
      */
     @NotNull
     public static String process(@NotNull String s, boolean useRGB) {
-        for (BasePattern pattern : PATTERNS) s = pattern.process(s, useRGB);
+        for (BasePattern pattern : BASE_PATTERNS)
+            s = pattern.process(s, useRGB);
         return ChatColor.translateAlternateColorCodes('&', s);
-    }
-
-    /**
-     * Process a string to apply the correct colors using the RGB format.
-     *
-     * @param string an input string
-     * @return the processed string
-     */
-    @NotNull
-    public static String process(@NotNull String string) {
-        return process(string, SUPPORTS_RGB);
     }
 
     /**
@@ -85,12 +75,19 @@ public final class IridiumAPI {
      */
     @NotNull
     public static String process(Player player, String s) {
-        int i = 0;
-        try {
-            i = Protocols.getClientVersion(player);
-        }
-        catch (Exception ignored) {}
-        return i == 0 ? process(s) : process(s, i > 15 && SUPPORTS_RGB);
+        int i = Protocols.getClientVersion(player);
+        return process(s, (i == 0 || i > 15) && SUPPORTS_RGB);
+    }
+
+    /**
+     * Process a string to apply the correct colors using the RGB format.
+     *
+     * @param string an input string
+     * @return the processed string
+     */
+    @NotNull
+    public static String process(@NotNull String string) {
+        return process(null, string);
     }
 
     /**
@@ -158,8 +155,8 @@ public final class IridiumAPI {
      * @return the stripped string
      */
     @NotNull
-    public static String stripBukkit(@NotNull String string) {
-        return string.replaceAll("(?i)[&§][a-f\\d]", "");
+    public static String stripBukkit(String string) {
+        return StringUtils.isBlank(string) ? string : string.replaceAll("(?i)[&§][a-f\\d]", "");
     }
 
     /**
@@ -169,8 +166,8 @@ public final class IridiumAPI {
      * @return the stripped string
      */
     @NotNull
-    public static String stripSpecial(@NotNull String string) {
-        return string.replaceAll("(?i)[&§][k-or]", "");
+    public static String stripSpecial(String string) {
+        return StringUtils.isBlank(string) ? string : string.replaceAll("(?i)[&§][k-or]", "");
     }
 
     /**
@@ -180,7 +177,9 @@ public final class IridiumAPI {
      * @return the stripped string
      */
     @NotNull
-    public static String stripRGB(@NotNull String string) {
+    public static String stripRGB(String string) {
+        if (StringUtils.isBlank(string)) return string;
+
         string = Gradient.convertLegacy(string);
 
         Matcher gradient = Gradient.GRADIENT_PATTERN.matcher(string);
@@ -202,8 +201,8 @@ public final class IridiumAPI {
      * @return the stripped string
      */
     @NotNull
-    public static String stripAll(@NotNull String string) {
-        return stripRGB(stripSpecial(stripBukkit(string)));
+    public static String stripAll(String string) {
+        return StringUtils.isBlank(string) ? string : stripRGB(stripSpecial(stripBukkit(string)));
     }
 
     /**

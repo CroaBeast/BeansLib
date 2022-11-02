@@ -143,53 +143,34 @@ public enum Protocols {
     }
 
     /**
-     * Gets the major version from a protocol's number.
+     * Gets the major version from a player's client.
+     * <p> Returns <strong><code>0</code></strong> if ViaVersion is not enabled or player is null.
      *
-     * @param i protocol
+     * @param player a player
      * @return the major version
      */
-    public static int getClientVersion(int i) {
-        Protocols init = UNKNOWN_CLIENT;
+    public static int getClientVersion(Player player) {
+        int o = UNKNOWN_CLIENT.majorVersion();
+
+        if (!Exceptions.isPluginEnabled("ViaVersion"))
+            return o;
+
+        try {
+            Exceptions.checkPlayer(player);
+        } catch (Exception e) {
+            return o;
+        }
+
+        UUID u = player.getUniqueId();
+        int i = Via.getAPI().getPlayerVersion(u);
 
         for (Protocols p : values()) {
             if (p == UNKNOWN_CLIENT) continue;
-            if (p.protocols().contains(i)) init = p;
+
+            if (p.protocols().contains(i))
+                return p.majorVersion();
         }
 
-        return init.majorVersion();
-    }
-
-    /**
-     * Exception for ViaVersion not being enabled.
-     */
-    private static final UnsupportedOperationException NOT_VIAVERSION_ENABLED =
-            new UnsupportedOperationException("ViaVersion needs to be enabled to use this method.");
-
-    /**
-     * Gets the major version from a UUID.
-     *
-     * @param uuid a uuid
-     *
-     * @return the major version
-     * @throws UnsupportedOperationException if ViaVersion is not enabled
-     */
-    public static int getClientVersion(@NotNull UUID uuid) {
-        if (!Exceptions.isPluginEnabled("ViaVersion"))
-            throw NOT_VIAVERSION_ENABLED;
-
-        return getClientVersion(Via.getAPI().getPlayerVersion(uuid));
-    }
-
-    /**
-     * Gets the major version from a player's client.
-     *
-     * @param player a player
-     *
-     * @return the major version
-     * @throws UnsupportedOperationException if ViaVersion is not enabled
-     * @throws NullPointerException if player is null
-     */
-    public static int getClientVersion(Player player) {
-        return getClientVersion(Exceptions.checkPlayer(player).getUniqueId());
+        return o;
     }
 }

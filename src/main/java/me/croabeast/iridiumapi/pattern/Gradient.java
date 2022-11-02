@@ -1,6 +1,7 @@
 package me.croabeast.iridiumapi.pattern;
 
 import me.croabeast.iridiumapi.*;
+import org.apache.commons.lang.StringUtils;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -40,6 +41,8 @@ public final class Gradient extends BasePattern {
      * @return the converted string
      */
     public static String convertLegacy(String string) {
+        if (StringUtils.isBlank(string)) return string;
+
         Matcher match = LEGACY_GRADIENT.matcher(string);
 
         while (match.find()) {

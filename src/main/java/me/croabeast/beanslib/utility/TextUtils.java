@@ -252,9 +252,9 @@ public final class TextUtils {
      */
     public static String parseInteractiveChat(Player player, String line) {
         if (!Exceptions.isPluginEnabled("InteractiveChat")) return line;
-        Exceptions.checkPlayer(player);
 
         try {
+            Exceptions.checkPlayer(player);
             return InteractiveChatAPI.markSender(line, player.getUniqueId());
         } catch (Exception e) {
             e.printStackTrace();
