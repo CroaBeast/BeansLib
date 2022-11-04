@@ -109,8 +109,10 @@ public class JsonMessage {
             if (!hover.isEmpty()) addHover(comp, hover);
 
             if (StringUtils.isNotBlank(click)) {
-                String[] input = click.split(":", 2);
-                comp.setClickEvent(new ClickEvent(parseAction(input[0]), input[1]));
+                try {
+                    String[] input = click.split(":", 2);
+                    comp.setClickEvent(new ClickEvent(parseAction(input[0]), input[1]));
+                } catch (Exception ignored) {}
             }
 
             return Lists.newArrayList(comp).toArray(new BaseComponent[0]);

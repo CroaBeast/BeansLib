@@ -3,6 +3,7 @@ package me.croabeast.beanslib.object.display;
 import com.google.common.collect.Sets;
 import com.loohp.interactivechat.libs.org.apache.commons.compress.utils.Lists;
 import me.croabeast.beanslib.object.discord.Webhook;
+import me.croabeast.beanslib.utility.Exceptions;
 import me.croabeast.beanslib.utility.LogUtils;
 import me.croabeast.beanslib.BeansMethods;
 import me.croabeast.beanslib.utility.TextUtils;
@@ -180,9 +181,8 @@ public class Displayer {
         if (isLogger) for (String s : list) LogUtils.rawLog(m, s);
 
         for (CommandSender target : targets) {
-            if (target == null) continue;
-
             Player t = target instanceof Player ? (Player) target : null;
+            if (t == null) continue;
 
             for (String s : list) {
                 if (checkMatch(s, abp)) {
@@ -263,6 +263,7 @@ public class Displayer {
                 }
 
                 if (!flags.isEmpty() && !flags.contains(CHAT)) continue;
+
                 new JsonMessage(m, t, parser, removeSpace(s)).send();
             }
         }
