@@ -174,16 +174,25 @@ public class Displayer {
             return;
         }
 
+        List<Player> targets = new ArrayList<>();
+
+        for (CommandSender t : this.targets) {
+            if (t == null) continue;
+            if (t instanceof Player) targets.add(((Player) t));
+        }
+
+        if (targets.isEmpty()) {
+            for (String s : list) LogUtils.rawLog(m, s);
+            return;
+        }
+
         String abp = m.actionBarRegex(true), tp = m.titleRegex(true),
                 jp = m.jsonRegex(true), bp = m.bossbarRegex(true),
                 wp = m.webhookRegex(true);
 
         if (isLogger) for (String s : list) LogUtils.rawLog(m, s);
 
-        for (CommandSender target : targets) {
-            Player t = target instanceof Player ? (Player) target : null;
-            if (t == null) continue;
-
+        targets.forEach(t -> {
             for (String s : list) {
                 if (checkMatch(s, abp)) {
                     if (!flags.isEmpty() && !flags.contains(ACTION_BAR)) continue;
@@ -224,7 +233,7 @@ public class Displayer {
                     Bukkit.dispatchCommand(
                             Bukkit.getConsoleSender(),
                             "minecraft:tellraw " +
-                                    target.getName() + " " + cmd
+                            t.getName() + " " + cmd
                     );
                     continue;
                 }
@@ -266,6 +275,6 @@ public class Displayer {
 
                 new JsonMessage(m, t, parser, removeSpace(s)).send();
             }
-        }
+        });
     }
 }
