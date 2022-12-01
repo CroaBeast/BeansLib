@@ -4,7 +4,7 @@ An essential library for your SpigotMC plugin. Features range from advanced grad
 
 Please note that this is **not a plugin!**
 
-Requires Java 8. Works on MC Versions 1.8 - 1.18.
+Requires Java 8. Works on MC Versions 1.8 - 1.19.
 
 ## Setup
 1. Add BeansLib into your project via Maven or Gradle (look below).
