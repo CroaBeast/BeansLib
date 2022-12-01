@@ -21,34 +21,20 @@ And you're all set!
 ## Maven and Gradle Integration
 Maven - add to pom.xml
 ```xml
-<repositories>
-    <repository>
-        <id>jitpack.io</id>
-        <url>https://jitpack.io</url>
-    </repository>
-</repositories>
-```
-```xml
 <dependencies>
     <dependency>
-        <groupId>com.github.CroaBeast</groupId>
+        <groupId>io.github.croabeast</groupId>
         <artifactId>BeansLib</artifactId>
-        <!--Replace version with the latest release version-->
-        <version>RELEASE_TAG</version>
+        <!--Replace version with the latest version-->
+        <version>{version commit tag}</version>
     </dependency>
 </dependencies>
 ```
 
 Gradle - add to build.gradle
-```
-allprojects {
-    repositories {
-        maven { url 'https://jitpack.io' }
-    }
-}
-```
+
 ```
 dependencies {
-    implementation 'com.github.CroaBeast:BeansLib:RELEASE_TAG'
+    implementation 'io.github.croabeast:BeansLib:{version commit tag}'
 }
 ```
