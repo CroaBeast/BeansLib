@@ -1,5 +1,6 @@
 package me.croabeast.beanslib.utility.chars;
 
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,6 +54,8 @@ public final class CharHandler {
     @Nullable
     public static Character toChar(@Nullable String input) {
         if (input == null || input.length() <= 0) return null;
+        if (StringUtils.isBlank(input)) return null;
+
         char[] array = input.toCharArray();
         return array.length > 1 ? null : array[0];
     }
@@ -81,12 +84,12 @@ public final class CharHandler {
     }
 
     /**
-     * Removes a character from the {@link #VALUES} map.
+     * Removes a character array from the {@link #VALUES} map.
      *
-     * @param c a character
+     * @param array a character array
      */
-    public static void removeChar(char c) {
-        VALUES.remove(c);
+    public static void removeChar(char... array) {
+        for (char c : array) VALUES.remove(c);
     }
 
     /**
@@ -101,12 +104,14 @@ public final class CharHandler {
     }
 
     /**
-     * Removes a character from a string from the {@link #VALUES} map.
+     * Removes characters in a string array from the {@link #VALUES} map.
      *
-     * @param input an input string
+     * @param array an string array
      */
-    public static void removeChar(String input) {
-        Character character = toChar(input);
-        if (character != null) removeChar(character);
+    public static void removeChar(String... array) {
+        for (String input : array) {
+            Character character = toChar(input);
+            if (character != null) removeChar(character);
+        }
     }
 }

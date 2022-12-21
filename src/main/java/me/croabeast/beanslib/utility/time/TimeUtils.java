@@ -11,6 +11,9 @@ package me.croabeast.beanslib.utility.time;
 @Deprecated
 public final class TimeUtils {
 
+    /**
+     * Initializing this class is blocked.
+     */
     private TimeUtils() {}
 
     /**

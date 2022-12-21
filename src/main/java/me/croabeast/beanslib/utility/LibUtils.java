@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 public final class LibUtils {
 
     /**
-     * Initializing this class is not available.
+     * Initializing this class is blocked.
      */
     private LibUtils() {}
 

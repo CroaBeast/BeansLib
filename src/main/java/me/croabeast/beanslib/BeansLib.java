@@ -106,7 +106,9 @@ public abstract class BeansLib extends BeansMethods {
      */
     @Deprecated
     public void sendMessageList(CommandSender sender, List<String> list, String[] keys, String[] values) {
-        new Displayer(this, sender, null, list).setKeys(keys).setValues(values).setCaseSensitive(false).display();
+        new Displayer(this, sender, null, list).
+                setKeys(keys).setValues(values).
+                setCaseSensitive(false).display();
     }
 
     /**

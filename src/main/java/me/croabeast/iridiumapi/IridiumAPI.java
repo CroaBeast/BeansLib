@@ -24,6 +24,9 @@ import java.util.regex.Pattern;
  */
 public final class IridiumAPI {
 
+    /**
+     * Initializing this class is blocked.
+     */
     private IridiumAPI() {}
 
     private static final boolean SUPPORTS_RGB = LibUtils.majorVersion() > 15;

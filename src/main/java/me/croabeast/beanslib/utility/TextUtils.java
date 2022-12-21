@@ -90,7 +90,7 @@ public final class TextUtils {
     @SuppressWarnings("unchecked")
     @SafeVarargs
     public static <T> T[] combineArrays(@NotNull T[] array, @Nullable T[]... additionalArrays) {
-        if (additionalArrays == null) return Arrays.copyOf(array, array.length);
+        if (additionalArrays == null) return array;
 
         List<T> resultList = new ArrayList<>();
         Collections.addAll(resultList, array);
@@ -257,7 +257,6 @@ public final class TextUtils {
             Exceptions.checkPlayer(player);
             return InteractiveChatAPI.markSender(line, player.getUniqueId());
         } catch (Exception e) {
-            e.printStackTrace();
             return line;
         }
     }

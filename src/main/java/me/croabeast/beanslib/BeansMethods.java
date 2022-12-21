@@ -13,6 +13,9 @@ import java.util.regex.Pattern;
 
 public class BeansMethods extends BeansVariables {
 
+    /**
+     * A default {@link BeansMethods} instance for static methods.
+     */
     public static final BeansMethods DEFAULTS = new BeansMethods();
 
     /**

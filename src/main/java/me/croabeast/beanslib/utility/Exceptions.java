@@ -14,6 +14,9 @@ import java.util.Objects;
  */
 public final class Exceptions {
 
+    /**
+     * Initializing this class is blocked.
+     */
     private Exceptions() {}
 
     /**

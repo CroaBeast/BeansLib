@@ -1,9 +1,8 @@
 package me.croabeast.beanslib.object.display;
 
 import com.google.common.collect.Sets;
-import com.loohp.interactivechat.libs.org.apache.commons.compress.utils.Lists;
+import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.object.discord.Webhook;
-import me.croabeast.beanslib.utility.Exceptions;
 import me.croabeast.beanslib.utility.LogUtils;
 import me.croabeast.beanslib.BeansMethods;
 import me.croabeast.beanslib.utility.TextUtils;
@@ -26,7 +25,15 @@ import static me.croabeast.beanslib.utility.TextUtils.*;
  * The <code>Displayer</code> class represents the action to display a list of messages
  * to a player using {@link BeansVariables} keys for parse different message types.
  *
- * <p> It can set flags to allow certain message types to be sent.
+ * <p></p> This is a basic example of how to create a new <code>Displayer</code> object.
+ * <pre>{@code
+ * new Displayer(
+ *       "A BeansLib instance to get methods and variables",
+ *       "A collection of CommandSender targets to display",
+ *       "A player to parse colors and placeholders, can be null",
+ *       "A String list of messages to display"
+ * );
+ * }</pre>
  */
 public class Displayer {
 
@@ -70,7 +77,10 @@ public class Displayer {
             isLogger = true,
             caseSensitive = true;
 
-    public Displayer(BeansMethods m, Collection<? extends CommandSender> targets, Player parser, List<String> list, String... flags) {
+    public Displayer(
+            BeansMethods m, Collection<? extends CommandSender> targets,
+            Player parser, List<String> list, String... flags
+    ) {
         this.m = m == null ? BeansMethods.DEFAULTS : m;
 
         this.targets = targets;
@@ -144,18 +154,18 @@ public class Displayer {
         isRegistered = true;
     }
 
-    private String parseFormat(Player target, String regex, String string, boolean color) {
-        Matcher m = Pattern.compile(regex).matcher(string);
+    private String parseFormat(Player t, String r, String s, boolean c) {
+        Matcher m = Pattern.compile(r).matcher(s);
 
-        while (m.find()) string = string.replace(m.group(), "");
-        string = TextUtils.removeSpace(string);
+        while (m.find()) s = s.replace(m.group(), "");
+        s = TextUtils.removeSpace(s);
 
-        if (!color) {
-            String s = parsePAPI(parser, this.m.parseChars(string));
-            return IridiumAPI.stripAll(stripJson(s));
+        if (!c) {
+            String s1 = parsePAPI(parser, this.m.parseChars(s));
+            return IridiumAPI.stripAll(stripJson(s1));
         }
 
-        return this.m.colorize(target, parser, string);
+        return this.m.colorize(t, parser, s);
     }
 
     private boolean checkMatch(String s, String p) {
@@ -163,37 +173,48 @@ public class Displayer {
         return m.find();
     }
 
-    public void display() {
-        registerValues(); // register the values and operators in each line
+    public void display(boolean hardSpacing) {
+        // register the values and operators in each line
+        registerValues();
 
+        // Checks if the messages list is empty or if
+        // the first message is blank to not display.
         if (list.isEmpty()) return;
         if (list.size() == 1 && StringUtils.isBlank(list.get(0))) return;
 
+        // if there is no target(s), it will display to the console.
         if (targets == null || targets.isEmpty()) {
             for (String s : list) LogUtils.rawLog(m, s);
             return;
         }
 
+        // Only gets the players from the collection of targets.
         List<Player> targets = new ArrayList<>();
 
         for (CommandSender t : this.targets) {
             if (t == null) continue;
-            if (t instanceof Player) targets.add(((Player) t));
+            if (!(t instanceof Player)) continue;
+            targets.add(((Player) t));
         }
 
+        // if there is no player targets, it will display to the console.
         if (targets.isEmpty()) {
             for (String s : list) LogUtils.rawLog(m, s);
             return;
         }
 
+        // Gets all the message type regexes.
         String abp = m.actionBarRegex(true), tp = m.titleRegex(true),
                 jp = m.jsonRegex(true), bp = m.bossbarRegex(true),
                 wp = m.webhookRegex(true);
 
+        // Displays the messages list to console if enabled.
         if (isLogger) for (String s : list) LogUtils.rawLog(m, s);
 
+        // Iterates of every target to display.
         targets.forEach(t -> {
             for (String s : list) {
+                // Checks if the message is an action bar type and if the type is allowed.
                 if (checkMatch(s, abp)) {
                     if (!flags.isEmpty() && !flags.contains(ACTION_BAR)) continue;
 
@@ -201,6 +222,7 @@ public class Displayer {
                     continue;
                 }
 
+                // Checks if the message is a title type and if the type is allowed.
                 if (checkMatch(s, tp)) {
                     if (!flags.isEmpty() && !flags.contains(TITLE)) continue;
                     Matcher r = Pattern.compile(tp).matcher(s);
@@ -226,6 +248,7 @@ public class Displayer {
                     continue;
                 }
 
+                // Checks if the message is a json type and if the type is allowed.
                 if (checkMatch(s, jp)) {
                     if (!flags.isEmpty() && !flags.contains(JSON)) continue;
                     String cmd = parseFormat(t, jp, s, false);
@@ -238,6 +261,7 @@ public class Displayer {
                     continue;
                 }
 
+                // Checks if the message is a bossbar type and if the type is allowed.
                 if (checkMatch(s, bp)) {
                     if (!flags.isEmpty() && !flags.contains(BOSSBAR)) continue;
                     if (m.getPlugin() == null) continue;
@@ -246,6 +270,7 @@ public class Displayer {
                     continue;
                 }
 
+                // Checks if the message is a webhook type and if the type is allowed.
                 if (checkMatch(s, wp)) {
                     if (!flags.isEmpty() && !flags.contains(WEBHOOK)) continue;
                     ConfigurationSection id = m.getWebhookSection();
@@ -271,10 +296,18 @@ public class Displayer {
                     continue;
                 }
 
+                // Checks if the message is a chat type and if the type is allowed.
                 if (!flags.isEmpty() && !flags.contains(CHAT)) continue;
-
-                new JsonMessage(m, t, parser, removeSpace(s)).send();
+                new JsonMessage(m, t, parser, hardSpacing ? removeSpace(s) : s).send();
             }
         });
+    }
+
+    public void display() {
+        display(false);
+    }
+
+    public static Displayer fromPlayer(Player player, List<String> list) {
+        return new Displayer(null, (CommandSender) null, player, list);
     }
 }
