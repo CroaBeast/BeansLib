@@ -122,19 +122,19 @@ public final class TextUtils {
         if (keys == null || values == null) return string;
         if (keys.length > values.length) return string;
 
-        String add = caseSensitive ? "" : "(?i)";
-
         for (int i = 0; i < keys.length; i++) {
             if (keys[i] == null | values[i] == null) continue;
 
-            String newKey = Pattern.quote(keys[i]);
-            if (StringUtils.isBlank(newKey)) continue;
+            String key = Pattern.quote(keys[i]);
+            if (StringUtils.isBlank(key)) continue;
 
-            Matcher matcher = Pattern.compile(add + newKey).matcher(string);
-            if (!matcher.find()) continue;
+            if (caseSensitive) key = "(?i)" + key;
+            Matcher m = Pattern.compile(key).matcher(string);
+            if (!m.find()) continue;
 
-            string = string.replace(matcher.group(), values[i]);
+            string = string.replace(m.group(), values[i]);
         }
+
         return string;
     }
 

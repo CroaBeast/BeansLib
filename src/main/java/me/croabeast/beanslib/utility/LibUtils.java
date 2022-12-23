@@ -67,7 +67,7 @@ public final class LibUtils {
      * @return server's major version
      */
     public static int majorVersion() {
-        return Integer.parseInt(serverVersion().split("\\.")[1]);
+        return Integer.parseInt(serverVersion().split("\\.", 3)[1]);
     }
 
     /**

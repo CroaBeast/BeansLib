@@ -89,6 +89,7 @@ public final class CharHandler {
      * @param array a character array
      */
     public static void removeChar(char... array) {
+        if (array == null || array.length == 0) return;
         for (char c : array) VALUES.remove(c);
     }
 
@@ -109,6 +110,8 @@ public final class CharHandler {
      * @param array an string array
      */
     public static void removeChar(String... array) {
+        if (array == null || array.length == 0) return;
+
         for (String input : array) {
             Character character = toChar(input);
             if (character != null) removeChar(character);

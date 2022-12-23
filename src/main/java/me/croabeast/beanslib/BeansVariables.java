@@ -11,10 +11,10 @@ import java.util.regex.Pattern;
 
 /**
  * The variables for the {@link BeansLib} class.
- * The name before BeansVariables was TextKeys.
+ * The name before BeansVariables was <code>TextKeys</code>.
  *
  * @author CroaBeast
- * @since 1.0
+ * @since 1.2
  */
 public class BeansVariables {
 

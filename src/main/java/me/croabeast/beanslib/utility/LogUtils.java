@@ -108,7 +108,7 @@ public final class LogUtils {
      * @param sender a valid sender, can be the console or a player
      * @param lines the information to send
      */
-    public static void doLog(BeansMethods m, @NotNull JavaPlugin plugin, CommandSender sender, String... lines) {
+    public static void doLog(BeansMethods m, JavaPlugin plugin, CommandSender sender, String... lines) {
         if (sender instanceof Player)
             playerLog(m, (Player) sender, lines);
 

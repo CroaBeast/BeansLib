@@ -1,7 +1,6 @@
 package me.croabeast.beanslib.object.display;
 
 import com.google.common.collect.Sets;
-import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.object.discord.Webhook;
 import me.croabeast.beanslib.utility.LogUtils;
 import me.croabeast.beanslib.BeansMethods;
@@ -13,6 +12,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.UnaryOperator;
@@ -22,18 +22,41 @@ import java.util.regex.Pattern;
 import static me.croabeast.beanslib.utility.TextUtils.*;
 
 /**
- * The <code>Displayer</code> class represents the action to display a list of messages
- * to a player using {@link BeansVariables} keys for parse different message types.
+ * <p>The <code>Displayer</code> class represents the
+ * action to display a list of messages to a player
+ * using {@link BeansVariables} keys for parse
+ * different message types and {@link BeansMethods} to
+ * use and format every message type respectively.</p>
  *
- * <p></p> This is a basic example of how to create a new <code>Displayer</code> object.
+ * <p> This is a basic example of how to create
+ * a new <code>Displayer</code> object.
  * <pre>{@code
  * new Displayer(
  *       "A BeansLib instance to get methods and variables",
  *       "A collection of CommandSender targets to display",
  *       "A player to parse colors and placeholders, can be null",
  *       "A String list of messages to display"
+ *       "An array of flags to allow certain message types"
+ *       // if there is no flag array, it will allow all types
  * );
  * }</pre>
+ *
+ * Example:
+ * <pre>{@code
+ * Displayer displayer = new Displayer(
+ *       plugin.getBeansLibExtendedClass(),
+ *       Bukkit.getOnlinePlayers(), // can be single or null
+ *       Bukkit.getPlayer("Markiplier"),
+ *       plugin.getConfig().getStringList("path-here"),
+ *       Displayer.CHAT, Displayer.BOSSBAR
+ *       // only chat and bossbar messages are allowed
+ *       // with these flags
+ * );
+ *
+ * displayer.display(); // displays the object
+ * }</pre>
+ *
+ * See {@link #display(boolean)} or {@link #display()} for more info.
  */
 public class Displayer {
 
@@ -77,6 +100,15 @@ public class Displayer {
             isLogger = true,
             caseSensitive = true;
 
+    /**
+     * See {@link Displayer} for more info.
+     *
+     * @param m       the BeansLib instance
+     * @param targets a CommandSender targets, can be null
+     * @param parser  a player to parse values, can be null
+     * @param list    a string list
+     * @param flags   an array of flags to allow certain message types
+     */
     public Displayer(
             BeansMethods m, Collection<? extends CommandSender> targets,
             Player parser, List<String> list, String... flags
@@ -90,35 +122,86 @@ public class Displayer {
         this.flags = Sets.newHashSet(flags);
     }
 
+    /**
+     * See {@link Displayer} for more info.
+     *
+     * @param m      the BeansLib instance
+     * @param target a CommandSender target, can be null
+     * @param parser a player to parse values, can be null
+     * @param list   a string list
+     * @param flags  an array of flags to allow certain message types
+     */
     public Displayer(BeansMethods m, CommandSender target, Player parser, List<String> list, String... flags) {
         this(m, target == null ? null : Collections.singletonList(target), parser, list, flags);
     }
 
+    /**
+     * See {@link Displayer} for more info.
+     *
+     * @param m      the BeansLib instance
+     * @param parser a player to parse values, can be null
+     * @param list   a string list
+     * @param flags  an array of flags to allow certain message types
+     */
     public Displayer(BeansMethods m, Player parser, List<String> list, String... flags) {
         this(m, parser, parser, list, flags);
     }
 
+    /**
+     * Sets strings operators to apply them in
+     * every string of the string list.
+     *
+     * @param ops an array of operator
+     * @return a reference of this object
+     */
     @SafeVarargs
     public final Displayer setOperators(UnaryOperator<String>... ops) {
         operators = ops;
         return this;
     }
 
+    /**
+     * Sets the string keys to be replaced for
+     * the input values in {@link #setValues(String...)}.
+     *
+     * @param keys an array of keys
+     * @return a reference of this object
+     */
     public Displayer setKeys(String... keys) {
         this.keys = keys;
         return this;
     }
 
+    /**
+     * Sets the string values that replaces the
+     * input keys in {@link #setValues(String...)}.
+     *
+     * @param values an array of values
+     * @return a reference of this object
+     */
     public Displayer setValues(String... values) {
         this.values = values;
         return this;
     }
 
+    /**
+     * Sets if messages can be sent into the console or not.
+     *
+     * @param b the input value
+     * @return a reference of this object
+     */
     public Displayer setLogger(boolean b) {
         isLogger = b;
         return this;
     }
 
+    /**
+     * Sets if the input keys in {@link #setValues(String...)}
+     * are case-sensitive or not if input keys were set.
+     *
+     * @param b the input value
+     * @return a reference of this object
+     */
     public Displayer setCaseSensitive(boolean b) {
         caseSensitive = b;
         return this;
@@ -173,6 +256,12 @@ public class Displayer {
         return m.find();
     }
 
+    /**
+     * Displays all the messages in the string list to the defined targets.
+     * If there is no targets, will be display in console as log messages.
+     *
+     * @param hardSpacing if the first spaces of a chat message will be removed.
+     */
     public void display(boolean hardSpacing) {
         // register the values and operators in each line
         registerValues();
@@ -303,11 +392,23 @@ public class Displayer {
         });
     }
 
+    /**
+     * Displays all the messages in the string list to the defined targets.
+     * If there is no targets, will be display in console as log messages.
+     * <p>The <code>hardSpacing</code> value of {@link #display(boolean)} is false using this method.
+     */
     public void display() {
         display(false);
     }
 
-    public static Displayer fromPlayer(Player player, List<String> list) {
-        return new Displayer(null, (CommandSender) null, player, list);
+    /**
+     * Creates a single Displayer object with default values and a string list.
+     *
+     * @param player a target player that can parse values, can not be null
+     * @param list an input string list
+     * @return a new instance of the {@link Displayer} object
+     */
+    public static Displayer fromPlayer(@NotNull Player player, List<String> list) {
+        return new Displayer(null, player, list);
     }
 }

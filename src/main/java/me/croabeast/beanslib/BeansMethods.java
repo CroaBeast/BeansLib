@@ -11,6 +11,12 @@ import org.bukkit.entity.Player;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * The method for the {@link BeansLib} class.
+ *
+ * @author CroaBeast
+ * @since 1.3
+ */
 public class BeansMethods extends BeansVariables {
 
     /**
