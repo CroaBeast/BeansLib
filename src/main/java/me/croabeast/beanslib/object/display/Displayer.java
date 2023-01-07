@@ -372,7 +372,10 @@ public class Displayer {
                     Matcher r = Pattern.compile(wp).matcher(s);
                     String line = parseFormat(t, wp, s, false);
 
-                    id = id.getConfigurationSection(r.find() ? r.group() : list.get(0));
+                    String path = list.get(0);
+                    if (r.find()) path = r.group().substring(1);
+
+                    id = id.getConfigurationSection(path);
                     if (id == null) continue;
 
                     new Webhook(id, line).send();
