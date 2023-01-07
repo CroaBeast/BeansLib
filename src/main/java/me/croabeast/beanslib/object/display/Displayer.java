@@ -362,26 +362,20 @@ public class Displayer {
                 // Checks if the message is a webhook type and if the type is allowed.
                 if (checkMatch(s, wp)) {
                     if (!flags.isEmpty() && !flags.contains(WEBHOOK)) continue;
-                    ConfigurationSection id = m.getWebhookSection();
 
+                    ConfigurationSection id = m.getWebhookSection();
                     if (id == null) continue;
 
                     List<String> list = new ArrayList<>(id.getKeys(false));
                     if (list.isEmpty()) continue;
 
-                    Matcher r1 = Pattern.compile(wp).matcher(s);
-                    String n = r1.find() ? r1.group(1) : null;
-
+                    Matcher r = Pattern.compile(wp).matcher(s);
                     String line = parseFormat(t, wp, s, false);
 
-                    if (n == null) {
-                        n = list.get(0);
-                        new Webhook(id.getConfigurationSection(n), line).send();
-                        continue;
-                    }
+                    id = id.getConfigurationSection(r.find() ? r.group() : list.get(0));
+                    if (id == null) continue;
 
-                    for (String l : list) if (n.equals(l)) n = l;
-                    new Webhook(id.getConfigurationSection(n), line).send();
+                    new Webhook(id, line).send();
                     continue;
                 }
 

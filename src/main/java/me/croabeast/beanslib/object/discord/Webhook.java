@@ -3,6 +3,7 @@ package me.croabeast.beanslib.object.discord;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,11 +30,12 @@ public class Webhook {
      * Create a Discord webhook setup using a default configuration section.
      * <p> Make sure the section looks something like this:
      * <a href="https://paste.helpch.at/yojidanamu.bash">webhook.yml</a>
+     *
      * @param sec a valid configuration section
      * @param token a token to replace
      * @param message a basic message to show
      */
-    public Webhook(ConfigurationSection sec, String token, String message) {
+    public Webhook(@NotNull ConfigurationSection sec, String token, String message) {
         this.sec = sec;
         enabled = sec.getBoolean("enabled");
 
@@ -45,10 +47,11 @@ public class Webhook {
      * Create a Discord webhook setup using a default configuration section and a default token "{message}".
      * <p> Make sure the section looks something like this:
      * <a href="https://paste.helpch.at/yojidanamu.bash">webhook.yml</a>
+     *
      * @param sec a valid configuration section
      * @param message a basic message to show
      */
-    public Webhook(ConfigurationSection sec, String message) {
+    public Webhook(@NotNull ConfigurationSection sec, String message) {
         this(sec, "{message}", message);
     }
 
@@ -56,14 +59,16 @@ public class Webhook {
      * Create a Discord webhook setup using a default configuration section with no message to display.
      * <p> Make sure the section looks something like this:
      * <a href="https://paste.helpch.at/yojidanamu.bash">webhook.yml</a>
+     *
      * @param sec a valid configuration section
      */
-    public Webhook(ConfigurationSection sec) {
+    public Webhook(@NotNull ConfigurationSection sec) {
         this(sec, null);
     }
 
     /**
      * Registers the {@link #webhook} with all the necessary items to display.
+     *
      * @param token a token
      * @param message a message
      * @return the requested webhook
@@ -139,6 +144,7 @@ public class Webhook {
     /**
      * Sends the webhook. If the webhook is null or isn't enabled, won't send anything.
      * <p> If any error happens when connecting to its url, will print an error in the console.
+     *
      * @param token a token
      * @param message a message if no message was declared in the constructor
      */
@@ -160,6 +166,7 @@ public class Webhook {
     /**
      * Sends the webhook. If the webhook is null or isn't enabled, won't send anything.
      * <p> If any error happens when connecting to its url, will print an error in the console.
+     *
      * @param message a message if no message was declared in the constructor
      */
     public void send(String message) {

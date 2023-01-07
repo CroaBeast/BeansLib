@@ -201,7 +201,7 @@ public class RawWebhook {
      * @throws IOException if it has an error connecting to the url or if the url is invalid
      * @throws NullPointerException if there is no content or embeds to display
      */
-    public void execute() throws IOException, NullPointerException {
+    public void execute() throws IOException {
         if (content == null && embeds.isEmpty())
             throw new NullPointerException("Set content or add at least one EmbedObject.");
 
