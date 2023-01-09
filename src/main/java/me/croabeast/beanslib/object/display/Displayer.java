@@ -372,8 +372,8 @@ public class Displayer {
                     Matcher r = Pattern.compile(wp).matcher(s);
                     String line = parseFormat(t, wp, s, false);
 
-                    String path = list.get(0);
-                    if (r.find()) path = r.group().substring(1);
+                    String found = r.find() ? r.group(1) : null;
+                    String path = found != null ? found : list.get(0);
 
                     id = id.getConfigurationSection(path);
                     if (id == null) continue;

@@ -80,9 +80,11 @@ public class RawWebhook {
      */
     @NotNull
     private String replace(String string) {
-        if (string == null) return "";
+        if (StringUtils.isBlank(string)) return "";
+
         if (getMessage() == null) return string;
         if (getToken() == null) return string;
+
         return string.replace(getToken(), getMessage());
     }
 
@@ -202,8 +204,8 @@ public class RawWebhook {
      * @throws NullPointerException if there is no content or embeds to display
      */
     public void execute() throws IOException {
-        if (content == null && embeds.isEmpty())
-            throw new NullPointerException("Set content or add at least one EmbedObject.");
+        if (content == null)
+            throw new NullPointerException("Set a content in the embed");
 
         JSONObject json = new JSONObject().
                 put("content", content).

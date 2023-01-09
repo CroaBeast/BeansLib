@@ -76,20 +76,27 @@ public class Webhook {
     private RawWebhook register(String token, String message) {
         RawWebhook hook;
         try {
-            hook = new RawWebhook(sec.getString("url"), token, message).
-                    setContent(sec.getString("content")).
-                    setAvatarUrl(sec.getString("avatar-url")).
-                    setUsername(sec.getString("username")).
-                    setTTS(sec.getBoolean("tts"));
+            hook = new RawWebhook(sec.getString("url"), token, message);
         } catch (NullPointerException e) {
             return null;
         }
 
+        hook.setContent(sec.getString("content")).
+                setAvatarUrl(sec.getString("avatar-url")).
+                setUsername(sec.getString("username")).
+                setTTS(sec.getBoolean("tts"));
+
         ConfigurationSection s = sec.getConfigurationSection("embeds");
-        if (s == null) return null;
+        if (s == null) {
+            notRegistered = false;
+            return hook;
+        }
 
         List<String> keys = new ArrayList<>(s.getKeys(false));
-        if (keys.isEmpty()) return null;
+        if (keys.isEmpty()) {
+            notRegistered = false;
+            return hook;
+        }
 
         for (String key : keys) {
             ConfigurationSection em = s.getConfigurationSection(key);
@@ -184,6 +191,7 @@ public class Webhook {
     /**
      * Sends the webhook asynchronously.
      * <p> See {@link #send(String, String)} for more info.
+     *
      * @param plugin a javaPlugin's instance
      * @param token a token
      * @param message a message if no message was declared in the constructor
@@ -195,6 +203,7 @@ public class Webhook {
     /**
      * Sends the webhook asynchronously.
      * <p> See {@link #send(String)} for more info.
+     *
      * @param plugin a javaPlugin's instance
      * @param message a message if no message was declared in the constructor
      */
@@ -205,6 +214,7 @@ public class Webhook {
     /**
      * Sends the webhook asynchronously.
      * <p> See {@link #send()} for more info.
+     *
      * @param plugin a javaPlugin's instance
      */
     public void sendAsync(JavaPlugin plugin) {

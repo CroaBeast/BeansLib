@@ -205,7 +205,7 @@ public final class IridiumAPI {
      */
     @NotNull
     public static String stripAll(String string) {
-        return StringUtils.isBlank(string) ? string : stripRGB(stripSpecial(stripBukkit(string)));
+        return stripRGB(stripSpecial(stripBukkit(string)));
     }
 
     /**
