@@ -50,7 +50,28 @@ public final class IridiumAPI {
             .put(new Color(16777215), ChatColor.getByChar('f')).build();
 
     private static final List<BasePattern> BASE_PATTERNS =
-            Arrays.asList(new Gradient(), new Rainbow(), new SolidColor());
+            Arrays.asList(
+                    (s, b) -> {
+                        Matcher matcher = BasePattern.SOLID_PATTERN.matcher(s);
+
+                        while (matcher.find()) {
+                            s = s.replace(matcher.group(),
+                                    IridiumAPI.getColor(matcher.group(1), b) + "");
+                        }
+                        return s;
+                    },
+                    (s, b) -> {
+                        Matcher matcher = BasePattern.RAINBOW_PATTERN.matcher(s);
+
+                        while (matcher.find()) {
+                            String sat = matcher.group(1), c = matcher.group(2);
+                            s = s.replace(matcher.group(),
+                                    IridiumAPI.rainbow(c, Float.parseFloat(sat), b));
+                        }
+                        return s;
+                    },
+                    new Gradient()
+            );
 
     /**
      * Process a string to apply the correct colors using the RGB format.
@@ -60,10 +81,10 @@ public final class IridiumAPI {
      *
      * @return the processed string
      */
-    @NotNull
-    public static String process(@NotNull String s, boolean useRGB) {
-        for (BasePattern pattern : BASE_PATTERNS)
-            s = pattern.process(s, useRGB);
+    public static String process(String s, boolean useRGB) {
+        if (StringUtils.isBlank(s)) return s;
+
+        for (BasePattern p : BASE_PATTERNS) s = p.process(s, useRGB);
         return ChatColor.translateAlternateColorCodes('&', s);
     }
 
@@ -76,7 +97,6 @@ public final class IridiumAPI {
      *
      * @return the processed string
      */
-    @NotNull
     public static String process(Player player, String s) {
         int i = Protocols.getClientVersion(player);
         return process(s, (i == 0 || i > 15) && SUPPORTS_RGB);
@@ -88,8 +108,7 @@ public final class IridiumAPI {
      * @param string an input string
      * @return the processed string
      */
-    @NotNull
-    public static String process(@NotNull String string) {
+    public static String process(String string) {
         return process(null, string);
     }
 
@@ -101,7 +120,6 @@ public final class IridiumAPI {
      *
      * @return the colored string
      */
-    @NotNull
     public static String color(@NotNull Color color, @NotNull String string) {
         return (SUPPORTS_RGB ? ChatColor.of(color) : getClosestColor(color)) + string;
     }
@@ -116,7 +134,6 @@ public final class IridiumAPI {
      *
      * @return the string with the applied gradient
      */
-    @NotNull
     public static String color(@NotNull String string, @NotNull Color start, @NotNull Color end, boolean useRGB) {
         int step = stripSpecial(string).length();
         return step <= 1 ? string : apply(string, createGradient(start, end, step, useRGB));

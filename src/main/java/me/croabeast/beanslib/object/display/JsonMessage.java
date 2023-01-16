@@ -206,7 +206,7 @@ public class JsonMessage {
      *
      * @return the requested chat component array
      */
-    public static BaseComponent[] fromText(Player parser, String text) {
+    public static BaseComponent[] of(Player parser, String text) {
         return new JsonMessage(null, parser, text).convertString(null, new ArrayList<>());
     }
 
@@ -222,7 +222,7 @@ public class JsonMessage {
      * @param text an input string
      * @return the requested chat component array
      */
-    public static BaseComponent[] fromText(String text) {
-        return fromText(null, text);
+    public static BaseComponent[] of(String text) {
+        return of(null, text);
     }
 }

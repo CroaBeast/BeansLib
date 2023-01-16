@@ -40,16 +40,6 @@ public abstract class BeansLib extends BeansMethods {
     public abstract String langPrefix();
 
     /**
-     * It will fix an RGB issue is some servers that RGB not working correctly.
-     * It's recommended to use a boolean from a .yml of your plugin.
-     * <p> Example:
-     * <pre> {@code return JavaPlugin.getConfig().getBoolean("path here")}</pre>
-     *
-     * @return if this fix is enabled
-     */
-    public abstract boolean fixColorLogger();
-
-    /**
      * The {@link ConfigurationSection} object to get all the available webhooks.
      *
      * @return the requested section

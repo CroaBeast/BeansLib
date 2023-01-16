@@ -24,14 +24,14 @@ public final class LogUtils {
      */
     private LogUtils() {}
 
-    private static String colorLogger(String string, boolean fixColor) {
+    private static String colorLogger(String string) {
         if (StringUtils.isBlank(string)) return string;
 
-        boolean doColor = LibUtils.majorVersion() >= 12 &&
-                !LibUtils.serverFork().split(" ")[0].matches("(?i)Bukkit|Spigot");
+        boolean doColor = System.console() != null &&
+                System.getenv().get("TERM") != null;
 
         string = TextUtils.stripJson(string);
-        return doColor ? process(string, !fixColor) : stripAll(string);
+        return doColor ? process(string) : stripAll(string);
     }
 
     private static String[] toLogLines(BeansMethods m, Player player, boolean isLog, String... lines) {
@@ -86,9 +86,8 @@ public final class LogUtils {
      * @param lines the information to send
      */
     public static void rawLog(BeansMethods m, String... lines) {
-        boolean fix = m != null && m.fixColorLogger();
         for (String s : toLogLines(m, lines))
-            Bukkit.getLogger().info(colorLogger(s, fix));
+            Bukkit.getLogger().info(colorLogger(s));
     }
 
     /**
@@ -113,10 +112,9 @@ public final class LogUtils {
             playerLog(m, (Player) sender, lines);
 
         JavaPlugin p = m != null ? m.getPlugin() : plugin;
-        boolean fix = m != null && m.fixColorLogger();
 
         for (String s : toLogLines(m, lines))
-            p.getLogger().info(colorLogger(s, fix));
+            p.getLogger().info(colorLogger(s));
     }
 
     /**

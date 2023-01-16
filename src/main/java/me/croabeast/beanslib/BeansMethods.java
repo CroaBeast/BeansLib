@@ -12,7 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The method for the {@link BeansLib} class.
+ * The methods for the {@link BeansLib} class.
  *
  * @author CroaBeast
  * @since 1.3

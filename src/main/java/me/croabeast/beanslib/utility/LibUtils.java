@@ -76,7 +76,7 @@ public final class LibUtils {
      *
      * @return server's java version
      */
-    public static int javaVersion() {
+    public static int majorJavaVersion() {
         String version = SystemUtils.JAVA_VERSION;
 
         if (!version.startsWith("1.")) {
@@ -87,6 +87,26 @@ public final class LibUtils {
         else version = version.substring(2, 3);
 
         return Integer.parseInt(version);
+    }
+
+    /**
+     * Checks if the server is Paper or a fork of it.
+     *
+     * @return if is Paper environment
+     */
+    public static boolean isPaper() {
+        if (majorVersion() < 8) return false;
+
+        String clazz = majorVersion() >= 12 ?
+                "com.destroystokyo.paper.ParticleBuilder" :
+                "io.papermc.paperclip.Paperclip";
+
+        try {
+            Class.forName(clazz);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**

@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
  * @author CroaBeast
  * @since 1.0
  */
-public final class Gradient extends BasePattern {
+public final class Gradient implements BasePattern {
 
     static final String HEX = "[\\da-f]{6}";
 

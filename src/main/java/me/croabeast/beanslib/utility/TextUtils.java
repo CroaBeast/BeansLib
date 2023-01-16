@@ -128,7 +128,7 @@ public final class TextUtils {
             String key = Pattern.quote(keys[i]);
             if (StringUtils.isBlank(key)) continue;
 
-            if (caseSensitive) key = "(?i)" + key;
+            if (!caseSensitive) key = "(?i)" + key;
             Matcher m = Pattern.compile(key).matcher(string);
             if (!m.find()) continue;
 
@@ -314,13 +314,14 @@ public final class TextUtils {
         final String name = obj.getClass().getSimpleName();
 
         if (args == null || args.length == 0) return name + "=[]";
-
-        String quote = use ? "\"" : "";
         StringBuilder builder = new StringBuilder();
 
         for (int i = 0; i < args.length; i++) {
             if (i > 0) builder.append(split);
-            builder.append(quote).append(args[i]).append(quote);
+
+            if (use) builder.append("\"");
+            builder.append(args[i]);
+            if (use) builder.append("\"");
         }
 
         return name + "=[" + builder + "]";
