@@ -1,33 +1,27 @@
 package me.croabeast.beanslib.object.display;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.object.discord.Webhook;
-import me.croabeast.beanslib.object.key.PlayerKeys;
-import me.croabeast.beanslib.utility.LogUtils;
-import me.croabeast.beanslib.BeansMethods;
-import me.croabeast.beanslib.utility.TextUtils;
-import me.croabeast.beanslib.BeansVariables;
-import me.croabeast.iridiumapi.IridiumAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static me.croabeast.beanslib.utility.TextUtils.*;
 
 /**
- * <p>The <code>Displayer</code> class represents the
- * action to display a list of messages to a player
- * using {@link BeansVariables} keys for parse
- * different message types and {@link BeansMethods} to
- * use and format every message type respectively.</p>
+ * <p>The <code>Displayer</code> class represents the action to display a list
+ * of messages to a player using {@link BeansLib} keys for parse different message
+ * types and format every message type respectively.</p>
  *
  * <p> This is a basic example of how to create
  * a new <code>Displayer</code> object.
@@ -84,9 +78,9 @@ public class Displayer {
     /**
      * This flag allows to display action bar messages.
      */
-    public static final String ACTION_BAR = "ACTION_BAR";
+    public static final String ACTION_BAR = "ACTION-BAR";
 
-    private final BeansMethods m;
+    private final BeansLib lib;
 
     private final Collection<? extends CommandSender> targets;
     private final Player parser;
@@ -104,17 +98,17 @@ public class Displayer {
     /**
      * See {@link Displayer} for more info.
      *
-     * @param m       the BeansLib instance
+     * @param lib       the BeansLib instance
      * @param targets a CommandSender targets, can be null
      * @param parser  a player to parse values, can be null
      * @param list    a string list
      * @param flags   an array of flags to allow certain message types
      */
     public Displayer(
-            BeansMethods m, Collection<? extends CommandSender> targets,
+            BeansLib lib, Collection<? extends CommandSender> targets,
             Player parser, List<String> list, String... flags
     ) {
-        this.m = m == null ? BeansMethods.DEFAULTS : m;
+        this.lib = lib == null ? BeansLib.DEFAULTS : lib;
 
         this.targets = targets;
         this.parser = parser;
@@ -126,26 +120,26 @@ public class Displayer {
     /**
      * See {@link Displayer} for more info.
      *
-     * @param m      the BeansLib instance
+     * @param lib      the BeansLib instance
      * @param target a CommandSender target, can be null
      * @param parser a player to parse values, can be null
      * @param list   a string list
      * @param flags  an array of flags to allow certain message types
      */
-    public Displayer(BeansMethods m, CommandSender target, Player parser, List<String> list, String... flags) {
-        this(m, target == null ? null : Collections.singletonList(target), parser, list, flags);
+    public Displayer(BeansLib lib, CommandSender target, Player parser, List<String> list, String... flags) {
+        this(lib, target == null ? null : Lists.newArrayList(target), parser, list, flags);
     }
 
     /**
      * See {@link Displayer} for more info.
      *
-     * @param m      the BeansLib instance
+     * @param lib      the BeansLib instance
      * @param parser a player to parse values, can be null
      * @param list   a string list
      * @param flags  an array of flags to allow certain message types
      */
-    public Displayer(BeansMethods m, Player parser, List<String> list, String... flags) {
-        this(m, parser, parser, list, flags);
+    public Displayer(BeansLib lib, Player parser, List<String> list, String... flags) {
+        this(lib, parser, parser, list, flags);
     }
 
     /**
@@ -216,7 +210,7 @@ public class Displayer {
             }
         }
 
-        string = m.parsePlayerKeys(parser, string, caseSensitive);
+        string = lib.parsePlayerKeys(parser, string, caseSensitive);
         return replaceEach(string, keys, values, caseSensitive);
     }
 
@@ -228,7 +222,7 @@ public class Displayer {
 
         for (String s : list) {
             if (s == null) continue;
-            s = s.replace(m.langPrefixKey(), m.langPrefix());
+            s = s.replace(lib.getLangPrefixKey(), lib.getLangPrefix());
             l.add(parseOperatorsAndValues(s));
         }
 
@@ -238,23 +232,41 @@ public class Displayer {
         isRegistered = true;
     }
 
-    private String parseFormat(Player t, String r, String s, boolean c) {
-        Matcher m = Pattern.compile(r).matcher(s);
-
-        while (m.find()) s = s.replace(m.group(), "");
-        s = TextUtils.removeSpace(s);
-
-        if (!c) {
-            String s1 = parsePAPI(parser, this.m.parseChars(s));
-            return IridiumAPI.stripAll(stripJson(s1));
-        }
-
-        return this.m.colorize(t, parser, s);
+    private boolean isNotAllowed(String flag) {
+        return !flags.isEmpty() && !flags.contains(flag);
     }
 
-    private boolean checkMatch(String s, String p) {
-        Matcher m = Pattern.compile(p).matcher(s);
-        return m.find();
+    private void sendWebhooks() {
+        for (String s : list) {
+            final BeansLib.MessageKey key = lib.identifyMessageType(s);
+
+            if (key != null && key.getUpperKey().equals(WEBHOOK)) {
+                if (isNotAllowed(WEBHOOK)) continue;
+
+                ConfigurationSection id = lib.getWebhookSection();
+                if (id == null) continue;
+
+                List<String> list = new ArrayList<>(id.getKeys(false));
+                if (list.isEmpty()) continue;
+
+                Matcher m2 = key.getPattern().matcher(s);
+                String line = key.formatString(null, parser, s);
+
+                String path = list.get(0);
+
+                if (m2.find()) {
+                    String[] a = m2.group().replace("[", "").
+                            replace("]", "").split(":", 2);
+
+                    String temp = a.length == 2 ? a[1] : null;
+                    if (temp != null) path = temp;
+                }
+
+                id = id.getConfigurationSection(path);
+                if (id != null) new Webhook(id, line).send();
+            }
+            lib.rawLog(s);
+        }
     }
 
     /**
@@ -272,39 +284,9 @@ public class Displayer {
         if (list.isEmpty()) return;
         if (list.size() == 1 && StringUtils.isBlank(list.get(0))) return;
 
-        final String wp = m.webhookRegex(true);
-
         // if there is no target(s), it will display to the console.
         if (targets == null || targets.isEmpty()) {
-            for (String s : list) {
-                if (checkMatch(s, wp)) {
-                    if (!flags.isEmpty() && !flags.contains(WEBHOOK))
-                        continue;
-
-                    ConfigurationSection id = m.getWebhookSection();
-                    if (id == null) continue;
-
-                    List<String> list = new ArrayList<>(id.getKeys(false));
-                    if (list.isEmpty()) continue;
-
-                    Matcher r = Pattern.compile(wp).matcher(s);
-                    String line = parseFormat(null, wp, s, false);
-
-                    String path = list.get(0);
-
-                    if (r.find()) {
-                        String[] a = r.group().replace("[", "").
-                                replace("]", "").split(":", 2);
-                        String temp = a.length == 2 ? a[1] : null;
-
-                        if (temp != null) path = temp;
-                    }
-
-                    id = id.getConfigurationSection(path);
-                    if (id != null) new Webhook(id, line).send();
-                }
-                LogUtils.rawLog(m, s);
-            }
+            sendWebhooks();
             return;
         }
 
@@ -319,147 +301,103 @@ public class Displayer {
 
         // if there is no player targets, it will display to the console.
         if (targets.isEmpty()) {
-            for (String s : list) {
-
-                if (checkMatch(s, wp)) {
-                    if (!flags.isEmpty() && !flags.contains(WEBHOOK))
-                        continue;
-
-                    ConfigurationSection id = m.getWebhookSection();
-                    if (id == null) continue;
-
-                    List<String> list = new ArrayList<>(id.getKeys(false));
-                    if (list.isEmpty()) continue;
-
-                    Matcher r = Pattern.compile(wp).matcher(s);
-                    String line = parseFormat(null, wp, s, false);
-
-                    String path = list.get(0);
-
-                    if (r.find()) {
-                        String[] a = r.group().replace("[", "").
-                                replace("]", "").split(":", 2);
-                        String temp = a.length == 2 ? a[1] : null;
-
-                        if (temp != null) path = temp;
-                    }
-
-                    id = id.getConfigurationSection(path);
-                    if (id != null) new Webhook(id, line).send();
-
-                }
-                LogUtils.rawLog(m, s);
-            }
+            sendWebhooks();
             return;
         }
 
-        // Gets all the message type regexes.
-        String abp = m.actionBarRegex(true), tp = m.titleRegex(true),
-                jp = m.jsonRegex(true), bp = m.bossbarRegex(true);
-
         // Displays the messages list to console if enabled.
-        if (isLogger) for (String s : list) LogUtils.rawLog(m, s);
+        if (isLogger) list.forEach(lib::rawLog);
 
         // Iterates of every target to display.
-        for (Player t : targets) {
+        for (Player t : targets)
             for (String s : list) {
-                // Checks if the message is an action bar type and if the type is allowed.
-                if (checkMatch(s, abp)) {
-                    if (!flags.isEmpty() && !flags.contains(ACTION_BAR))
-                        continue;
+                final BeansLib.MessageKey key = lib.identifyMessageType(s);
 
-                    sendActionBar(t, parseFormat(t, abp, s, true));
+                if (key == null) {
+                    if (isNotAllowed(CHAT)) continue;
+
+                    String temp = hardSpacing ? removeSpace(s) : s;
+
+                    new JsonBuilder(lib, t, parser, temp).send();
                     continue;
                 }
 
-                // Checks if the message is a title type and if the type is allowed.
-                if (checkMatch(s, tp)) {
-                    if (!flags.isEmpty() && !flags.contains(TITLE))
+                switch (key.getUpperKey()) {
+
+                    case ACTION_BAR:
+                        if (isNotAllowed(ACTION_BAR)) continue;
+                        sendActionBar(t, key.formatString(t, parser, s));
                         continue;
 
-                    Matcher r = Pattern.compile(tp).matcher(s);
+                    case TITLE:
+                        if (isNotAllowed(TITLE)) continue;
 
-                    String tm = null;
-                    try {
-                        if (r.find()) tm = r.group(1).substring(1);
-                    } catch (Exception ignored) {}
+                        Matcher m1 = key.getPattern().matcher(s);
 
-                    int[] ticks = this.m.defaultTitleTicks();
-                    int time = ticks[1];
+                        String tm = null;
+                        try {
+                            if (m1.find()) tm = m1.group(1).substring(1);
+                        } catch (Exception ignored) {}
 
-                    try {
-                        if (tm != null) time = Integer.parseInt(tm) * 20;
-                    } catch (Exception ignored) {}
+                        int[] a = lib.getDefaultTitleTicks();
+                        int time = a[1];
 
-                    String temp1 = parseFormat(t, tp, s, true);
+                        try {
+                            if (tm != null) time = Integer.parseInt(tm) * 20;
+                        } catch (Exception ignored) {}
 
-                    sendTitle(t,
-                            temp1.split(m.lineSeparator()),
-                            ticks[0], time, ticks[2]
-                    );
-                    continue;
-                }
+                        String t1 = key.formatString(t, parser, s);
 
-                // Checks if the message is a json type and if the type is allowed.
-                if (checkMatch(s, jp)) {
-                    if (!flags.isEmpty() && !flags.contains(JSON))
+                        sendTitle(t, t1.split(lib.getLineSeparator()), a[0], time, a[2]);
                         continue;
 
-                    String cmd = parseFormat(t, jp, s, false);
+                    case BOSSBAR:
+                        if (isNotAllowed(BOSSBAR)) continue;
 
-                    Bukkit.dispatchCommand(
-                            Bukkit.getConsoleSender(),
-                            "minecraft:tellraw " +
-                            t.getName() + " " + cmd
-                    );
-                    continue;
-                }
+                        Plugin plugin = lib.getPlugin();
+                        if (plugin == null) continue;
 
-                // Checks if the message is a bossbar type and if the type is allowed.
-                if (checkMatch(s, bp)) {
-                    if (!flags.isEmpty() && !flags.contains(BOSSBAR))
-                        continue;
-                    if (m.getPlugin() == null) continue;
-
-                    new Bossbar(m.getPlugin(), t, s).display();
-                    continue;
-                }
-
-                // Checks if the message is a webhook type and if the type is allowed.
-                if (checkMatch(s, wp)) {
-                    if (!flags.isEmpty() && !flags.contains(WEBHOOK))
+                        new BossbarBuilder(plugin, t, s).display();
                         continue;
 
-                    ConfigurationSection id = m.getWebhookSection();
-                    if (id == null) continue;
+                    case JSON:
+                        if (isNotAllowed(JSON)) continue;
 
-                    List<String> list = new ArrayList<>(id.getKeys(false));
-                    if (list.isEmpty()) continue;
+                        Bukkit.dispatchCommand(
+                                Bukkit.getConsoleSender(), "minecraft:tellraw " +
+                                t.getName() + " " + key.formatString(t, parser, s)
+                        );
+                        continue;
 
-                    Matcher r = Pattern.compile(wp).matcher(s);
-                    String line = parseFormat(t, wp, s, false);
+                    case WEBHOOK:
+                        if (isNotAllowed(WEBHOOK)) continue;
 
-                    String path = list.get(0);
+                        ConfigurationSection id = lib.getWebhookSection();
+                        if (id == null) continue;
 
-                    if (r.find()) {
-                        String[] a = r.group().replace("[", "").
-                                replace("]", "").split(":", 2);
-                        String temp = a.length == 2 ? a[1] : null;
+                        List<String> list = new ArrayList<>(id.getKeys(false));
+                        if (list.isEmpty()) continue;
 
-                        if (temp != null) path = temp;
-                    }
+                        Matcher m2 = key.getPattern().matcher(s);
+                        String line = key.formatString(null, parser, s);
 
-                    id = id.getConfigurationSection(path);
-                    if (id != null) new Webhook(id, line).send();
-                    continue;
+                        String path = list.get(0);
+
+                        if (m2.find()) {
+                            String[] split = m2.group().replace("[", "").
+                                    replace("]", "").split(":", 2);
+
+                            String temp = split.length == 2 ? split[1] : null;
+                            if (temp != null) path = temp;
+                        }
+
+                        id = id.getConfigurationSection(path);
+                        if (id != null) new Webhook(id, line).send();
+                        continue;
+
+                    default:
                 }
-
-                // Checks if the message is a chat type and if the type is allowed.
-                if (!flags.isEmpty() && !flags.contains(CHAT)) continue;
-                new JsonMessage(m, t, parser,
-                        hardSpacing ? removeSpace(s) : s).send();
             }
-        }
     }
 
     /**
@@ -473,9 +411,11 @@ public class Displayer {
 
     /**
      * Creates a single Displayer object with default values and a string list.
+     * Bossbar messages will not work with this integration.
      *
      * @param player a target player that can parse values, can not be null
      * @param list an input string list
+     *
      * @return a new instance of the {@link Displayer} object
      */
     public static Displayer of(@NotNull Player player, List<String> list) {

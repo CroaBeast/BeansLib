@@ -1,9 +1,9 @@
 package me.croabeast.iridiumapi;
 
 import com.google.common.collect.ImmutableMap;
+import me.croabeast.beanslib.object.misc.ClientVersion;
 import me.croabeast.beanslib.utility.LibUtils;
 import me.croabeast.iridiumapi.pattern.*;
-import me.croabeast.beanslib.object.*;
 import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
@@ -49,10 +49,10 @@ public final class IridiumAPI {
             .put(new Color(16777045), ChatColor.getByChar('e'))
             .put(new Color(16777215), ChatColor.getByChar('f')).build();
 
-    private static final List<BasePattern> BASE_PATTERNS =
+    private static final List<RGBParser> BASE_PATTERNS =
             Arrays.asList(
                     (s, b) -> {
-                        Matcher matcher = BasePattern.SOLID_PATTERN.matcher(s);
+                        Matcher matcher = RGBParser.SOLID_PATTERN.matcher(s);
 
                         while (matcher.find()) {
                             s = s.replace(matcher.group(),
@@ -61,7 +61,7 @@ public final class IridiumAPI {
                         return s;
                     },
                     (s, b) -> {
-                        Matcher matcher = BasePattern.RAINBOW_PATTERN.matcher(s);
+                        Matcher matcher = RGBParser.RAINBOW_PATTERN.matcher(s);
 
                         while (matcher.find()) {
                             String sat = matcher.group(1), c = matcher.group(2);
@@ -84,7 +84,7 @@ public final class IridiumAPI {
     public static String process(String s, boolean useRGB) {
         if (StringUtils.isBlank(s)) return s;
 
-        for (BasePattern p : BASE_PATTERNS) s = p.process(s, useRGB);
+        for (RGBParser p : BASE_PATTERNS) s = p.process(s, useRGB);
         return ChatColor.translateAlternateColorCodes('&', s);
     }
 
@@ -98,7 +98,7 @@ public final class IridiumAPI {
      * @return the processed string
      */
     public static String process(Player player, String s) {
-        int i = Protocols.getClientVersion(player);
+        int i = ClientVersion.getClientVersion(player);
         return process(s, (i == 0 || i > 15) && SUPPORTS_RGB);
     }
 
@@ -206,7 +206,7 @@ public final class IridiumAPI {
         while (gradient.find())
             string = string.replace(gradient.group(), gradient.group(2));
 
-        Matcher rgb = BasePattern.SOLID_PATTERN.matcher(string);
+        Matcher rgb = RGBParser.SOLID_PATTERN.matcher(string);
         while (rgb.find()) string = string.replace(rgb.group(), "");
 
         string = string.replaceAll("(?i)(<R:\\d{1,3}>|</R>)", "");

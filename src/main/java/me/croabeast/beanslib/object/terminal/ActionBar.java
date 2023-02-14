@@ -56,10 +56,9 @@ public final class ActionBar extends Reflection {
      *
      * @param player a player
      * @param message a message
-     *
-     * @throws NullPointerException if player is null
      */
     public void send(Player player, String message) {
-        actionBar.send(Exceptions.checkPlayer(player), message);
+        if (player == null) return;
+        actionBar.send(player, message);
     }
 }

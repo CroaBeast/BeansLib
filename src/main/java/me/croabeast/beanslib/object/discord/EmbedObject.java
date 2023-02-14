@@ -1,5 +1,6 @@
 package me.croabeast.beanslib.object.discord;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
@@ -10,22 +11,22 @@ import java.util.List;
 
 /**
  * An object that represents embed messages.
+ *
  * @author Kihsomray
  * @fork CroaBeast
  * @since 1.1
  */
+@Getter
 public class EmbedObject {
 
     /**
      * The stored fields of the embed message.
      */
-    @Getter
     private final List<Field> fields = new ArrayList<>();
 
-    private final String token;
-    private final String message;
+    @Getter(AccessLevel.PRIVATE)
+    private final String token, message;
 
-    @Getter
     private String
             title, description, url,
             image, thumbnail,
@@ -34,12 +35,10 @@ public class EmbedObject {
     /**
      * The color of the embed message.
      */
-    @Getter
     private Color color;
     /**
      * The author of the embed message.
      */
-    @Getter
     private Author author;
 
     /**
@@ -50,22 +49,6 @@ public class EmbedObject {
     public EmbedObject(String token, String message) {
         this.token = token;
         this.message = message;
-    }
-
-    /**
-     * Gets the message token, can be null.
-     * @return the message
-     */
-    private String getToken() {
-        return token;
-    }
-
-    /**
-     * Gets the message, can be null.
-     * @return the message
-     */
-    private String getMessage() {
-        return message;
     }
 
     /**
@@ -188,22 +171,19 @@ public class EmbedObject {
     /**
      * A field for text in the discord message.
      */
-    @AllArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     @Getter
     static class Field {
-        private final String name;
-        private final String value;
+        private final String name, value;
         private final boolean inLine;
     }
 
     /**
      * An author for the discord message.
      */
-    @AllArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     @Getter
     static class Author {
-        private final String name;
-        private final String url;
-        private final String iconUrl;
+        private final String name, url, iconUrl;
     }
 }

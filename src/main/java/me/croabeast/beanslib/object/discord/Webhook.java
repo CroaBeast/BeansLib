@@ -10,6 +10,7 @@ import java.util.List;
 
 /**
  * An object for sending discord webhooks.
+ *
  * @author Kihsomray
  * @fork CroaBeast
  * @since 1.1

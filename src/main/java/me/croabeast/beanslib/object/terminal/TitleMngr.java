@@ -80,10 +80,9 @@ public final class TitleMngr extends Reflection {
      * @param in fade in time in ticks
      * @param stay stay time in ticks
      * @param out fade out time in ticks
-     *
-     * @throws NullPointerException if player is null
      */
     public void send(Player player, String title, String subtitle, int in, int stay, int out) {
-        this.title.send(Exceptions.checkPlayer(player), title, subtitle, in, stay, out);
+        if (player == null) return;
+        this.title.send(player, title, subtitle, in, stay, out);
     }
 }

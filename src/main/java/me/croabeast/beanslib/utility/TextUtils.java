@@ -4,19 +4,18 @@ import com.google.common.collect.Lists;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.croabeast.beanslib.BeansLib;
-import me.croabeast.beanslib.BeansMethods;
 import me.croabeast.beanslib.object.terminal.ActionBar;
 import me.croabeast.beanslib.object.terminal.TitleMngr;
-import me.croabeast.beanslib.object.display.Displayer;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Array;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,9 +29,11 @@ import java.util.regex.Pattern;
 public final class TextUtils {
 
     /**
-     * Initializing this class is blocked.
+     * Check if the line has a valid json format. Usage:
+     * <pre> {@code if (IS_JSON.apply("a string")) doSomething();}</pre>
      */
-    private TextUtils() {}
+    public static final Function<String, Boolean> IS_JSON =
+            s -> LibUtils.JSON_PATTERN.matcher(convertOldJson(s)).find();
 
     /**
      * Action Bar sender handler.
@@ -44,16 +45,23 @@ public final class TextUtils {
     private static final TitleMngr TITLE_MNGR = new TitleMngr();
 
     /**
+     * Initializing this class is blocked.
+     */
+    private TextUtils() {}
+
+    /**
      * Parses the placeholders from {@link PlaceholderAPI} if is enabled.
      *
      * @param player a player, can be null
-     * @param message the input line
+     * @param string the input line
      *
      * @return the parsed message
      */
-    public static String parsePAPI(Player player, String message) {
+    public static String parsePAPI(Player player, String string) {
+        if (StringUtils.isBlank(string)) return string;
+
         return Exceptions.isPluginEnabled("PlaceholderAPI") ?
-                PlaceholderAPI.setPlaceholders(player, message) : message;
+                PlaceholderAPI.setPlaceholders(player, string) : string;
     }
 
     /**
@@ -87,10 +95,9 @@ public final class TextUtils {
      *
      * @return New array of combined values
      */
-    @SuppressWarnings("unchecked")
-    @SafeVarargs
-    public static <T> T[] combineArrays(@NotNull T[] array, @Nullable T[]... additionalArrays) {
-        if (additionalArrays == null) return array;
+    @SuppressWarnings("unchecked") @SafeVarargs
+    public static <T> T[] combineArrays(@NotNull T[] array, T[]... additionalArrays) {
+        if (additionalArrays == null || additionalArrays.length < 1) return array;
 
         List<T> resultList = new ArrayList<>();
         Collections.addAll(resultList, array);
@@ -191,10 +198,15 @@ public final class TextUtils {
      *
      * @return the converted string list or an empty list if section is null
      */
+    @NotNull
     public static List<String> toList(@Nullable ConfigurationSection section, String path) {
         if (section == null) return new ArrayList<>();
+
+        final String temp = section.getString(path);
+        if (temp == null) return new ArrayList<>();
+
         if (section.isList(path)) return section.getStringList(path);
-        return Lists.newArrayList(section.getString(path));
+        return Lists.newArrayList(temp);
     }
 
     /**
@@ -215,13 +227,6 @@ public final class TextUtils {
         }
         return string;
     }
-
-    /**
-     * Check if the line has a valid json format. Usage:
-     * <pre> {@code if (IS_JSON.apply("a string")) doSomethingIdk();}</pre>
-     */
-    public static final Function<String, Boolean> IS_JSON =
-            s -> LibUtils.JSON_PATTERN.matcher(convertOldJson(s)).find();
 
     /**
      * Strips the JSON format from an input string.

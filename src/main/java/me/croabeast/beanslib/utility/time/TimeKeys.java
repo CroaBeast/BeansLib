@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.object.key;
+package me.croabeast.beanslib.utility.time;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,7 +1,7 @@
 package example;
 
 import me.croabeast.beanslib.BeansLib;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 public class MyTextClass extends BeansLib {
@@ -21,7 +21,7 @@ public class MyTextClass extends BeansLib {
      */
 
     @Override
-    protected @NotNull JavaPlugin getPlugin() {
+    public @NotNull Plugin getPlugin() {
         return myPlugin;
     }
 
@@ -38,15 +38,5 @@ public class MyTextClass extends BeansLib {
     @Override
     public boolean fixColorLogger() {
         return myPlugin.getConfig().getBoolean("options.fix-color-logger");
-    }
-
-    @Override
-    public boolean isHardSpacing() {
-        return myPlugin.getConfig().getBoolean("options.hard-spacing");
-    }
-
-    @Override
-    public boolean isStripPrefix() {
-        return myPlugin.getConfig().getBoolean("options.strip-prefix");
     }
 }

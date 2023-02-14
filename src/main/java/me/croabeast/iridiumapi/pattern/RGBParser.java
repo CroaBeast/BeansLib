@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
  * The class that handles the RGB format to parse.
  */
 @FunctionalInterface
-public interface BasePattern {
+public interface RGBParser {
 
     /**
      * Compiles the rainbow gradient pattern.

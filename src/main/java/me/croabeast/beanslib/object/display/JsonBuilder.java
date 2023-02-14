@@ -1,28 +1,48 @@
 package me.croabeast.beanslib.object.display;
 
-import com.google.common.collect.*;
-import me.croabeast.beanslib.BeansMethods;
-import me.croabeast.beanslib.utility.*;
+import com.google.common.collect.Lists;
+import me.croabeast.beanslib.BeansLib;
+import me.croabeast.beanslib.utility.Exceptions;
 import me.croabeast.beanslib.utility.LibUtils;
-import me.croabeast.beanslib.BeansVariables;
-import net.md_5.bungee.api.chat.*;
+import me.croabeast.beanslib.utility.TextUtils;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Player;
 
-import java.util.*;
-import java.util.regex.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
 
 import static net.md_5.bungee.api.chat.ClickEvent.Action.*;
 
 /**
- * The object class to handle JSON messages.
+ * The object class to handle JSON messages to players in chat.
+ *
+ * <p> Uses an input string to apply a click event and a string list
+ * to apply a hover event.
+ * <p> If click and hover values are null/empty, it will use the
+ * {@link LibUtils#JSON_PATTERN} to parse the respective actions and
+ * add then in the chat component.
+ * <p> After all the actions are set in the chat component, the
+ * message is sent to the target player.
+ * <pre>{@code
+ * JsonConverter json = new JsonConverter(player, "my message");
+ * // Sends the message to the target using a
+ * // hover list and a string action.
+ * json.send("RUN:/command", Arrays.asList("My hover message"));
+ * // Send the message to the target using the defined pattern.
+ * json.send();
+ * }</pre>
  *
  * @author CroaBeast
  * @since 1.3
  */
-public class JsonMessage {
+public class JsonBuilder {
 
-    private final BeansMethods m;
+    private final BeansLib lib;
 
     private final Player target;
     private final Player parser;
@@ -30,15 +50,15 @@ public class JsonMessage {
 
     /**
      * Converts a {@link String} line to a {@code JsonMessage} object.
-     * <p> Parses all the required keys from {@link BeansVariables} and formats colors.
+     * <p> Parses all the required keys from {@link BeansLib} and formats colors.
      *
-     * @param m the {@link BeansMethods} instance
+     * @param lib the {@link BeansLib} instance
      * @param target a target to send a message, can be null
      * @param parser a parser to parse placeholders
      * @param string an input string
      */
-    public JsonMessage(BeansMethods m, Player target, Player parser, String string) {
-        this.m = m != null ? m : BeansMethods.DEFAULTS;
+    public JsonBuilder(BeansLib lib, Player target, Player parser, String string) {
+        this.lib = lib != null ? lib : BeansLib.DEFAULTS;
         this.target = target == null ? parser : target;
 
         this.parser = parser;
@@ -47,13 +67,13 @@ public class JsonMessage {
 
     /**
      * Converts a {@link String} line to a {@code JsonMessage} object.
-     * <p> Parses all the required keys and methods from {@link BeansMethods#DEFAULTS}.
+     * <p> Parses all the required keys and methods from {@link BeansLib#DEFAULTS}.
      *
      * @param target a target to send a message, can be null
      * @param parser a parser to parse placeholders
      * @param string an input string
      */
-    public JsonMessage(Player target, Player parser, String string) {
+    public JsonBuilder(Player target, Player parser, String string) {
         this(null, target, parser, string);
     }
 
@@ -81,7 +101,7 @@ public class JsonMessage {
 
         for (int i = 0; i < hover.size(); i++) {
             String end = i == hover.size() - 1 ? "" : "\n";
-            array[i] = toComponent(m.colorize(target, parser, hover.get(i)) + end);
+            array[i] = toComponent(lib.colorize(target, parser, hover.get(i)) + end);
         }
 
         comp.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, array));
@@ -89,7 +109,7 @@ public class JsonMessage {
 
     void addEvent(TextComponent comp, String type, String string) {
         if (type.matches("(?i)hover")) {
-            String[] array = string.split(m.lineSeparator());
+            String[] array = string.split(lib.getLineSeparator());
             addHover(comp, Lists.newArrayList(array));
         }
         else if (parseAction(type) != null)
@@ -100,9 +120,9 @@ public class JsonMessage {
         return Lists.newArrayList(TextComponent.fromLegacyText(string));
     }
 
-    BaseComponent[] convertString(String click, List<String> hover) {
+    BaseComponent[] toJSON(String click, List<String> hover) {
         String line = TextUtils.parseInteractiveChat(parser, string);
-        line = m.centerMessage(target, parser, line);
+        line = lib.centerMessage(target, parser, line);
 
         if (!hover.isEmpty() || StringUtils.isNotBlank(click)) {
             final TextComponent comp = toComponent(TextUtils.stripJson(line));
@@ -152,18 +172,6 @@ public class JsonMessage {
     /**
      * Sends the {@code JsonMessage} object to the target player,
      * if not defined will be to the parser player.
-     * <p> Uses an input string to apply a click event and a
-     * string list to apply a hover event.
-     * <p> If click and hover values are null/empty, it will use
-     * the {@link LibUtils#JSON_PATTERN} to parse the respective actions
-     * and add then in the chat component.
-     * <p> After all the actions are set in the chat component,
-     * the message is sent to the target player.
-     * <pre>{@code
-     * JsonConverter json = new JsonConverter(player, "my message");
-     * // Send the message to the target using a hover list and a string action.
-     * json.send("RUN:/command", Arrays.asList("My hover message"));
-     * }</pre>
      *
      * @param click the click string
      * @param hover a string list
@@ -171,20 +179,12 @@ public class JsonMessage {
      * @throws NullPointerException if the target is null
      */
     public void send(String click, List<String> hover) {
-        Exceptions.checkPlayer(target).spigot().sendMessage(convertString(click, hover));
+        Exceptions.checkPlayer(target).spigot().sendMessage(toJSON(click, hover));
     }
 
     /**
      * Sends the {@code JsonMessage} object to the target player,
      * if not defined will be to the parser player.
-     * <p> Uses the {@link LibUtils#JSON_PATTERN} to parse the
-     * respective actions and add then in the chat component.
-     * <p> After all the actions are set in the chat component,
-     * the message is sent to the target player.
-     * <pre>{@code
-     * JsonConverter json = new JsonConverter(target, player, "my message");
-     * json.send(); // Send the message to the target using the defined pattern.
-     * }</pre>
      *
      * @throws NullPointerException if the target is null
      */
@@ -207,7 +207,7 @@ public class JsonMessage {
      * @return the requested chat component array
      */
     public static BaseComponent[] of(Player parser, String text) {
-        return new JsonMessage(null, parser, text).convertString(null, new ArrayList<>());
+        return new JsonBuilder(null, parser, text).toJSON(null, new ArrayList<>());
     }
 
     /**

@@ -1,12 +1,20 @@
 package me.croabeast.beanslib.utility.time;
 
-import me.croabeast.beanslib.BeansMethods;
-import me.croabeast.beanslib.utility.TextUtils;
-import me.croabeast.beanslib.object.key.TimeKeys;
+import me.croabeast.beanslib.BeansLib;
 import org.bukkit.entity.Player;
 
 /**
  * An object that handles a time in seconds and converts it in a formatted string.
+ * You can see a very basic example here:
+ * <pre>{@code player.sendMessage(new TimeParser(56981).formatTime())}</pre>
+ * You can also have custom keys creating a new instance of the {@link TimeKeys} object.
+ * <pre>{@code
+ * TimeKeys keys = new TimeKeys();
+ * // Here I'm changing the splitter.
+ * keys = keys.setSplitter("; ");
+ * // Then I set it on an instance of TimeParser.
+ * TimeParser parser = new TimeParser(keys, 2132);
+ * }</pre>
  *
  * @author Kihsomray
  * @fork CroaBeast
@@ -43,16 +51,7 @@ public class TimeParser {
     private final long seconds;
 
     /**
-     * Basic TimeUtils constructor. You can see a very basic example here:
-     * <pre>{@code player.sendMessage(new TimeParser(56981).formatTime())}</pre>
-     * You can also have custom keys creating a new instance of the {@link TimeKeys} object.
-     * <pre>{@code
-     * TimeKeys keys = new TimeKeys();
-     * // Here I'm changing the splitter.
-     * keys = keys.setSplitter("; ");
-     * // Then I set it on an instance of TimeParser.
-     * TimeParser parser = new TimeParser(keys, 2132);
-     * }</pre>
+     * Creates a new parser using a {@link TimeKeys} instance and an amount of seconds.
      *
      * @param keys a {@link TimeKeys} instance
      * @param seconds time in seconds
@@ -63,16 +62,7 @@ public class TimeParser {
     }
 
     /**
-     * Basic TimeUtils constructor. You can see a very basic example here:
-     * <pre>{@code player.sendMessage(new TimeParser(56981).formatTime())}</pre>
-     * You can also have custom keys creating a new instance of the {@link TimeKeys} object.
-     * <pre>{@code
-     * TimeKeys keys = new TimeKeys();
-     * // Here I'm changing the splitter.
-     * keys = keys.setSplitter("; ");
-     * // Then I set it on an instance of TimeParser.
-     * TimeParser parser = new TimeParser(keys, 2132);
-     * }</pre>
+     * Creates a new parser using an amount of seconds.
      *
      * @param seconds time in seconds
      */
@@ -104,7 +94,10 @@ public class TimeParser {
         long result = this.seconds;
 
         if (result <= 0)
-            return BeansMethods.DEFAULTS.colorize(null, parser, isPlural(0, keys.getSecondFormat()));
+            return BeansLib.DEFAULTS.colorize(
+                    null, parser,
+                    isPlural(0, keys.getSecondFormat())
+            );
 
         StringBuilder formattedTime = new StringBuilder();
         long years, months, weeks, days, hours, mins;
@@ -154,7 +147,7 @@ public class TimeParser {
         if (result > 0) formattedTime.
                 append(isPlural(result, keys.getSecondFormat() + split));
 
-        return BeansMethods.DEFAULTS.colorize(null, parser,
+        return BeansLib.DEFAULTS.colorize(null, parser,
                 formattedTime.substring(0,
                 formattedTime.length() - split.length())
         );

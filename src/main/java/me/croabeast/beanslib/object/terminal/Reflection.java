@@ -3,7 +3,7 @@ package me.croabeast.beanslib.object.terminal;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-abstract class Reflection {
+class Reflection {
 
     Class<?> getNMSClass(String name) {
         String version = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];

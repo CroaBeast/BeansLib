@@ -1,5 +1,6 @@
 package me.croabeast.beanslib.object.discord;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -8,13 +9,15 @@ import javax.net.ssl.HttpsURLConnection;
 import java.awt.*;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 
 /**
  * The object that handles the webhook items to display.
+ *
  * @author Kihsomray
  * @fork CroaBeast
  * @since 1.1
@@ -26,6 +29,8 @@ public class RawWebhook {
      * List of embed objects to display.
      */
     private final List<EmbedObject> embeds = new ArrayList<>();
+
+    @Getter(AccessLevel.PRIVATE)
     private final String url, token, message;
 
     private String content, username, avatarUrl;
@@ -55,22 +60,6 @@ public class RawWebhook {
      */
     public void addEmbed(EmbedObject embed) {
         embeds.add(embed);
-    }
-
-    /**
-     * Gets the message token, can be null.
-     * @return the message
-     */
-    private String getToken() {
-        return token;
-    }
-
-    /**
-     * Gets the message, can be null.
-     * @return the message
-     */
-    private String getMessage() {
-        return message;
     }
 
     /**
@@ -215,7 +204,7 @@ public class RawWebhook {
 
         json = registerContent(json);
 
-        URL url = new URL(this.url);
+        URL url = new URL(getUrl());
         HttpsURLConnection c = (HttpsURLConnection) url.openConnection();
 
         c.addRequestProperty("Content-Type", "application/json");
@@ -232,5 +221,76 @@ public class RawWebhook {
 
         c.getInputStream().close();
         c.disconnect();
+    }
+
+    /**
+     * The object that handles JSON messages.
+     * Only accessible inside the package.
+     *
+     * @author Kihsomray
+     * @fork CroaBeast
+     * @since 1.1
+     */
+    static class JSONObject {
+
+        /**
+         * The map to store all the values.
+         */
+        private final HashMap<String, Object> map = new HashMap<>();
+
+        /**
+         * Adds an object in the {@link #map} of the object.
+         *
+         * @param key   a key for the object
+         * @param value the object
+         * @return a reference of this object
+         */
+        JSONObject put(String key, Object value) {
+            if (value != null) map.put(key, value);
+            return this;
+        }
+
+        private String quote(String string) {
+            return "\"" + string + "\"";
+        }
+
+        /**
+         * Converts all the stored values of the {@link #map} to it string format.
+         *
+         * @return the converted string format
+         */
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            Set<Map.Entry<String, Object>> entrySet = map.entrySet();
+
+            builder.append("{");
+            int i = 0;
+
+            for (Map.Entry<String, Object> entry : entrySet) {
+                Object val = entry.getValue();
+                builder.append(quote(entry.getKey())).append(":");
+
+                if (val instanceof Boolean || val instanceof JSONObject)
+                    builder.append(val);
+                else if (val instanceof Integer)
+                    builder.append(Integer.valueOf(String.valueOf(val)));
+                else if (val instanceof String)
+                    builder.append(quote(String.valueOf(val)));
+                else if (val.getClass().isArray()) {
+                    builder.append("[");
+                    int len = Array.getLength(val);
+                    for (int j = 0; j < len; j++) {
+                        String temp = Array.get(val, j).toString();
+                        builder.append(temp).append(j != len - 1 ? "," : "");
+                    }
+                    builder.append("]");
+                }
+
+                builder.append(++i == entrySet.size() ? "}" : ",");
+            }
+
+            return builder + "";
+        }
     }
 }
