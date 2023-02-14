@@ -23,9 +23,11 @@ import static net.md_5.bungee.api.chat.ClickEvent.Action.*;
  *
  * <p> Uses an input string to apply a click event and a string list
  * to apply a hover event.
+ *
  * <p> If click and hover values are null/empty, it will use the
  * {@link LibUtils#JSON_PATTERN} to parse the respective actions and
  * add then in the chat component.
+ *
  * <p> After all the actions are set in the chat component, the
  * message is sent to the target player.
  * <pre>{@code
@@ -194,6 +196,7 @@ public class JsonBuilder {
 
     /**
      * Converts a line to a {@link BaseComponent} array using the {@link LibUtils#JSON_PATTERN}.
+     *
      * <p> Example of how to use it:
      * <pre> {@code
      * String text = "<hover:\"a hover line\">text to apply</text>";
@@ -212,6 +215,7 @@ public class JsonBuilder {
 
     /**
      * Converts a line to a {@link BaseComponent} array using the {@link LibUtils#JSON_PATTERN}.
+     *
      * <p> Example of how to use it:
      * <pre> {@code
      * String text = "<hover:\"a hover line\">text to apply</text>";

@@ -28,12 +28,14 @@ public final class LibUtils {
 
     /**
      * The main pattern to identify the JSON message in a string.
+     *
      * <p> Keep in mind that every string can only have one {@link ClickEvent.Action};
      * a click action has this format:
      * <pre> {@code
      * Available Actions: RUN, SUGGEST, URL and all ClickAction values.
      * "<ACTION>:<the click string>" -> "RUN:/me click to run"
      * }</pre>
+     *
      * <p> Examples:
      * <pre> {@code
      * String hover = "<hover:\"a hover line\">text to apply</text>";

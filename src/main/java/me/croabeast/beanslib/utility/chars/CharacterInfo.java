@@ -19,13 +19,6 @@ public class CharacterInfo {
      */
     private final int length;
 
-    /**
-     * Creates a character info class.
-     * <p> It's not possible to create an instance of this class.
-     * <p> Use {@link CharHandler#addChar(char, int)} instead.
-     * @param character the character
-     * @param length the char's length
-     */
     CharacterInfo(char character, int length) {
         this.character = character;
         this.length = length;

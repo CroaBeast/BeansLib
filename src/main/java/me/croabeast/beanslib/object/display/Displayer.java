@@ -23,8 +23,7 @@ import static me.croabeast.beanslib.utility.TextUtils.*;
  * of messages to a player using {@link BeansLib} keys for parse different message
  * types and format every message type respectively.</p>
  *
- * <p> This is a basic example of how to create
- * a new <code>Displayer</code> object.
+ * <p> This is a basic example of how to create a new <code>Displayer</code> object.
  * <pre>{@code
  * new Displayer(
  *       "A BeansLib instance to get methods and variables",

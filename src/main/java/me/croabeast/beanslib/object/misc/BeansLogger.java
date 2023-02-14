@@ -24,6 +24,7 @@ public class BeansLogger {
 
     /**
      * A static instance of a logger without any lib or plugin implementation.
+     *
      * <p> The methods {@link BeansLogger#doLog(String...)} and
      * {@link BeansLogger#doLog(CommandSender, String...)} does not work
      * with this logger.

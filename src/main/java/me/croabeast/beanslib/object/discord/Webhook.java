@@ -29,6 +29,7 @@ public class Webhook {
 
     /**
      * Create a Discord webhook setup using a default configuration section.
+     *
      * <p> Make sure the section looks something like this:
      * <a href="https://paste.helpch.at/yojidanamu.bash">webhook.yml</a>
      *
@@ -46,6 +47,7 @@ public class Webhook {
 
     /**
      * Create a Discord webhook setup using a default configuration section and a default token "{message}".
+     *
      * <p> Make sure the section looks something like this:
      * <a href="https://paste.helpch.at/yojidanamu.bash">webhook.yml</a>
      *
@@ -58,6 +60,7 @@ public class Webhook {
 
     /**
      * Create a Discord webhook setup using a default configuration section with no message to display.
+     *
      * <p> Make sure the section looks something like this:
      * <a href="https://paste.helpch.at/yojidanamu.bash">webhook.yml</a>
      *
@@ -151,6 +154,7 @@ public class Webhook {
 
     /**
      * Sends the webhook. If the webhook is null or isn't enabled, won't send anything.
+     *
      * <p> If any error happens when connecting to its url, will print an error in the console.
      *
      * @param token a token
@@ -173,6 +177,7 @@ public class Webhook {
 
     /**
      * Sends the webhook. If the webhook is null or isn't enabled, won't send anything.
+     *
      * <p> If any error happens when connecting to its url, will print an error in the console.
      *
      * @param message a message if no message was declared in the constructor
@@ -183,6 +188,7 @@ public class Webhook {
 
     /**
      * Sends the webhook. If the webhook is null or isn't enabled, won't send anything.
+     *
      * <p> If any error happens when connecting to its url, will print an error in the console.
      */
     public void send() {

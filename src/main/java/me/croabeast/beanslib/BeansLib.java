@@ -43,6 +43,7 @@ public class BeansLib {
 
     /**
      * The static instance of the lib that doesn't have a plugin's implementation.
+     *
      * <p> Methods that use a plugin instance like {@link #doLog(CommandSender, String...)},
      * sending bossbar messages and other related will not work.
      */
@@ -78,8 +79,10 @@ public class BeansLib {
     /**
      * The line splitter or separator to split multiple chat lines
      * or split a title message between title and subtitle.
+     *
      * <p> If you want to override this string, you need to quote
      * your own one using {@link Pattern#quote(String)}.
+     *
      * <p> Example: {@code Pattern.quote("my own string");}
      */
     private String lineSeparator = Pattern.quote("<n>");
@@ -129,6 +132,9 @@ public class BeansLib {
 
     /**
      * Creates a new instance of the lib using a {@link Plugin} implementation.
+     *
+     * <p> Methods that use a plugin instance like {@link #doLog(CommandSender, String...)},
+     * sending bossbar messages and other related will not work if plugin is null.
      *
      * @param plugin plugin's instance
      */
@@ -375,15 +381,44 @@ public class BeansLib {
         doLog(null, lines);
     }
 
+    /**
+     * Creates a {@link Displayer} instance using the lib as a reference.
+     *
+     * @param targets a CommandSender targets, can be null
+     * @param parser  a player to parse values, can be null
+     * @param list    a string list
+     * @param flags   an array of flags to allow certain message types
+     *
+     * @return a {@link Displayer} instance
+     */
     public Displayer create(Collection<? extends CommandSender> targets,
                             Player parser, List<String> list, String... flags) {
         return new Displayer(this, targets, parser, list, flags);
     }
 
+    /**
+     * Creates a {@link Displayer} instance using the lib as a reference.
+     *
+     * @param target a CommandSender target, can be null
+     * @param parser  a player to parse values, can be null
+     * @param list    a string list
+     * @param flags   an array of flags to allow certain message types
+     *
+     * @return a {@link Displayer} instance
+     */
     public Displayer create(CommandSender target, Player parser, List<String> list, String... flags) {
         return new Displayer(this, target, parser, list, flags);
     }
 
+    /**
+     * Creates a {@link Displayer} instance using the lib as a reference.
+     *
+     * @param parser  a player to parse values, can be null
+     * @param list    a string list
+     * @param flags   an array of flags to allow certain message types
+     *
+     * @return a {@link Displayer} instance
+     */
     public Displayer create(Player parser, List<String> list, String... flags) {
         return new Displayer(this, parser, list, flags);
     }
@@ -504,6 +539,7 @@ public class BeansLib {
         /**
          * Creates a regex pattern in staring format using the key and the
          * optional regex parameter.
+         *
          * <p> It will be case-insensitive and always check at the start of a string.
          *
          * @return the requested regex string
