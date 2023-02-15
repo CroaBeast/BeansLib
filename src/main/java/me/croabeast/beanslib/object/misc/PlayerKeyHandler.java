@@ -4,6 +4,8 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import me.croabeast.beanslib.utility.TextUtils;
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 
@@ -29,7 +31,7 @@ import static me.croabeast.beanslib.object.misc.Rounder.round;
  *      createKey("{prefix}", p -> player.getPrefix()); // create a new key
  * }</pre>
  *
- * Then use the method {@link #parsePlayerKeys(Player, String, boolean)} to parse
+ * Then use the method {@link #parseKeys(Player, String, boolean)} to parse
  * all the stored keys in an input string with a player as a reference.
  *
  * <p> • Example: <pre>{@code
@@ -38,24 +40,30 @@ import static me.croabeast.beanslib.object.misc.Rounder.round;
  */
 public final class PlayerKeyHandler {
 
-    private static final Map<Integer, Key> KEY_MAP = new HashMap<>();
+    private static final Map<Integer, PlayerKey> KEY_MAP = new HashMap<>();
+    private static final Map<Integer, PlayerKey> DEFAULTS = new HashMap<>();
+
+    private static Location loc(Player p) { return p.getLocation(); }
 
     /**
      * Creates a new instance of the handler.
      */
     public PlayerKeyHandler() {
-        new Key("{player}", HumanEntity::getName);
-        new Key("{playerDisplayName}", Player::getDisplayName);
-        new Key("{playerUUID}", p -> p.getUniqueId() + "");
-        new Key("{playerWorld}", p -> p.getWorld().getName());
-        new Key("{playerGameMode}", p -> p.getGameMode() + "");
+        new PlayerKey("{player}", HumanEntity::getName);
+        new PlayerKey("{playerDisplayName}", Player::getDisplayName);
 
-        new Key("{playerX}", p -> round(p.getLocation().getX()) + "");
-        new Key("{playerY}", p -> round(p.getLocation().getY()) + "");
-        new Key("{playerZ}", p -> round(p.getLocation().getZ()) + "");
+        new PlayerKey("{playerUUID}", Entity::getUniqueId);
+        new PlayerKey("{playerWorld}", p -> p.getWorld().getName());
+        new PlayerKey("{playerGameMode}", HumanEntity::getGameMode);
 
-        new Key("{playerYaw}", p -> round(p.getLocation().getYaw()) + "");
-        new Key("{playerPitch}", p -> round(p.getLocation().getPitch()) + "");
+        new PlayerKey("{playerX}", p -> round(loc(p).getX()));
+        new PlayerKey("{playerY}", p -> round(loc(p).getY()));
+        new PlayerKey("{playerZ}", p -> round(loc(p).getZ()));
+
+        new PlayerKey("{playerYaw}", p -> round(loc(p).getYaw()));
+        new PlayerKey("{playerPitch}", p -> round(loc(p).getPitch()));
+
+        DEFAULTS.putAll(KEY_MAP);
     }
 
     /**
@@ -67,11 +75,11 @@ public final class PlayerKeyHandler {
      *
      * @return a reference of this object
      */
-    public PlayerKeyHandler createKey(String key, Function<Player, String> function) {
+    public PlayerKeyHandler createKey(String key, Function<Player, Object> function) {
         if (StringUtils.isBlank(key)) return this;
         if (function == null) return this;
 
-        new Key(key, (PlayerFunction) function);
+        new PlayerKey(key, (PlayerFunction<Object>) function);
         return this;
     }
 
@@ -101,10 +109,19 @@ public final class PlayerKeyHandler {
     public PlayerKeyHandler setKey(int index, String key) {
         if (StringUtils.isBlank(key)) return this;
 
-        Key k = KEY_MAP.getOrDefault(index, null);
+        PlayerKey k = KEY_MAP.getOrDefault(index, null);
         if (k != null) k.setKey(key);
 
         return this;
+    }
+
+    /**
+     * Rollbacks any change in the default keys and removes any custom key stored.
+     * <p> Usefully for reload methods that depend on cache.
+     */
+    public void setDefaults() {
+        KEY_MAP.clear();
+        KEY_MAP.putAll(DEFAULTS);
     }
 
     /**
@@ -116,18 +133,18 @@ public final class PlayerKeyHandler {
      *
      * @return the string with the respective values
      */
-    public String parsePlayerKeys(Player player, String string, boolean c) {
+    public String parseKeys(Player player, String string, boolean c) {
         if (StringUtils.isBlank(string)) return string;
         if (player == null) return string;
 
-        for (Key key : KEY_MAP.values())
-            string = key.parseKey(player, string, c);
+        for (PlayerKey playerKey : KEY_MAP.values())
+            string = playerKey.parseKey(player, string, c);
         return string;
     }
 
-    interface PlayerFunction extends Function<Player, String> {}
+    public interface PlayerFunction<O> extends Function<Player, O> {}
 
-    static class Key {
+    static class PlayerKey {
 
         private static int ordinal = 0;
 
@@ -136,12 +153,13 @@ public final class PlayerKeyHandler {
         private String key;
 
         private final int index;
-        private final PlayerFunction function;
+        private final PlayerFunction<String> function;
 
-        private Key(String key, PlayerFunction function) {
+        private PlayerKey(String key, PlayerFunction<Object> function) {
             this.key = key;
             this.index = ordinal;
-            this.function = function;
+
+            this.function = p -> String.valueOf(function.apply(p));
 
             KEY_MAP.put(ordinal, this);
             ordinal++;
@@ -152,7 +170,7 @@ public final class PlayerKeyHandler {
             return TextUtils.classFormat(this, ":", false, index, key);
         }
 
-        public String parseKey(Player player, String string, boolean c) {
+        String parseKey(Player player, String string, boolean c) {
             return TextUtils.replaceEach(string, key, function.apply(player), c);
         }
     }

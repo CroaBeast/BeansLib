@@ -18,7 +18,6 @@ public class ExampleClass {
 
     public void doSomething() {
         Player player = Bukkit.getPlayer("Mark");
-        plugin.getMyTextClass().sendMessage(player, "<#F0F12A>a cool <#12AAE1>chat message</#07DD01>");
         TextUtils.sendActionBar(player, "<R:1>my rainbow action bar message</R>");
     }
 

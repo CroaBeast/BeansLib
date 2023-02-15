@@ -60,6 +60,14 @@ public final class UpdateChecker {
 
     private static final Pattern DECIMAL_SCHEME_PATTERN = Pattern.compile("\\d+(?:\\.\\d+)*");
 
+    /**
+     * Get the last update result that was queried by {@link #requestUpdateCheck()}. If no
+     * update check was performed since this class' initialization, this method will
+     * return null.
+     *
+     * @return the last update check result. null if none.
+     */
+    @Getter @Nullable
     private UpdateResult lastResult = null;
 
     private final JavaPlugin plugin;
@@ -113,18 +121,6 @@ public final class UpdateChecker {
             return new UpdateResult(responseCode == 401 ?
                     UpdateReason.UNAUTHORIZED_QUERY : UpdateReason.UNKNOWN_ERROR);
         });
-    }
-
-    /**
-     * Get the last update result that was queried by {@link #requestUpdateCheck()}. If no
-     * update check was performed since this class' initialization, this method will
-     * return null.
-     *
-     * @return the last update check result. null if none.
-     */
-    @Nullable
-    public UpdateResult getLastResult() {
-        return lastResult;
     }
 
     private static String[] splitVersionInfo(String version) {
@@ -239,26 +235,24 @@ public final class UpdateChecker {
      * Represents a result for an update query performed by
      * {@link UpdateChecker#requestUpdateCheck()}.
      */
+    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     @Getter
     public final class UpdateResult {
 
         /**
          * Get the constant reason of this result.
          */
+        @NotNull
         private final UpdateReason reason;
         /**
          * Get the latest version of the plugin. This may be the currently installed version, it
          * may not be. This depends entirely on the result of the update.
          */
+        @NotNull
         private final String newestVersion;
 
         {
             UpdateChecker.this.lastResult = this;
-        }
-
-        private UpdateResult(@NotNull UpdateReason reason, @NotNull String newestVersion) {
-            this.reason = reason;
-            this.newestVersion = newestVersion;
         }
 
         private UpdateResult(@NotNull UpdateReason reason) {

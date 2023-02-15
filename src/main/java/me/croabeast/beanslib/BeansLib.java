@@ -184,7 +184,7 @@ public class BeansLib {
     }
 
     /**
-     * Sets the values of a specific {@link MessageKey} object stored.0
+     * Sets the values of a specific {@link MessageKey} object stored.
      *
      * <ul>
      *   <li>0: action bar key - "[action-bar]"</li>
@@ -222,6 +222,8 @@ public class BeansLib {
     }
 
     /**
+     * Returns the key instance of an input string to check what message
+     * type is the string. If there is no type or a chat message, will return null.
      *
      * @param s an input string
      * @return the requested message key
@@ -340,7 +342,7 @@ public class BeansLib {
      * @return the requested string
      */
     public String parsePlayerKeys(Player parser, String string, boolean c) {
-        return playerKeyHandler.parsePlayerKeys(parser, string, c);
+        return playerKeyHandler.parseKeys(parser, string, c);
     }
 
     /**

@@ -34,9 +34,9 @@ public class BeansLogger {
     private final BeansLib lib;
 
     /**
-     * Creates a new logger using a {@link BeansLib} or {@link BeansLib} instance.
+     * Creates a new logger using a {@link BeansLib} instance.
      *
-     * @param lib {@link BeansLib} or {@link BeansLib} instance
+     * @param lib {@link BeansLib} instance
      */
     public BeansLogger(@NotNull BeansLib lib) {
         this.lib = lib;

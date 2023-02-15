@@ -269,6 +269,8 @@ public final class TextUtils {
     /**
      * Sends an action bar message to a player.
      *
+     * <p> Doesn't format the message. Use {@link BeansLib#colorize(Player, Player, String)}.
+     *
      * @param player a player
      * @param message the message
      */
@@ -278,6 +280,8 @@ public final class TextUtils {
 
     /**
      * Sends a title message to a player.
+     *
+     * <p> Doesn't format the message. Use {@link BeansLib#colorize(Player, Player, String)}.
      *
      * @param player a player
      * @param title a title
@@ -292,6 +296,8 @@ public final class TextUtils {
 
     /**
      * Sends a title message to a player.
+     *
+     * <p> Doesn't format the message. Use {@link BeansLib#colorize(Player, Player, String)}.
      *
      * @param player a player
      * @param message an array of title and subtitle

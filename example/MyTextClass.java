@@ -6,14 +6,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class MyTextClass extends BeansLib {
 
-    /*
-     * You need to initialize your BeansLib class with your plugin's instance.
-     */
-
-    private final MyPlugin myPlugin;
-
     public MyTextClass(MyPlugin plugin) {
-        this.myPlugin = plugin;
+        super(plugin);
     }
 
     /*
@@ -21,22 +15,12 @@ public class MyTextClass extends BeansLib {
      */
 
     @Override
-    public @NotNull Plugin getPlugin() {
-        return myPlugin;
+    public @NotNull String getLangPrefixKey() {
+        return getPlugin().getConfig().getString("lang.prefix-key", "<key>");
     }
 
     @Override
-    public @NotNull String langPrefixKey() {
-        return myPlugin.getConfig().getString("lang.prefix-key", "<key>");
-    }
-
-    @Override
-    public @NotNull String langPrefix() {
-        return myPlugin.getConfig().getString("lang.main-prefix", " My Plugin owo");
-    }
-
-    @Override
-    public boolean fixColorLogger() {
-        return myPlugin.getConfig().getBoolean("options.fix-color-logger");
+    public @NotNull String getLangPrefix() {
+        return getPlugin().getConfig().getString("lang.main-prefix", " My Plugin owo");
     }
 }
