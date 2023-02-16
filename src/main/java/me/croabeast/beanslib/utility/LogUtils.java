@@ -46,5 +46,4 @@ public final class LogUtils {
     public static void doLog(@NotNull JavaPlugin plugin, String... lines) {
         new BeansLogger(plugin).doLog(null, lines);
     }
-
 }

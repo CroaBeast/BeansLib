@@ -60,7 +60,7 @@ public class JsonBuilder {
      * @param string an input string
      */
     public JsonBuilder(BeansLib lib, Player target, Player parser, String string) {
-        this.lib = lib != null ? lib : BeansLib.DEFAULTS;
+        this.lib = lib != null ? lib : BeansLib.getLoadedInstance();
         this.target = target == null ? parser : target;
 
         this.parser = parser;
@@ -69,7 +69,8 @@ public class JsonBuilder {
 
     /**
      * Converts a {@link String} line to a {@code JsonMessage} object.
-     * <p> Parses all the required keys and methods from {@link BeansLib#DEFAULTS}.
+     * 
+     * <p> Parses all the required keys and methods from {@link BeansLib}.
      *
      * @param target a target to send a message, can be null
      * @param parser a parser to parse placeholders

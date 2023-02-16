@@ -18,6 +18,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,14 +41,17 @@ import static me.croabeast.beanslib.utility.TextUtils.stripJson;
 public class BeansLib {
 
     private static final Map<Integer, MessageKey> MESSAGE_KEY_MAP = new HashMap<>();
+    private static final Map<Integer, MessageKey> DEFAULT_KEY_MAP = new HashMap<>();
 
     /**
      * The static instance of the lib that doesn't have a plugin's implementation.
      *
-     * <p> Methods that use a plugin instance like {@link #doLog(CommandSender, String...)},
-     * sending bossbar messages and other related will not work.
+     * <p> Methods that use a plugin instance like logging with a plugin prefix,
+     * sending bossbar messages and others plugin-related will not work.
      */
-    public static final BeansLib DEFAULTS = new BeansLib(null);
+    private static final BeansLib NO_PLUGIN_INSTANCE = new BeansLib(null);
+
+    private static BeansLib loadedInstance = null;
 
     /**
      * The {@link Plugin} instance of your project.
@@ -122,10 +126,10 @@ public class BeansLib {
      * }</pre>
      */
     @Setter(AccessLevel.NONE)
-    private int[] defaultTitleTicks = {8, 50, 8};
+    private int @NotNull [] defaultTitleTicks = {8, 50, 8};
 
     @Setter(AccessLevel.NONE)
-    private String[] keysDelimiters = {"[", "]"};
+    private String @NotNull [] keysDelimiters = {"[", "]"};
 
     @Getter(AccessLevel.NONE)
     private final MessageKey titleKey, jsonKey, aBarKey, bossbarKey, webhookKey;
@@ -133,24 +137,50 @@ public class BeansLib {
     /**
      * Creates a new instance of the lib using a {@link Plugin} implementation.
      *
-     * <p> Methods that use a plugin instance like {@link #doLog(CommandSender, String...)},
-     * sending bossbar messages and other related will not work if plugin is null.
+     * <p> if the plugin instance is null, methods that use a plugin instance
+     * like logging with a plugin prefix, sending bossbar messages and others
+     * plugin-related will not work.
      *
      * @param plugin plugin's instance
      */
     public BeansLib(@Nullable Plugin plugin) {
         this.plugin = plugin;
 
-        logger = new BeansLogger(this);
         playerKeyHandler = new PlayerKeyHandler();
-
-        langPrefix = "&e " + (plugin == null ? "JavaPlugin" : plugin.getName()) + " &8»&7";
+        logger = new BeansLogger(this);
 
         aBarKey = new MessageKey(this, "action-bar", null).doColor();
         titleKey = new MessageKey(this, "title", "(:\\d+)?").doColor();
         jsonKey = new MessageKey(this, "json", null);
         webhookKey = new MessageKey(this, "webhook", "(:.+)?");
         bossbarKey = new MessageKey(this, "bossbar", "(:.+)?");
+
+        langPrefix = "&e " + (this.plugin == null ?
+                "JavaPlugin" : this.plugin.getName()) + " &8»&7";
+
+        DEFAULT_KEY_MAP.putAll(MESSAGE_KEY_MAP);
+        if (loadedInstance == null) loadedInstance = this;
+    }
+
+    /**
+     * Returns the static instance of the lib that is loaded by a plugin using this lib.
+     * If there is no loaded instance, will return the {@link #NO_PLUGIN_INSTANCE}.
+     *
+     * <p> To avoid the no-plugin result, a lib instance should be initialized in the
+     * main class of the project, on {@link JavaPlugin#onLoad()} or {@link JavaPlugin#onEnable()}.
+     *
+     * <p> Simple example of initialization of the lib:
+     * <pre> {@code
+     * @Override
+     * public void onEnable() {
+     *     new BeansLib(this);
+     * }} </pre>
+     *
+     * @return loaded instance
+     */
+    @NotNull
+    public static BeansLib getLoadedInstance() {
+        return loadedInstance == null ? NO_PLUGIN_INSTANCE : loadedInstance;
     }
 
     /**
@@ -162,7 +192,7 @@ public class BeansLib {
      *
      * @return a reference of this object
      */
-    public BeansLib setTitleTicks(int in, int stay, int out) {
+    public final BeansLib setTitleTicks(int in, int stay, int out) {
         defaultTitleTicks = new int[] {in, stay, out};
         return this;
     }
@@ -178,7 +208,7 @@ public class BeansLib {
      *
      * @return a reference of this object
      */
-    public BeansLib setKeysDelimiters(String start, String end) {
+    public final BeansLib setKeysDelimiters(String start, String end) {
         keysDelimiters = new String[] {start, end};
         return this;
     }
@@ -199,7 +229,7 @@ public class BeansLib {
      *
      * @return a reference of this object
      */
-    public BeansLib setMessageKeyValues(int index, @NotNull String key, @Nullable String regex) {
+    public final BeansLib setMessageKeyValues(int index, @NotNull String key, @Nullable String regex) {
         if (StringUtils.isBlank(key)) return this;
         if (index > 3) return this;
 
@@ -207,6 +237,15 @@ public class BeansLib {
         if (k != null) k.setKey(key).setRegex(regex);
 
         return this;
+    }
+
+    /**
+     * Rollbacks any change in the default keys stored.
+     * <p> Usefully for reload methods that depend on cache.
+     */
+    public final void setDefaults() {
+        MESSAGE_KEY_MAP.clear();
+        MESSAGE_KEY_MAP.putAll(DEFAULT_KEY_MAP);
     }
 
     /**
@@ -229,7 +268,7 @@ public class BeansLib {
      * @return the requested message key
      */
     @Nullable
-    public MessageKey identifyMessageType(String s) {
+    public final MessageKey identifyMessageType(String s) {
         if (StringUtils.isBlank(s)) return null;
 
         for (MessageKey key : MESSAGE_KEY_MAP.values())
@@ -341,7 +380,7 @@ public class BeansLib {
      *
      * @return the requested string
      */
-    public String parsePlayerKeys(Player parser, String string, boolean c) {
+    public final String parsePlayerKeys(Player parser, String string, boolean c) {
         return playerKeyHandler.parseKeys(parser, string, c);
     }
 
@@ -351,7 +390,7 @@ public class BeansLib {
      * @param player a valid online player
      * @param lines the information to send
      */
-    public void playerLog(@NotNull Player player, String... lines) {
+    public final void playerLog(@NotNull Player player, String... lines) {
         logger.playerLog(player, lines);
     }
 
@@ -360,7 +399,7 @@ public class BeansLib {
      *
      * @param lines the information to send
      */
-    public void rawLog(String... lines) {
+    public final void rawLog(String... lines) {
         logger.rawLog(lines);
     }
 
@@ -370,7 +409,7 @@ public class BeansLib {
      * @param sender a valid sender, can be the console or a player
      * @param lines the information to send
      */
-    public void doLog(@Nullable CommandSender sender, String... lines) {
+    public final void doLog(@Nullable CommandSender sender, String... lines) {
         logger.doLog(sender, lines);
     }
 
@@ -379,7 +418,7 @@ public class BeansLib {
      *
      * @param lines the information to send
      */
-    public void doLog(String... lines) {
+    public final void doLog(String... lines) {
         doLog(null, lines);
     }
 
@@ -393,7 +432,7 @@ public class BeansLib {
      *
      * @return a {@link Displayer} instance
      */
-    public Displayer create(Collection<? extends CommandSender> targets,
+    public final Displayer create(Collection<? extends CommandSender> targets,
                             Player parser, List<String> list, String... flags) {
         return new Displayer(this, targets, parser, list, flags);
     }
@@ -408,7 +447,7 @@ public class BeansLib {
      *
      * @return a {@link Displayer} instance
      */
-    public Displayer create(CommandSender target, Player parser, List<String> list, String... flags) {
+    public final Displayer create(CommandSender target, Player parser, List<String> list, String... flags) {
         return new Displayer(this, target, parser, list, flags);
     }
 
@@ -421,7 +460,7 @@ public class BeansLib {
      *
      * @return a {@link Displayer} instance
      */
-    public Displayer create(Player parser, List<String> list, String... flags) {
+    public final Displayer create(Player parser, List<String> list, String... flags) {
         return new Displayer(this, parser, list, flags);
     }
 
@@ -495,7 +534,7 @@ public class BeansLib {
      */
     @Accessors(chain = true)
     @Setter(AccessLevel.PRIVATE)
-    public static class MessageKey {
+    public static final class MessageKey {
 
         private static int ordinal = 0;
 

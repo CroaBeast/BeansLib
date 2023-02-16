@@ -22,17 +22,17 @@ public final class Gradient implements RGBParser {
     static final Pattern LEGACY_GRADIENT =
             Pattern.compile("(?i)<G:(" + HEX + ")>(.+?)</G:(" + HEX + ")>");
 
-    static String gradient(String string, boolean isRegex, boolean isEnding) {
+    static String gradientFormat(String string, boolean isRegex, boolean isEnding) {
         return "<" + (isEnding ? "/" : "") + "#" +
                 (isRegex ? "(" : "") + string + (isRegex ? ")" : "") + ">";
     }
 
-    static String gradient(String string, boolean isRegex) {
-        return gradient(string, isRegex, false);
+    static String gradientFormat(String string, boolean isRegex) {
+        return gradientFormat(string, isRegex, false);
     }
 
-    static String gradient() {
-        return gradient(HEX, true);
+    static String gradientFormat() {
+        return gradientFormat(HEX, true);
     }
 
     /**
@@ -48,9 +48,9 @@ public final class Gradient implements RGBParser {
         while (match.find()) {
             String start = match.group(1), end = match.group(3);
             string = string.replace(match.group(),
-                    gradient(start, false) +
+                    gradientFormat(start, false) +
                             match.group(2) +
-                            gradient(end, false, true)
+                            gradientFormat(end, false, true)
             );
         }
 
@@ -61,7 +61,7 @@ public final class Gradient implements RGBParser {
      * Compiles the gradient pattern. Supports multiple gradients in one format.
      */
     public static final Pattern GRADIENT_PATTERN =
-            Pattern.compile("(?i)" + gradient() + "(.+?)" + gradient(HEX, true, true));
+            Pattern.compile("(?i)" + gradientFormat() + "(.+?)" + gradientFormat(HEX, true, true));
 
     private Color getColor(String line) {
         return new Color(Integer.parseInt(line, 16));
@@ -75,7 +75,7 @@ public final class Gradient implements RGBParser {
 
         while (match.find()) {
             String x = match.group(1), text = match.group(2),
-                    z = match.group(3), r = "(?i)" + gradient();
+                    z = match.group(3), r = "(?i)" + gradientFormat();
 
             Matcher insideMatch = Pattern.compile(r).matcher(text);
             String[] array = text.split(r);
@@ -84,6 +84,7 @@ public final class Gradient implements RGBParser {
 
             ids.add(x);
             while (insideMatch.find()) ids.add(insideMatch.group(1));
+
             ids.add(z);
 
             StringBuilder result = new StringBuilder();
@@ -94,7 +95,8 @@ public final class Gradient implements RGBParser {
                         array[i],
                         getColor(ids.get(i)),
                         getColor(ids.get(i + 1)),
-                        useRGB));
+                        useRGB)
+                );
                 i++;
             }
 

@@ -107,7 +107,7 @@ public class Displayer {
             BeansLib lib, Collection<? extends CommandSender> targets,
             Player parser, List<String> list, String... flags
     ) {
-        this.lib = lib == null ? BeansLib.DEFAULTS : lib;
+        this.lib = lib == null ? BeansLib.getLoadedInstance() : lib;
 
         this.targets = targets;
         this.parser = parser;

@@ -94,7 +94,7 @@ public class TimeParser {
         long result = this.seconds;
 
         if (result <= 0)
-            return BeansLib.DEFAULTS.colorize(
+            return BeansLib.getLoadedInstance().colorize(
                     null, parser,
                     isPlural(0, keys.getSecondFormat())
             );
@@ -147,7 +147,7 @@ public class TimeParser {
         if (result > 0) formattedTime.
                 append(isPlural(result, keys.getSecondFormat() + split));
 
-        return BeansLib.DEFAULTS.colorize(null, parser,
+        return BeansLib.getLoadedInstance().colorize(null, parser,
                 formattedTime.substring(0,
                 formattedTime.length() - split.length())
         );
