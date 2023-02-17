@@ -233,7 +233,7 @@ public final class IridiumAPI {
      * getLastColor("&b&k&lThis is cool", null, false, false) = "&b";
      * getLastColor("{#FFFFFF}hi, &fChris", "Chris", false, false) = "{#FFFFFF}";
      * getLastColor("{#FFFFFF}hi, &fChris", "Chris", false, true) = "&f";
-     * }</pre>
+     * } </pre>
      *
      * @param string an input string, can not be null neither empty
      * @param key a key to search in the string, can be null

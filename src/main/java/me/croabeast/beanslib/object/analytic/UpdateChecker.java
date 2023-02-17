@@ -8,6 +8,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang.math.NumberUtils;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,7 +24,7 @@ import java.util.regex.Pattern;
 /**
  * A utility class to assist in checking for updates for plugins uploaded to
  * <a href="https://spigotmc.org/resources/">SpigotMC</a>. Before any members of this
- * class are accessed, {@link #of(JavaPlugin, int)} must be invoked by the plugin,
+ * class are accessed, {@link #of(Plugin, int)} must be invoked by the plugin,
  * preferably in its {@link JavaPlugin#onEnable()} method, though that is not a
  * requirement.
  * <p>
@@ -70,7 +71,7 @@ public final class UpdateChecker {
     @Getter @Nullable
     private UpdateResult lastResult = null;
 
-    private final JavaPlugin plugin;
+    private final Plugin plugin;
     private final int pluginID;
     private final VersionScheme versionScheme;
 
@@ -142,7 +143,7 @@ public final class UpdateChecker {
      * @return an UpdateChecker instance
      */
     @NotNull
-    public static UpdateChecker of(@NotNull JavaPlugin plugin, int pluginID, @NotNull VersionScheme versionScheme) {
+    public static UpdateChecker of(@NotNull Plugin plugin, int pluginID, @NotNull VersionScheme versionScheme) {
         Preconditions.checkArgument(pluginID > 0, "Plugin ID must be greater than 0");
         return new UpdateChecker(plugin, pluginID, versionScheme);
     }
@@ -158,7 +159,7 @@ public final class UpdateChecker {
      * @return an UpdateChecker instance
      */
     @NotNull
-    public static UpdateChecker of(@NotNull JavaPlugin plugin, int pluginID) {
+    public static UpdateChecker of(@NotNull Plugin plugin, int pluginID) {
         return of(plugin, pluginID, VERSION_SCHEME_DECIMAL);
     }
 

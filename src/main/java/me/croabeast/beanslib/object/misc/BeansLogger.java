@@ -11,7 +11,9 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
 
 /**
  * This class manages logger manages to player and/or console.
@@ -81,6 +83,15 @@ public class BeansLogger {
             if (line == null) continue;
             line = line.replace(lib.getLangPrefixKey(), value);
 
+            if (isLog && lib.isStripPrefix()) {
+                BeansLib.MessageKey k = lib.getMessageKey(line);
+
+                if (k != null) {
+                    Matcher match = k.getPattern().matcher(line);
+                    line = line.replace(match.group(), "");
+                }
+            }
+
             line = lib.centerMessage(player, player, line);
             list.add(line.replace(sp, "&f" + sp));
         }
@@ -99,8 +110,7 @@ public class BeansLogger {
      * @param lines the information to send
      */
     public void playerLog(Player player, String... lines) {
-        for (String s : toLogLines(player, false, lines))
-            player.sendMessage(IridiumAPI.process(s));
+        lib.create(player, Arrays.asList(toLogLines(player, false, lines)));
     }
 
     /**

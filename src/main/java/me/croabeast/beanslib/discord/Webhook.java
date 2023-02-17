@@ -1,12 +1,11 @@
-package me.croabeast.beanslib.object.discord;
+package me.croabeast.beanslib.discord;
 
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * An object for sending discord webhooks.
@@ -154,7 +153,6 @@ public class Webhook {
 
     /**
      * Sends the webhook. If the webhook is null or isn't enabled, won't send anything.
-     *
      * <p> If any error happens when connecting to its url, will print an error in the console.
      *
      * @param token a token
@@ -199,32 +197,28 @@ public class Webhook {
      * Sends the webhook asynchronously.
      * <p> See {@link #send(String, String)} for more info.
      *
-     * @param plugin a javaPlugin's instance
      * @param token a token
      * @param message a message if no message was declared in the constructor
      */
-    public void sendAsync(JavaPlugin plugin, String token, String message) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> send(token, message));
+    public void sendAsync(String token, String message) {
+        CompletableFuture.runAsync(() -> send(token, message));
     }
 
     /**
      * Sends the webhook asynchronously.
      * <p> See {@link #send(String)} for more info.
      *
-     * @param plugin a javaPlugin's instance
      * @param message a message if no message was declared in the constructor
      */
-    public void sendAsync(JavaPlugin plugin, String message) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> send(message));
+    public void sendAsync(String message) {
+        CompletableFuture.runAsync(() -> send(message));
     }
 
     /**
      * Sends the webhook asynchronously.
      * <p> See {@link #send()} for more info.
-     *
-     * @param plugin a javaPlugin's instance
      */
-    public void sendAsync(JavaPlugin plugin) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> send());
+    public void sendAsync() {
+        CompletableFuture.runAsync(this::send);
     }
 }

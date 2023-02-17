@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.object.discord;
+package me.croabeast.beanslib.discord;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

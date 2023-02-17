@@ -4,8 +4,8 @@ import com.google.common.collect.Lists;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.croabeast.beanslib.BeansLib;
-import me.croabeast.beanslib.object.terminal.ActionBar;
-import me.croabeast.beanslib.object.terminal.TitleMngr;
+import me.croabeast.beanslib.nms.NMSActionBar;
+import me.croabeast.beanslib.nms.NMSTitle;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -21,7 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The class for static methods of the {@link BeansLib} class.
+ * A class that stores static methods for text, string, configurations, and more.
  *
  * @author CroaBeast
  * @since 1.0
@@ -29,20 +29,14 @@ import java.util.regex.Pattern;
 public final class TextUtils {
 
     /**
-     * Check if the line has a valid json format. Usage:
-     * <pre> {@code if (IS_JSON.apply("a string")) doSomething();}</pre>
+     * Check if the line uses a valid json format on any part of the string.
+     * <p> • Usage example:
+     * <pre> {@code
+     * if (IS_JSON.apply("a string")) doSomething();
+     * } </pre>
      */
     public static final Function<String, Boolean> IS_JSON =
             s -> LibUtils.JSON_PATTERN.matcher(convertOldJson(s)).find();
-
-    /**
-     * Action Bar sender handler.
-     */
-    private static final ActionBar ACTION_BAR = new ActionBar();
-    /**
-     * Title sender handler.
-     */
-    private static final TitleMngr TITLE_MNGR = new TitleMngr();
 
     /**
      * Initializing this class is blocked.
@@ -90,24 +84,25 @@ public final class TextUtils {
      * @since 1.3
      *
      * @param array First array
-     * @param additionalArrays Any additional arrays
+     * @param extraArrays Any additional arrays
      * @param <T> Type of array (must be same)
      *
      * @return New array of combined values
      */
     @SuppressWarnings("unchecked") @SafeVarargs
-    public static <T> T[] combineArrays(@NotNull T[] array, T[]... additionalArrays) {
-        if (additionalArrays == null || additionalArrays.length < 1) return array;
+    public static <T> T[] combineArrays(@NotNull T[] array, T[]... extraArrays) {
+        if (extraArrays == null || extraArrays.length < 1)
+            return array;
 
         List<T> resultList = new ArrayList<>();
         Collections.addAll(resultList, array);
 
-        for (T[] a : additionalArrays) {
-            if (a == null) continue;
-            Collections.addAll(resultList, a);
-        }
+        for (T[] a : extraArrays)
+            if (a != null) Collections.addAll(resultList, a);
 
-        T[] resultArray = (T[]) Array.newInstance(array.getClass().getComponentType(), 0);
+        Class<?> clazz = array.getClass().getComponentType();
+        T[] resultArray = (T[]) Array.newInstance(clazz, 0);
+
         return resultList.toArray(resultArray);
     }
 
@@ -275,7 +270,7 @@ public final class TextUtils {
      * @param message the message
      */
     public static void sendActionBar(Player player, String message) {
-        ACTION_BAR.send(player, message);
+        NMSActionBar.INSTANCE.send(player, message);
     }
 
     /**
@@ -291,7 +286,7 @@ public final class TextUtils {
      * @param out the fadeOut number in ticks
      */
     public static void sendTitle(Player player, String title, String subtitle, int in, int stay, int out) {
-        TITLE_MNGR.send(player, title, subtitle, in, stay, out);
+        NMSTitle.INSTANCE.send(player, title, subtitle, in, stay, out);
     }
 
     /**

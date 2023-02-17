@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.utility.time;
+package me.croabeast.beanslib.time;
 
 import me.croabeast.beanslib.BeansLib;
 import org.bukkit.entity.Player;
@@ -6,15 +6,15 @@ import org.bukkit.entity.Player;
 /**
  * An object that handles a time in seconds and converts it in a formatted string.
  * You can see a very basic example here:
- * <pre>{@code player.sendMessage(new TimeParser(56981).formatTime())}</pre>
+ * <pre> {@code player.sendMessage(new TimeParser(56981).formatTime())} </pre>
  * You can also have custom keys creating a new instance of the {@link TimeKeys} object.
- * <pre>{@code
+ * <pre> {@code
  * TimeKeys keys = new TimeKeys();
  * // Here I'm changing the splitter.
  * keys = keys.setSplitter("; ");
  * // Then I set it on an instance of TimeParser.
  * TimeParser parser = new TimeParser(keys, 2132);
- * }</pre>
+ * } </pre>
  *
  * @author Kihsomray
  * @fork CroaBeast

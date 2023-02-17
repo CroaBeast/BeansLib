@@ -34,22 +34,23 @@ public final class LibUtils {
      * <pre> {@code
      * Available Actions: RUN, SUGGEST, URL and all ClickAction values.
      * "<ACTION>:<the click string>" -> "RUN:/me click to run"
-     * }</pre>
+     * } </pre>
      *
      * <p> Examples:
      * <pre> {@code
      * String hover = "<hover:\"a hover line\">text to apply</text>";
      * String click = "<run:\"/click me\">text to apply</text>";
      * String mixed = "<hover:\"a hover line<n>another line\"|run:\"/command\">text to apply</text>";
-     * }</pre>
+     * } </pre>
      */
     public static final Pattern JSON_PATTERN =
             Pattern.compile("(?i)<(" + JSON_PREFIX + "([|]" + JSON_PREFIX + ")?)>(.+?)</text>");
 
     private static String serverVersion() {
         String temp = Bukkit.getVersion();
+        int i = temp.indexOf("MC:") + 3;
 
-        temp = TextUtils.removeSpace(temp.substring(temp.indexOf("MC:") + 3));
+        temp = TextUtils.removeSpace(temp.substring(i));
         return temp.substring(0, temp.length() - 1);
     }
 

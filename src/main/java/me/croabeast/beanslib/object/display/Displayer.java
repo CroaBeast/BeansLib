@@ -3,7 +3,7 @@ package me.croabeast.beanslib.object.display;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import me.croabeast.beanslib.BeansLib;
-import me.croabeast.beanslib.object.discord.Webhook;
+import me.croabeast.beanslib.discord.Webhook;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -24,7 +24,7 @@ import static me.croabeast.beanslib.utility.TextUtils.*;
  * types and format every message type respectively.</p>
  *
  * <p> This is a basic example of how to create a new <code>Displayer</code> object.
- * <pre>{@code
+ * <pre> {@code
  * new Displayer(
  *       "A BeansLib instance to get methods and variables",
  *       "A collection of CommandSender targets to display",
@@ -33,10 +33,10 @@ import static me.croabeast.beanslib.utility.TextUtils.*;
  *       "An array of flags to allow certain message types"
  *       // if there is no flag array, it will allow all types
  * );
- * }</pre>
+ * } </pre>
  *
  * Example:
- * <pre>{@code
+ * <pre> {@code
  * Displayer displayer = new Displayer(
  *       plugin.getBeansLibExtendedClass(),
  *       Bukkit.getOnlinePlayers(), // can be single or null
@@ -48,7 +48,7 @@ import static me.croabeast.beanslib.utility.TextUtils.*;
  * );
  *
  * displayer.display(); // displays the object
- * }</pre>
+ * } </pre>
  *
  * See {@link #display(boolean)} or {@link #display()} for more info.
  */
@@ -237,7 +237,7 @@ public class Displayer {
 
     private void sendWebhooks() {
         for (String s : list) {
-            final BeansLib.MessageKey key = lib.identifyMessageType(s);
+            final BeansLib.MessageKey key = lib.getMessageKey(s);
 
             if (key != null && key.getUpperKey().equals(WEBHOOK)) {
                 if (isNotAllowed(WEBHOOK)) continue;
@@ -249,7 +249,7 @@ public class Displayer {
                 if (list.isEmpty()) continue;
 
                 Matcher m2 = key.getPattern().matcher(s);
-                String line = key.formatString(null, parser, s);
+                String line = key.formatString(parser, s);
 
                 String path = list.get(0);
 
@@ -310,7 +310,7 @@ public class Displayer {
         // Iterates of every target to display.
         for (Player t : targets)
             for (String s : list) {
-                final BeansLib.MessageKey key = lib.identifyMessageType(s);
+                final BeansLib.MessageKey key = lib.getMessageKey(s);
 
                 if (key == null) {
                     if (isNotAllowed(CHAT)) continue;
@@ -347,7 +347,7 @@ public class Displayer {
 
                         String t1 = key.formatString(t, parser, s);
 
-                        sendTitle(t, t1.split(lib.getLineSeparator()), a[0], time, a[2]);
+                        sendTitle(t, lib.splitLine(t1), a[0], time, a[2]);
                         continue;
 
                     case BOSSBAR:
@@ -378,7 +378,7 @@ public class Displayer {
                         if (list.isEmpty()) continue;
 
                         Matcher m2 = key.getPattern().matcher(s);
-                        String line = key.formatString(null, parser, s);
+                        String line = key.formatString(parser, s);
 
                         String path = list.get(0);
 

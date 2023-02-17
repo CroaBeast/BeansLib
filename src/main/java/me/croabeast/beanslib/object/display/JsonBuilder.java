@@ -30,14 +30,14 @@ import static net.md_5.bungee.api.chat.ClickEvent.Action.*;
  *
  * <p> After all the actions are set in the chat component, the
  * message is sent to the target player.
- * <pre>{@code
+ * <pre> {@code
  * JsonConverter json = new JsonConverter(player, "my message");
  * // Sends the message to the target using a
  * // hover list and a string action.
  * json.send("RUN:/command", Arrays.asList("My hover message"));
  * // Send the message to the target using the defined pattern.
  * json.send();
- * }</pre>
+ * } </pre>
  *
  * @author CroaBeast
  * @since 1.3
@@ -112,7 +112,7 @@ public class JsonBuilder {
 
     void addEvent(TextComponent comp, String type, String string) {
         if (type.matches("(?i)hover")) {
-            String[] array = string.split(lib.getLineSeparator());
+            String[] array = lib.splitLine(string);
             addHover(comp, Lists.newArrayList(array));
         }
         else if (parseAction(type) != null)
@@ -203,7 +203,7 @@ public class JsonBuilder {
      * String text = "<hover:\"a hover line\">text to apply</text>";
      * BaseComponent[] array = JsonMessage.fromText(player, text);
      * player.spigot().sendMessage(array);
-     * }</pre>
+     * } </pre>
      *
      * @param parser a player to parse placeholders
      * @param text an input string
@@ -222,7 +222,7 @@ public class JsonBuilder {
      * String text = "<hover:\"a hover line\">text to apply</text>";
      * BaseComponent[] array = JsonMessage.fromText(text);
      * player.spigot().sendMessage(array);
-     * }</pre>
+     * } </pre>
      *
      * @param text an input string
      * @return the requested chat component array

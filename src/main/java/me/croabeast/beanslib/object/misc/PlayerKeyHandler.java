@@ -23,20 +23,20 @@ import static me.croabeast.beanslib.object.misc.Rounder.round;
  * replace existing keys using {@link #setKey(int, String)}. Both methods can be
  * cast as a chain in the same object instance or as void methods.
  *
- * <p> • Example: <pre>{@code
+ * <p> • Example: <pre> {@code
  * PlayerKeyHandler handler = new PlayerKeyHandler();
  * // or using the BeansLib#getPlayerKeys() to get its instance of the lib
  *
  * handler.setKey(0, "{playerName}"). // sets a key of an existing key
  *      createKey("{prefix}", p -> player.getPrefix()); // create a new key
- * }</pre>
+ * } </pre>
  *
  * Then use the method {@link #parseKeys(Player, String, boolean)} to parse
  * all the stored keys in an input string with a player as a reference.
  *
- * <p> • Example: <pre>{@code
+ * <p> • Example: <pre> {@code
  * String s = handler.parsePlayerKeys(player, "hello {player} :D", true);
- * }</pre>
+ * } </pre>
  */
 public final class PlayerKeyHandler {
 
@@ -67,8 +67,7 @@ public final class PlayerKeyHandler {
     }
 
     /**
-     * Creates a new key instance that will be stored with the
-     * default player keys.
+     * Creates a new key instance that will be stored with the default player keys.
      *
      * @param key a key for the object
      * @param function a function to get the respective player value

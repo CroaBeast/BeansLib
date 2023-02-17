@@ -9,8 +9,8 @@ import me.croabeast.beanslib.object.misc.PlayerKeyHandler;
 import me.croabeast.beanslib.object.display.Displayer;
 import me.croabeast.beanslib.object.misc.BeansLogger;
 import me.croabeast.beanslib.utility.TextUtils;
-import me.croabeast.beanslib.utility.chars.CharHandler;
-import me.croabeast.beanslib.utility.chars.CharacterInfo;
+import me.croabeast.beanslib.character.CharHandler;
+import me.croabeast.beanslib.character.CharacterInfo;
 import me.croabeast.iridiumapi.IridiumAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
@@ -26,12 +26,11 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static me.croabeast.beanslib.utility.TextUtils.parsePAPI;
-import static me.croabeast.beanslib.utility.TextUtils.stripJson;
+import static me.croabeast.beanslib.utility.TextUtils.*;
 
 /**
- * The main class of the Lib.
- * It has a lot of useful text-related methods.
+ * The main class of this lib. Most of the variables can be changed
+ * using chain setters.
  *
  * @author CroaBeast
  * @since 1.0
@@ -80,6 +79,7 @@ public class BeansLib {
      * The center prefix to define a center chat message.
      */
     private String centerPrefix = "[C]";
+
     /**
      * The line splitter or separator to split multiple chat lines
      * or split a title message between title and subtitle.
@@ -92,17 +92,39 @@ public class BeansLib {
     private String lineSeparator = Pattern.quote("<n>");
 
     /**
-     * The character regex pattern that replace the specified char.
-     * This regex should have only 1 group to catch.
+     * <p> The character regex pattern replace a 4-digit unicode code with a specific
+     * char using the unique group in the pattern.
+     *
+     * <p> Note: some unicode chars doesn't work with minecraft chat itself.
+     *
+     * <p> Examples:
+     * <pre> {@code
+     * String heart = "<U:2764>"; //U+2764 = ❤️
+     * String check = "<U:2714>"; //U+2714 = ✔️️
+     * String airplane = "<U:2708>"; //U+2708 = ✈️
+     * } </pre>
      */
-    private String charRegex = "<U:([a-fA-F0-9]{4})>";
+    @Getter(AccessLevel.NONE)
+    private String charRegex = "<U:([a-fA-F\\d]{4})>";
+
+    /**
+     * <p> It will identify which line is a bossbar message to be displayed. Also,
+     * the line should be ONLY the placeholder, if not, will not catch the pattern.
+     *
+     * <p> Ignores the spaces before and after the placeholder group.
+     *
+     * <p> First group is the placeholder itself, the second group is the bossbar's
+     * name or identifier in the {@link #bossbarSection}.
+     */
+    @Getter(AccessLevel.NONE)
+    private String customBossbarRegex = "%bossbar:(.+)%";
 
     /**
      * If the console can use colors or not. Some consoles have color support disabled.
      */
-    private boolean coloredConsole = false;
+    private boolean coloredConsole = true;
     /**
-     * If you want to remove the message-type prefix. Ex: [title], [json]
+     * If you want to remove the message-type prefix from log lines. Ex: [title], [json]
      */
     private boolean stripPrefix = false;
 
@@ -111,19 +133,20 @@ public class BeansLib {
      */
     private ConfigurationSection webhookSection = null;
     /**
-     * The {@link ConfigurationSection} object to get all the custom boss-bars.
+     * The {@link ConfigurationSection} object to get all the custom bossbars.
      */
     private ConfigurationSection bossbarSection = null;
 
     /**
      * In, stay and out ticks for a title message.
+     *
      * <pre> {@code
      * int[] ticks = defaultTitleTicks();
      * // Respective values
      * int fadeIn = ticks[0];
      * int stay = ticks[1];
      * int fadeout = ticks[2];
-     * }</pre>
+     * } </pre>
      */
     @Setter(AccessLevel.NONE)
     private int @NotNull [] defaultTitleTicks = {8, 50, 8};
@@ -252,7 +275,7 @@ public class BeansLib {
      * Returns if it will fix an RGB issue in some servers that RGB
      * not working correctly.
      *
-     * @deprecated check and/or override the "coloredConsole" variable
+     * @deprecated check and/or set the "coloredConsole" variable
      * @return if this fix is enabled
      */
     @Deprecated
@@ -268,13 +291,65 @@ public class BeansLib {
      * @return the requested message key
      */
     @Nullable
-    public final MessageKey identifyMessageType(String s) {
+    public final MessageKey getMessageKey(String s) {
         if (StringUtils.isBlank(s)) return null;
 
         for (MessageKey key : MESSAGE_KEY_MAP.values())
             if (key.getPattern().matcher(s).find()) return key;
 
+        Matcher m = getCustomBossbarPattern().matcher(s);
+        if (m.find()) return bossbarKey;
+
         return null;
+    }
+
+    /**
+     * Creates a new string array from an input string using the {@link #lineSeparator}
+     * as a split for the array.
+     *
+     * <p> You can define the limit of the array.
+     *
+     * @param s an input string
+     * @param limit a limit
+     *
+     * @return the requested array
+     */
+    public String[] splitLine(String s, int limit) {
+        return s.split(lineSeparator, limit);
+    }
+
+    /**
+     * Creates a new string array from an input string using the {@link #lineSeparator}
+     * as a split for the array.
+     *
+     * @param s an input string
+     * @return the requested array
+     */
+    public String[] splitLine(String s) {
+        return splitLine(s, 0);
+    }
+
+    /**
+     * Creates a new {@link Pattern} instance using the defined char regex string.
+     *
+     * <p> More info see {@link #setCharRegex(String)}.
+     *
+     * @return the requested pattern
+     */
+    public Pattern getCharPattern() {
+        return Pattern.compile(charRegex);
+    }
+
+    /**
+     * Creates a new {@link Pattern} instance using the defined custom bossbar
+     * internal placeholder.
+     *
+     * <p> More info see {@link #setCustomBossbarRegex(String)}.
+     *
+     * @return the requested pattern
+     */
+    public Pattern getCustomBossbarPattern() {
+        return Pattern.compile("^ *?(" + customBossbarRegex + ") *?$");
     }
 
     /**
@@ -288,7 +363,7 @@ public class BeansLib {
     public String parseChars(String string) {
         if (StringUtils.isBlank(string)) return string;
 
-        Matcher m = Pattern.compile(getCharRegex()).matcher(string);
+        Matcher m = getCharPattern().matcher(string);
 
         while (m.find()) {
             char s = (char) Integer.parseInt(m.group(1), 16);
@@ -310,7 +385,7 @@ public class BeansLib {
      */
     public String colorize(Player target, Player parser, String string) {
         if (target == null) target = parser;
-        string = TextUtils.parsePAPI(parser, parseChars(string));
+        string = parsePAPI(parser, parseChars(string));
         return IridiumAPI.process(target, string);
     }
 
@@ -332,7 +407,7 @@ public class BeansLib {
 
         string = string.substring(prefix.length());
 
-        String initial = parseChars(TextUtils.stripJson(string));
+        String initial = parseChars(stripJson(string));
         initial = colorize(target, parser, initial);
 
         int messagePxSize = 0;
@@ -494,7 +569,7 @@ public class BeansLib {
      */
     @Deprecated
     public void sendMessageList(CommandSender sender, ConfigurationSection section, String path, String[] keys, String[] values) {
-        sendMessageList(sender, TextUtils.toList(section, path), keys, values);
+        sendMessageList(sender, toList(section, path), keys, values);
     }
 
     /**
@@ -521,7 +596,7 @@ public class BeansLib {
      */
     @Deprecated
     public void sendMessageList(CommandSender sender, ConfigurationSection section, String path) {
-        sendMessageList(sender, TextUtils.toList(section, path));
+        sendMessageList(sender, toList(section, path));
     }
 
     /**
@@ -618,7 +693,7 @@ public class BeansLib {
             Matcher m = getPattern().matcher(s);
 
             while (m.find()) s = s.replace(m.group(), "");
-            s = TextUtils.removeSpace(s);
+            s = removeSpace(s);
 
             if (!useColor) {
                 String s1 = parsePAPI(parser, lib.parseChars(s));
@@ -626,6 +701,19 @@ public class BeansLib {
             }
 
             return lib.colorize(target, parser, s);
+        }
+
+        /**
+         * Formats an input string, colorizing it, parsing placeholders
+         * and removing the prefix.
+
+         * @param parser a player to parse
+         * @param s an input string
+         *
+         * @return the requested string
+         */
+        public String formatString(Player parser, String s) {
+            return formatString(parser, parser, s);
         }
     }
 }
