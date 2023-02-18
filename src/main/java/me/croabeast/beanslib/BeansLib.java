@@ -151,6 +151,12 @@ public class BeansLib {
     @Setter(AccessLevel.NONE)
     private int @NotNull [] defaultTitleTicks = {8, 50, 8};
 
+    /**
+     * The delimiters of all the messages keys to identify what type of
+     * message is a string to be displayed.
+     *
+     * <p> Example: default: [title] - custom: {{title}}
+     */
     @Setter(AccessLevel.NONE)
     private String @NotNull [] keysDelimiters = {"[", "]"};
 
@@ -183,27 +189,6 @@ public class BeansLib {
 
         DEFAULT_KEY_MAP.putAll(MESSAGE_KEY_MAP);
         if (loadedInstance == null) loadedInstance = this;
-    }
-
-    /**
-     * Returns the static instance of the lib that is loaded by a plugin using this lib.
-     * If there is no loaded instance, will return the {@link #NO_PLUGIN_INSTANCE}.
-     *
-     * <p> To avoid the no-plugin result, a lib instance should be initialized in the
-     * main class of the project, on {@link JavaPlugin#onLoad()} or {@link JavaPlugin#onEnable()}.
-     *
-     * <p> Simple example of initialization of the lib:
-     * <pre> {@code
-     * @Override
-     * public void onEnable() {
-     *     new BeansLib(this);
-     * }} </pre>
-     *
-     * @return loaded instance
-     */
-    @NotNull
-    public static BeansLib getLoadedInstance() {
-        return loadedInstance == null ? NO_PLUGIN_INSTANCE : loadedInstance;
     }
 
     /**
@@ -597,6 +582,27 @@ public class BeansLib {
     @Deprecated
     public void sendMessageList(CommandSender sender, ConfigurationSection section, String path) {
         sendMessageList(sender, toList(section, path));
+    }
+
+    /**
+     * Returns the static instance of the lib that is loaded by a plugin using this lib.
+     * If there is no loaded instance, will return the {@link #NO_PLUGIN_INSTANCE}.
+     *
+     * <p> To avoid the no-plugin result, a lib instance should be initialized in the
+     * main class of the project, on {@link JavaPlugin#onLoad()} or {@link JavaPlugin#onEnable()}.
+     *
+     * <p> Simple example of initialization of the lib:
+     * <pre> {@code
+     * @Override
+     * public void onEnable() {
+     *     new BeansLib(this);
+     * }} </pre>
+     *
+     * @return loaded instance
+     */
+    @NotNull
+    public static BeansLib getLoadedInstance() {
+        return loadedInstance == null ? NO_PLUGIN_INSTANCE : loadedInstance;
     }
 
     /**

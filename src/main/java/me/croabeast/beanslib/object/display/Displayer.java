@@ -356,6 +356,19 @@ public class Displayer {
                         Plugin plugin = lib.getPlugin();
                         if (plugin == null) continue;
 
+                        Matcher m2 = lib.getCustomBossbarPattern().matcher(s);
+
+                        if (m2.find()) {
+                            ConfigurationSection c = lib.getBossbarSection();
+                            if (c == null) continue;
+
+                            c = c.getConfigurationSection(m2.group(2));
+                            if (c == null) continue;
+
+                            new BossbarBuilder(plugin, t, c).display();
+                            continue;
+                        }
+
                         new BossbarBuilder(plugin, t, s).display();
                         continue;
 
@@ -377,14 +390,16 @@ public class Displayer {
                         List<String> list = new ArrayList<>(id.getKeys(false));
                         if (list.isEmpty()) continue;
 
-                        Matcher m2 = key.getPattern().matcher(s);
+                        Matcher m3 = key.getPattern().matcher(s);
                         String line = key.formatString(parser, s);
 
                         String path = list.get(0);
 
-                        if (m2.find()) {
-                            String[] split = m2.group().replace("[", "").
-                                    replace("]", "").split(":", 2);
+                        if (m3.find()) {
+                            String[] split = m3.group().
+                                    replace(lib.getKeysDelimiters()[0], "").
+                                    replace(lib.getKeysDelimiters()[1], "").
+                                    split(":", 2);
 
                             String temp = split.length == 2 ? split[1] : null;
                             if (temp != null) path = temp;
