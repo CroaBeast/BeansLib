@@ -1,5 +1,7 @@
 package me.croabeast.beanslib.time;
 
+import org.jetbrains.annotations.ApiStatus;
+
 /**
  * Basic time utilities for any server.
  *
@@ -8,7 +10,7 @@ package me.croabeast.beanslib.time;
  * @author Kihsomray
  * @version 1.0
  */
-@Deprecated
+@Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
 public final class TimeUtils {
 
     /**

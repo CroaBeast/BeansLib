@@ -4,13 +4,15 @@ import me.croabeast.beanslib.object.misc.BeansLogger;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * The class that handles logger utilities.
- * Deprecated, use {@link BeansLogger} instead.
+ *
+ * @deprecated Use the {@link BeansLogger} object instead.
  */
-@Deprecated
+@Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
 public final class LogUtils {
 
     /**

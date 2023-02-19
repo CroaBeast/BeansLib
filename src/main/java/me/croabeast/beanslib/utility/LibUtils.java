@@ -4,6 +4,7 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.regex.Pattern;
 
@@ -118,7 +119,7 @@ public final class LibUtils {
      *
      * @return if the server is in a Windows system
      */
-    @Deprecated
+    @Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
     public static boolean isWindows() {
         return SystemUtils.OS_NAME.matches("(?i)Windows");
     }

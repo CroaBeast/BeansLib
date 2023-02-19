@@ -5,12 +5,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import me.clip.placeholderapi.PlaceholderAPI;
-import me.croabeast.beanslib.object.misc.PlayerKeyHandler;
-import me.croabeast.beanslib.object.display.Displayer;
-import me.croabeast.beanslib.object.misc.BeansLogger;
-import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.beanslib.character.CharHandler;
 import me.croabeast.beanslib.character.CharacterInfo;
+import me.croabeast.beanslib.object.display.Displayer;
+import me.croabeast.beanslib.object.misc.BeansLogger;
+import me.croabeast.beanslib.object.misc.PlayerKeyHandler;
+import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.iridiumapi.IridiumAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
@@ -19,6 +19,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -263,7 +264,7 @@ public class BeansLib {
      * @deprecated check and/or set the "coloredConsole" variable
      * @return if this fix is enabled
      */
-    @Deprecated
+    @Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
     public boolean fixColorLogger() {
         return !coloredConsole;
     }
@@ -534,7 +535,7 @@ public class BeansLib {
      *
      * @deprecated See {@link Displayer} and its constructor.
      */
-    @Deprecated
+    @Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
     public void sendMessageList(CommandSender sender, List<String> list, String[] keys, String[] values) {
         create(sender, null, list).
                 setKeys(keys).setValues(values).setLogger(false).
@@ -552,7 +553,7 @@ public class BeansLib {
      *
      * @deprecated See {@link Displayer} and its constructor.
      */
-    @Deprecated
+    @Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
     public void sendMessageList(CommandSender sender, ConfigurationSection section, String path, String[] keys, String[] values) {
         sendMessageList(sender, toList(section, path), keys, values);
     }
@@ -565,7 +566,7 @@ public class BeansLib {
      *
      * @deprecated See {@link Displayer} and its constructor.
      */
-    @Deprecated
+    @Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
     public void sendMessageList(CommandSender sender, List<String> list) {
         sendMessageList(sender, list, null, null);
     }
@@ -579,7 +580,7 @@ public class BeansLib {
      *
      * @deprecated See {@link Displayer} and its constructor.
      */
-    @Deprecated
+    @Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
     public void sendMessageList(CommandSender sender, ConfigurationSection section, String path) {
         sendMessageList(sender, toList(section, path));
     }
