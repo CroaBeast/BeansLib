@@ -1,11 +1,11 @@
-package me.croabeast.beanslib.object.display;
+package me.croabeast.beanslib.builder;
 
 import com.google.common.collect.Lists;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import me.croabeast.beanslib.object.misc.Rounder;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.iridiumapi.IridiumAPI;
 import org.apache.commons.lang.StringUtils;
@@ -23,6 +23,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static me.croabeast.beanslib.object.misc.Rounder.round;
 
 /**
  * This class manages how to create a {@link BossBar} instance for
@@ -305,20 +307,20 @@ public class BossbarBuilder {
             public void run() {
                 if (initial[0] <= 0.0) { unregister(); cancel(); return; }
 
-                final double interval = Rounder.round(4, total / time);
+                final double interval = round(4, total / time);
 
                 if (progressDecrease) {
-                    initial[0] = Rounder.round(4, initial[0] - interval);
+                    initial[0] = round(4, initial[0] - interval);
                     bar.setProgress(initial[0]);
                 }
 
-                double msgInt = Rounder.round((mSize - c1[0]) * (total / mSize)),
-                        forInt = Rounder.round((fSize - c2[0]) * (total / fSize));
+                double msgInt = round((mSize - c1[0]) * (total / mSize)),
+                        forInt = round((fSize - c2[0]) * (total / fSize));
 
-                final double init = Rounder.round(initial[0]);
+                final double init = round(initial[0]);
 
                 if (mSize > 1 && (Objects.equals(init, msgInt) ||
-                        Rounder.round(init - msgInt) <= 0.01) && c1[0] < mSize)
+                        round(init - msgInt) <= 0.01) && c1[0] < mSize)
                 {
                     int i = useRandomMessages ? RANDOM.nextInt(mSize) : c1[0];
 
@@ -327,7 +329,7 @@ public class BossbarBuilder {
                 }
 
                 if (!(fSize > 1 && (Objects.equals(init, forInt) ||
-                        Rounder.round(init - forInt) <= 0.01) && c2[0] < fSize))
+                        round(init - forInt) <= 0.01) && c2[0] < fSize))
                     return;
 
                 int i = useRandomFormats ? RANDOM.nextInt(fSize) : c2[0];
@@ -361,7 +363,7 @@ public class BossbarBuilder {
         BOSSBAR_MAP.remove(player);
     }
 
-    @RequiredArgsConstructor
+    @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
     @Getter
     static class DoubleValue {
         private final BarColor color;

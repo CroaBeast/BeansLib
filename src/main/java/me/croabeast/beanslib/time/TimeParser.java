@@ -77,7 +77,7 @@ public class TimeParser {
     private String isPlural(long value, String string) {
         string = value + " " + string;
         if (value == 1)
-            return string.replaceAll(keys.getPluralRegex(), "");
+            return string.replaceAll(TimeKeys.PLURAL_REGEX, "");
 
         return string.replace("(", "").replace(")", "");
     }

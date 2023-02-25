@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.object.misc;
+package me.croabeast.beanslib.key;
 
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -23,22 +23,26 @@ import static me.croabeast.beanslib.object.misc.Rounder.round;
  * replace existing keys using {@link #setKey(int, String)}. Both methods can be
  * cast as a chain in the same object instance or as void methods.
  *
- * <p> • Example: <pre> {@code
- * PlayerKeyHandler handler = new PlayerKeyHandler();
- * // or using the BeansLib#getPlayerKeys() to get its instance of the lib
+ * <pre> {@code
+ * // • Example:
+ * KeyManager manager = new KeyManager();
  *
- * handler.setKey(0, "{playerName}"). // sets a key of an existing key
+ * // or use the BeansLib#getKeyManager() to get its instance of the lib
+ * KeyManager manager = yourLib.getKeyManager();
+ *
+ * manager.setKey(0, "{playerName}"). // sets a key of an existing key
  *      createKey("{prefix}", p -> player.getPrefix()); // create a new key
  * } </pre>
  *
  * Then use the method {@link #parseKeys(Player, String, boolean)} to parse
  * all the stored keys in an input string with a player as a reference.
  *
- * <p> • Example: <pre> {@code
- * String s = handler.parsePlayerKeys(player, "hello {player} :D", true);
+ * <pre> {@code
+ * // • Example:
+ * String s = manager.parseKeys(player, "hello {player} :D", true);
  * } </pre>
  */
-public final class PlayerKeyHandler {
+public final class KeyManager {
 
     private static final Map<Integer, PlayerKey> KEY_MAP = new HashMap<>();
     private static final Map<Integer, PlayerKey> DEFAULTS = new HashMap<>();
@@ -48,7 +52,7 @@ public final class PlayerKeyHandler {
     /**
      * Creates a new instance of the handler.
      */
-    public PlayerKeyHandler() {
+    public KeyManager() {
         new PlayerKey("{player}", HumanEntity::getName);
         new PlayerKey("{playerDisplayName}", Player::getDisplayName);
 
@@ -74,7 +78,7 @@ public final class PlayerKeyHandler {
      *
      * @return a reference of this object
      */
-    public PlayerKeyHandler createKey(String key, Function<Player, Object> function) {
+    public KeyManager createKey(String key, Function<Player, Object> function) {
         if (StringUtils.isBlank(key)) return this;
         if (function == null) return this;
 
@@ -105,7 +109,7 @@ public final class PlayerKeyHandler {
      *
      * @return a reference of this object
      */
-    public PlayerKeyHandler setKey(int index, String key) {
+    public KeyManager setKey(int index, String key) {
         if (StringUtils.isBlank(key)) return this;
 
         PlayerKey k = KEY_MAP.getOrDefault(index, null);
@@ -141,7 +145,7 @@ public final class PlayerKeyHandler {
         return string;
     }
 
-    public interface PlayerFunction<O> extends Function<Player, O> {}
+    interface PlayerFunction<O> extends Function<Player, O> {}
 
     static class PlayerKey {
 
@@ -170,7 +174,8 @@ public final class PlayerKeyHandler {
         }
 
         String parseKey(Player player, String string, boolean c) {
-            return TextUtils.replaceEach(string, key, function.apply(player), c);
+            final String v = function.apply(player);
+            return new ValueReplacer(key, v).setCaseSensitive(c).replace(string);
         }
     }
 }

@@ -37,8 +37,8 @@ public final class LibUtils {
      * "<ACTION>:<the click string>" -> "RUN:/me click to run"
      * } </pre>
      *
-     * <p> Examples:
      * <pre> {@code
+     * // • Examples:
      * String hover = "<hover:\"a hover line\">text to apply</text>";
      * String click = "<run:\"/click me\">text to apply</text>";
      * String mixed = "<hover:\"a hover line<n>another line\"|run:\"/command\">text to apply</text>";
@@ -119,7 +119,8 @@ public final class LibUtils {
      *
      * @return if the server is in a Windows system
      */
-    @Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @Deprecated
     public static boolean isWindows() {
         return SystemUtils.OS_NAME.matches("(?i)Windows");
     }

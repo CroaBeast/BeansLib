@@ -1,19 +1,21 @@
 package me.croabeast.beanslib.object.misc;
 
 import me.croabeast.beanslib.BeansLib;
+import me.croabeast.beanslib.message.MessageKey;
+import me.croabeast.beanslib.message.MessageSender;
 import me.croabeast.beanslib.utility.TextUtils;
-import me.croabeast.iridiumapi.IridiumAPI;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
+
+import static me.croabeast.iridiumapi.IridiumAPI.process;
+import static me.croabeast.iridiumapi.IridiumAPI.stripAll;
 
 /**
  * This class manages logger manages to player and/or console.
@@ -25,75 +27,38 @@ import java.util.regex.Matcher;
 public class BeansLogger {
 
     /**
-     * A static instance of a logger without any lib or plugin implementation.
-     *
-     * <p> The methods {@link BeansLogger#doLog(String...)} and
-     * {@link BeansLogger#doLog(CommandSender, String...)} does not work
-     * with this logger.
+     * A static instance of the logger.
      */
     public static final BeansLogger DEFAULT_LOGGER = new BeansLogger();
 
-    private final BeansLib lib;
-
-    /**
-     * Creates a new logger using a {@link BeansLib} instance.
-     *
-     * @param lib {@link BeansLib} instance
-     */
-    public BeansLogger(@NotNull BeansLib lib) {
-        this.lib = lib;
-    }
-
-    /**
-     * Creates a new logger using a {@link Plugin} instance.
-     *
-     * @param plugin a {@link Plugin} instance
-     */
-    public BeansLogger(Plugin plugin) {
-        this(new BeansLib(plugin));
-    }
-
-    /**
-     * Creates a new logger without any plugin implementation. Useful to log
-     * information without the plugin's prefix.
-     *
-     * <p> The methods {@link BeansLogger#doLog(CommandSender, String...)} and
-     * {@link BeansLogger#doLog(String...)} does not work with this logger.
-     */
-    public BeansLogger() {
-        this((Plugin) null);
-    }
+    private static final BeansLib LOADED_LIB = BeansLib.getLoadedInstance();
 
     private String colorLogger(String string) {
-        if (StringUtils.isBlank(string)) return string;
-        string = TextUtils.stripJson(string);
+        final String temp = TextUtils.stripJson(string);
 
-        return lib.isColoredConsole() ?
-                IridiumAPI.process(string) :
-                IridiumAPI.stripAll(string);
+        return LOADED_LIB.isColoredConsole() ?
+                process(temp) : stripAll(temp);
     }
 
     private String[] toLogLines(Player player, boolean isLog, String... lines) {
         List<String> list = new ArrayList<>();
 
-        String value = isLog ? "" : lib.getLangPrefix(),
-                sp = lib.getLineSeparator();
+        String sp = LOADED_LIB.getLineSeparator();
 
         for (String line : lines) {
             if (line == null) continue;
-            line = line.replace(lib.getLangPrefixKey(), value);
 
-            if (isLog && lib.isStripPrefix()) {
-                BeansLib.MessageKey k = lib.getMessageKey(line);
+            line = LOADED_LIB.replacePrefixKey(line, isLog);
+            line = line.replace(sp, "&f" + sp);
 
-                if (k != null) {
-                    Matcher match = k.getPattern().matcher(line);
-                    line = line.replace(match.group(), "");
-                }
+            MessageKey k = MessageKey.identifyKey(line);
+
+            if (isLog && LOADED_LIB.isStripPrefix() && k != MessageKey.CHAT_KEY) {
+                Matcher match = k.getPattern().matcher(line);
+                if (match.find()) line = line.replace(match.group(), "");
             }
 
-            line = lib.centerMessage(player, player, line);
-            list.add(line.replace(sp, "&f" + sp));
+            list.add(LOADED_LIB.centerMessage(player, player, line));
         }
 
         return list.toArray(new String[0]);
@@ -110,7 +75,8 @@ public class BeansLogger {
      * @param lines the information to send
      */
     public void playerLog(Player player, String... lines) {
-        lib.create(player, Arrays.asList(toLogLines(player, false, lines)));
+        new MessageSender().setTargets(player).
+                send(false, Arrays.asList(toLogLines(player, false, lines)));
     }
 
     /**
@@ -132,7 +98,7 @@ public class BeansLogger {
         if (sender instanceof Player)
             playerLog((Player) sender, lines);
 
-        Plugin plugin = lib.getPlugin();
+        Plugin plugin = LOADED_LIB.getPlugin();
         if (plugin == null) return;
 
         for (String s : toLogLines(lines))

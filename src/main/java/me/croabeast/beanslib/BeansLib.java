@@ -7,9 +7,9 @@ import lombok.experimental.Accessors;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.croabeast.beanslib.character.CharHandler;
 import me.croabeast.beanslib.character.CharacterInfo;
-import me.croabeast.beanslib.object.display.Displayer;
+import me.croabeast.beanslib.key.KeyManager;
+import me.croabeast.beanslib.message.MessageSender;
 import me.croabeast.beanslib.object.misc.BeansLogger;
-import me.croabeast.beanslib.object.misc.PlayerKeyHandler;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.iridiumapi.IridiumAPI;
 import org.apache.commons.lang.StringUtils;
@@ -23,7 +23,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,16 +40,13 @@ import static me.croabeast.beanslib.utility.TextUtils.*;
 @Getter @Setter
 public class BeansLib {
 
-    private static final Map<Integer, MessageKey> MESSAGE_KEY_MAP = new HashMap<>();
-    private static final Map<Integer, MessageKey> DEFAULT_KEY_MAP = new HashMap<>();
-
     /**
      * The static instance of the lib that doesn't have a plugin's implementation.
      *
      * <p> Methods that use a plugin instance like logging with a plugin prefix,
      * sending bossbar messages and others plugin-related will not work.
      */
-    private static final BeansLib NO_PLUGIN_INSTANCE = new BeansLib(null);
+    private static final BeansLib WITHOUT_PLUGIN_INSTANCE = new BeansLib(null);
 
     private static BeansLib loadedInstance = null;
 
@@ -62,13 +59,13 @@ public class BeansLib {
     private final BeansLogger logger;
 
     /**
-     * The {@link PlayerKeyHandler} instance to parse the respective player
+     * The {@link KeyManager} instance to parse the respective player
      * values in strings.
      */
-    private PlayerKeyHandler playerKeyHandler;
+    private KeyManager keyManager;
 
     /**
-     * The prefix of the plugin that will replace the prefix key: {@link #getLangPrefixKey()}.
+     * The plugin's prefix that will replace the prefix key: {@link #getLangPrefixKey()}.
      */
     private String langPrefix;
 
@@ -82,13 +79,16 @@ public class BeansLib {
     private String centerPrefix = "[C]";
 
     /**
-     * The line splitter or separator to split multiple chat lines
-     * or split a title message between title and subtitle.
+     * The line splitter or separator to split multiple chat lines or split a title
+     * message between title and subtitle.
      *
-     * <p> If you want to override this string, you need to quote
-     * your own one using {@link Pattern#quote(String)}.
+     * <p> If you want to override this string, the custom separator should be quoted
+     * using {@link Pattern#quote(String)}.
      *
-     * <p> Example: {@code Pattern.quote("my own string");}
+     * <pre> {@code
+     * // Example of how setting a custom separator
+     * lib.setLineSeparator(Pattern.quote("{split}"));
+     * } </pre>
      */
     private String lineSeparator = Pattern.quote("<n>");
 
@@ -98,8 +98,8 @@ public class BeansLib {
      *
      * <p> Note: some unicode chars doesn't work with minecraft chat itself.
      *
-     * <p> Examples:
      * <pre> {@code
+     * // Examples:
      * String heart = "<U:2764>"; //U+2764 = ❤️
      * String check = "<U:2714>"; //U+2714 = ✔️️
      * String airplane = "<U:2708>"; //U+2708 = ✈️
@@ -118,10 +118,10 @@ public class BeansLib {
      * name or identifier in the {@link #bossbarSection}.
      */
     @Getter(AccessLevel.NONE)
-    private String customBossbarRegex = "%bossbar:(.+)%";
+    private String bossbarRegex = "%bossbar:(.+)%";
 
     /**
-     * If the console can use colors or not. Some consoles have color support disabled.
+     * If the console can use colors or not. Some consoles don't have color support.
      */
     private boolean coloredConsole = true;
     /**
@@ -161,9 +161,6 @@ public class BeansLib {
     @Setter(AccessLevel.NONE)
     private String @NotNull [] keysDelimiters = {"[", "]"};
 
-    @Getter(AccessLevel.NONE)
-    private final MessageKey titleKey, jsonKey, aBarKey, bossbarKey, webhookKey;
-
     /**
      * Creates a new instance of the lib using a {@link Plugin} implementation.
      *
@@ -176,20 +173,25 @@ public class BeansLib {
     public BeansLib(@Nullable Plugin plugin) {
         this.plugin = plugin;
 
-        playerKeyHandler = new PlayerKeyHandler();
-        logger = new BeansLogger(this);
-
-        aBarKey = new MessageKey(this, "action-bar", null).doColor();
-        titleKey = new MessageKey(this, "title", "(:\\d+)?").doColor();
-        jsonKey = new MessageKey(this, "json", null);
-        webhookKey = new MessageKey(this, "webhook", "(:.+)?");
-        bossbarKey = new MessageKey(this, "bossbar", "(:.+)?");
+        keyManager = new KeyManager();
+        logger = new BeansLogger();
 
         langPrefix = "&e " + (this.plugin == null ?
                 "JavaPlugin" : this.plugin.getName()) + " &8»&7";
 
-        DEFAULT_KEY_MAP.putAll(MESSAGE_KEY_MAP);
         if (loadedInstance == null) loadedInstance = this;
+    }
+
+    /**
+     * Replace the {@link #langPrefixKey} with the {@link #langPrefix}.
+     *
+     * @param string an input string
+     * @param remove if the prefix will be removed
+     *
+     * @return the formatted string
+     */
+    public String replacePrefixKey(String string, boolean remove) {
+        return string.replace(getLangPrefixKey(), remove ? "" : getLangPrefix());
     }
 
     /**
@@ -223,70 +225,16 @@ public class BeansLib {
     }
 
     /**
-     * Sets the values of a specific {@link MessageKey} object stored.
-     *
-     * <ul>
-     *   <li>0: action bar key - "[action-bar]"</li>
-     *   <li>1: title key - "[title]" - "(:\d+)?"</li>
-     *   <li>2: json key - "[json]"</li>
-     *   <li>3: webhook key - "[webhook]" - "(:.+)?"</li>
-     * </ul>
-     *
-     * @param index the respective index of the key
-     * @param key a prefix key
-     * @param regex regex pattern, can be null if no extra pattern will be applicable
-     *
-     * @return a reference of this object
-     */
-    public final BeansLib setMessageKeyValues(int index, @NotNull String key, @Nullable String regex) {
-        if (StringUtils.isBlank(key)) return this;
-        if (index > 3) return this;
-
-        MessageKey k = MESSAGE_KEY_MAP.getOrDefault(index, null);
-        if (k != null) k.setKey(key).setRegex(regex);
-
-        return this;
-    }
-
-    /**
-     * Rollbacks any change in the default keys stored.
-     * <p> Usefully for reload methods that depend on cache.
-     */
-    public final void setDefaults() {
-        MESSAGE_KEY_MAP.clear();
-        MESSAGE_KEY_MAP.putAll(DEFAULT_KEY_MAP);
-    }
-
-    /**
      * Returns if it will fix an RGB issue in some servers that RGB
      * not working correctly.
      *
      * @deprecated check and/or set the "coloredConsole" variable
      * @return if this fix is enabled
      */
-    @Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @Deprecated
     public boolean fixColorLogger() {
         return !coloredConsole;
-    }
-
-    /**
-     * Returns the key instance of an input string to check what message
-     * type is the string. If there is no type or a chat message, will return null.
-     *
-     * @param s an input string
-     * @return the requested message key
-     */
-    @Nullable
-    public final MessageKey getMessageKey(String s) {
-        if (StringUtils.isBlank(s)) return null;
-
-        for (MessageKey key : MESSAGE_KEY_MAP.values())
-            if (key.getPattern().matcher(s).find()) return key;
-
-        Matcher m = getCustomBossbarPattern().matcher(s);
-        if (m.find()) return bossbarKey;
-
-        return null;
     }
 
     /**
@@ -330,12 +278,12 @@ public class BeansLib {
      * Creates a new {@link Pattern} instance using the defined custom bossbar
      * internal placeholder.
      *
-     * <p> More info see {@link #setCustomBossbarRegex(String)}.
+     * <p> More info see {@link #setBossbarRegex(String)}.
      *
      * @return the requested pattern
      */
-    public Pattern getCustomBossbarPattern() {
-        return Pattern.compile("^ *?(" + customBossbarRegex + ") *?$");
+    public Pattern getBossbarPattern() {
+        return Pattern.compile("^ *?(" + bossbarRegex + ") *?$");
     }
 
     /**
@@ -386,7 +334,7 @@ public class BeansLib {
      * @return the centered chat message.
      */
     public String centerMessage(Player target, Player parser, String string) {
-        String prefix = getCenterPrefix();
+        final String prefix = getCenterPrefix();
 
         final String output = colorize(target, parser, string);
         if (!string.startsWith(prefix)) return output;
@@ -432,7 +380,7 @@ public class BeansLib {
     }
 
     /**
-     * Parses the players keys defined in your {@link #playerKeyHandler} object
+     * Parses the players keys defined in your {@link #keyManager} object
      * to its respective player variables.
      *
      * @param parser a player
@@ -442,7 +390,7 @@ public class BeansLib {
      * @return the requested string
      */
     public final String parsePlayerKeys(Player parser, String string, boolean c) {
-        return playerKeyHandler.parseKeys(parser, string, c);
+        return keyManager.parseKeys(parser, string, c);
     }
 
     /**
@@ -484,48 +432,6 @@ public class BeansLib {
     }
 
     /**
-     * Creates a {@link Displayer} instance using the lib as a reference.
-     *
-     * @param targets a CommandSender targets, can be null
-     * @param parser  a player to parse values, can be null
-     * @param list    a string list
-     * @param flags   an array of flags to allow certain message types
-     *
-     * @return a {@link Displayer} instance
-     */
-    public final Displayer create(Collection<? extends CommandSender> targets,
-                            Player parser, List<String> list, String... flags) {
-        return new Displayer(this, targets, parser, list, flags);
-    }
-
-    /**
-     * Creates a {@link Displayer} instance using the lib as a reference.
-     *
-     * @param target a CommandSender target, can be null
-     * @param parser  a player to parse values, can be null
-     * @param list    a string list
-     * @param flags   an array of flags to allow certain message types
-     *
-     * @return a {@link Displayer} instance
-     */
-    public final Displayer create(CommandSender target, Player parser, List<String> list, String... flags) {
-        return new Displayer(this, target, parser, list, flags);
-    }
-
-    /**
-     * Creates a {@link Displayer} instance using the lib as a reference.
-     *
-     * @param parser  a player to parse values, can be null
-     * @param list    a string list
-     * @param flags   an array of flags to allow certain message types
-     *
-     * @return a {@link Displayer} instance
-     */
-    public final Displayer create(Player parser, List<String> list, String... flags) {
-        return new Displayer(this, parser, list, flags);
-    }
-
-    /**
      * Parse keys and values using {@link TextUtils#replaceInsensitiveEach(String, String[], String[])}
      *
      * @param sender a sender to format and send the message
@@ -533,13 +439,18 @@ public class BeansLib {
      * @param keys a keys array
      * @param values a values array
      *
-     * @deprecated See {@link Displayer} and its constructor.
+     * @deprecated See {@link MessageSender} and its constructor.
      */
-    @Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @Deprecated
     public void sendMessageList(CommandSender sender, List<String> list, String[] keys, String[] values) {
-        create(sender, null, list).
-                setKeys(keys).setValues(values).setLogger(false).
-                setCaseSensitive(false).display();
+        new MessageSender().
+                setTargets(sender).
+                setKeys(keys).
+                setValues(values).
+                setLogger(false).
+                setCaseSensitive(false).
+                send(false, list);
     }
 
     /**
@@ -551,9 +462,10 @@ public class BeansLib {
      * @param keys a keys array
      * @param values a values array
      *
-     * @deprecated See {@link Displayer} and its constructor.
+     * @deprecated See {@link MessageSender} and its constructor.
      */
-    @Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @Deprecated
     public void sendMessageList(CommandSender sender, ConfigurationSection section, String path, String[] keys, String[] values) {
         sendMessageList(sender, toList(section, path), keys, values);
     }
@@ -564,9 +476,10 @@ public class BeansLib {
      * @param sender a sender to format and send the message
      * @param list the message list
      *
-     * @deprecated See {@link Displayer} and its constructor.
+     * @deprecated See {@link MessageSender} and its constructor.
      */
-    @Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @Deprecated
     public void sendMessageList(CommandSender sender, List<String> list) {
         sendMessageList(sender, list, null, null);
     }
@@ -578,22 +491,23 @@ public class BeansLib {
      * @param section the config file or section
      * @param path the path of the string or string list
      *
-     * @deprecated See {@link Displayer} and its constructor.
+     * @deprecated See {@link MessageSender} and its constructor.
      */
-    @Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @Deprecated
     public void sendMessageList(CommandSender sender, ConfigurationSection section, String path) {
         sendMessageList(sender, toList(section, path));
     }
 
     /**
      * Returns the static instance of the lib that is loaded by a plugin using this lib.
-     * If there is no loaded instance, will return the {@link #NO_PLUGIN_INSTANCE}.
+     * If there is no loaded instance, will return the {@link #WITHOUT_PLUGIN_INSTANCE}.
      *
      * <p> To avoid the no-plugin result, a lib instance should be initialized in the
      * main class of the project, on {@link JavaPlugin#onLoad()} or {@link JavaPlugin#onEnable()}.
      *
-     * <p> Simple example of initialization of the lib:
      * <pre> {@code
+     * // Initialization example of the lib:
      * @Override
      * public void onEnable() {
      *     new BeansLib(this);
@@ -603,124 +517,6 @@ public class BeansLib {
      */
     @NotNull
     public static BeansLib getLoadedInstance() {
-        return loadedInstance == null ? NO_PLUGIN_INSTANCE : loadedInstance;
-    }
-
-    /**
-     * The MessageKey class manages how to identify a message type if it has
-     * a respective registered prefix and an optional additional regex parameter
-     * to check if more arguments will be needed to identify the message type.
-     *
-     * <p> This class can not have more instances to avoid errors
-     * with the existing keys.
-     */
-    @Accessors(chain = true)
-    @Setter(AccessLevel.PRIVATE)
-    public static final class MessageKey {
-
-        private static int ordinal = 0;
-
-        private final BeansLib lib;
-
-        /**
-         * The main key of this object to identify it.
-         */
-        @NotNull @Getter
-        private String key;
-        @Nullable
-        private String regex;
-
-        @Setter(AccessLevel.NONE)
-        private boolean useColor = false;
-
-        private MessageKey(BeansLib lib, @NotNull String key, @Nullable String regex) {
-            this.lib = lib;
-            this.key = key;
-            this.regex = regex;
-
-            MESSAGE_KEY_MAP.put(ordinal, this);
-            ordinal++;
-        }
-
-        private String start() {
-            return lib.getKeysDelimiters()[0];
-        }
-
-        private String end() {
-            return lib.getKeysDelimiters()[1];
-        }
-
-        /**
-         * The main key of this object to identify it in upper-case.
-         *
-         * @return the requested key
-         */
-        public String getUpperKey() {
-            return getKey().toUpperCase(Locale.ENGLISH);
-        }
-
-        /**
-         * Creates a regex pattern in staring format using the key and the
-         * optional regex parameter.
-         *
-         * <p> It will be case-insensitive and always check at the start of a string.
-         *
-         * @return the requested regex string
-         */
-        private String getRegex() {
-            String s = StringUtils.isBlank(regex) ? key : (key + regex);
-            return "(?i)^" + Pattern.quote(start()) + s + Pattern.quote(end());
-        }
-
-        private MessageKey doColor() {
-            this.useColor = true;
-            return this;
-        }
-
-        /**
-         * Creates a {@link Pattern} instance using the created {@link #getRegex()}.
-         *
-         * @return the requested regex
-         */
-        public Pattern getPattern() {
-            return Pattern.compile(getRegex());
-        }
-
-        /**
-         * Formats an input string, colorizing it, parsing placeholders
-         * and removing the prefix.
-         *
-         * @param target a target to send
-         * @param parser a player to parse
-         * @param s an input string
-         *
-         * @return the requested string
-         */
-        public String formatString(Player target, Player parser, String s) {
-            Matcher m = getPattern().matcher(s);
-
-            while (m.find()) s = s.replace(m.group(), "");
-            s = removeSpace(s);
-
-            if (!useColor) {
-                String s1 = parsePAPI(parser, lib.parseChars(s));
-                return IridiumAPI.stripAll(stripJson(s1));
-            }
-
-            return lib.colorize(target, parser, s);
-        }
-
-        /**
-         * Formats an input string, colorizing it, parsing placeholders
-         * and removing the prefix.
-
-         * @param parser a player to parse
-         * @param s an input string
-         *
-         * @return the requested string
-         */
-        public String formatString(Player parser, String s) {
-            return formatString(parser, parser, s);
-        }
+        return loadedInstance == null ? WITHOUT_PLUGIN_INSTANCE : loadedInstance;
     }
 }

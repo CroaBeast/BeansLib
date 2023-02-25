@@ -119,7 +119,8 @@ public final class ClientVersion {
 
     /**
      * Gets the major version from a player's client.
-     * <p> Returns <strong><code>0</code></strong> if ViaVersion is not enabled or player is null.
+     *
+     * <p> Returns {@code 0} if ViaVersion is not enabled or player is null.
      *
      * @param player a player
      * @return the major version

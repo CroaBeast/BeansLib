@@ -9,10 +9,13 @@ import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
 /**
- * The <code>Rounder</code> object rounds a number using a mutable
+ * The {@code Rounder} object rounds a number using a mutable
  * amount of fixed decimals.
  *
  * @param <T> the number class type
+ *
+ * @author CroaBeast
+ * @since 1.4
  */
 public final class Rounder<T extends Number> {
 

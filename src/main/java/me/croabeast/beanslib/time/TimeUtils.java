@@ -10,7 +10,8 @@ import org.jetbrains.annotations.ApiStatus;
  * @author Kihsomray
  * @version 1.0
  */
-@Deprecated @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+@ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+@Deprecated
 public final class TimeUtils {
 
     /**

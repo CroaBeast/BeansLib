@@ -4,8 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-import java.util.regex.Pattern;
-
 @Getter
 @Setter
 @Accessors(chain = true)
@@ -30,8 +28,7 @@ public class TimeKeys {
 
     private String splitter = ", ";
 
-    private final Pattern pluralPattern = Pattern.compile("\\s*(\\()([^)(]+)(\\))\\s*");
-    private final String pluralRegex = "\\s*\\([^)]*\\)\\s*";
+    static final String PLURAL_REGEX = "\\s*\\([^)]*\\)\\s*";
 
     private String secondFormat = "Second(s)";
     private String minuteFormat = "Minute(s)";

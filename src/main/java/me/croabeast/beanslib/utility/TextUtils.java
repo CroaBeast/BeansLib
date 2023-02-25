@@ -4,11 +4,13 @@ import com.google.common.collect.Lists;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.croabeast.beanslib.BeansLib;
+import me.croabeast.beanslib.key.ValueReplacer;
 import me.croabeast.beanslib.nms.NMSActionBar;
 import me.croabeast.beanslib.nms.NMSTitle;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,8 +32,9 @@ public final class TextUtils {
 
     /**
      * Check if the line uses a valid json format on any part of the string.
-     * <p> • Usage example:
+     *
      * <pre> {@code
+     * // • Usage example:
      * if (IS_JSON.apply("a string")) doSomething();
      * } </pre>
      */
@@ -115,29 +118,13 @@ public final class TextUtils {
      * @param values the array of values
      * @param caseSensitive if keys are case-sensitive
      *
+     * @deprecated See {@link ValueReplacer}.
      * @return the parsed string with the respective values
      */
-    @NotNull
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @Deprecated
     public static String replaceEach(String string, String[] keys, String[] values, boolean caseSensitive) {
-        if (StringUtils.isBlank(string)) return string;
-
-        if (keys == null || values == null) return string;
-        if (keys.length > values.length) return string;
-
-        for (int i = 0; i < keys.length; i++) {
-            if (keys[i] == null | values[i] == null) continue;
-
-            String key = Pattern.quote(keys[i]);
-            if (StringUtils.isBlank(key)) continue;
-
-            if (!caseSensitive) key = "(?i)" + key;
-            Matcher m = Pattern.compile(key).matcher(string);
-            if (!m.find()) continue;
-
-            string = string.replace(m.group(), values[i]);
-        }
-
-        return string;
+        return ValueReplacer.forEach(string, keys, values, caseSensitive);
     }
 
     /**
@@ -149,10 +136,13 @@ public final class TextUtils {
      * @param value a value
      * @param caseSensitive if key is case-sensitive
      *
+     * @deprecated See {@link ValueReplacer}.
      * @return the parsed string with the respective value
      */
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @Deprecated
     public static String replaceEach(String string, String key, String value, boolean caseSensitive) {
-        return replaceEach(string, new String[] {key}, new String[] {value}, caseSensitive);
+        return new ValueReplacer(key, value).setCaseSensitive(caseSensitive).replace(string);
     }
 
     /**
@@ -163,11 +153,13 @@ public final class TextUtils {
      * @param keys the array of keys
      * @param values the array of values
      *
+     * @deprecated See {@link ValueReplacer}.
      * @return the parsed string with the respective values
      */
-    @NotNull
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @Deprecated
     public static String replaceInsensitiveEach(String string, String[] keys, String[] values) {
-        return replaceEach(string, keys, values, false);
+        return ValueReplacer.forEach(string, keys, values);
     }
 
     /**
@@ -178,10 +170,13 @@ public final class TextUtils {
      * @param key a key
      * @param value a value
      *
+     * @deprecated See {@link ValueReplacer}.
      * @return the parsed string with the respective value
      */
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @Deprecated
     public static String replaceInsensitiveEach(String string, String key, String value) {
-        return replaceInsensitiveEach(string, new String[] {key}, new String[] {value});
+        return new ValueReplacer(key, value).setCaseSensitive(false).replace(string);
     }
 
     /**

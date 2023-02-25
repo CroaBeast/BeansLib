@@ -11,6 +11,9 @@ import java.util.Objects;
 
 /**
  * The exceptions checker class.
+ *
+ * @author CroaBeast
+ * @since 1.2
  */
 public final class Exceptions {
 

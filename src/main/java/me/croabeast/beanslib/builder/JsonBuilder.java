@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.object.display;
+package me.croabeast.beanslib.builder;
 
 import com.google.common.collect.Lists;
 import me.croabeast.beanslib.BeansLib;
@@ -44,40 +44,25 @@ import static net.md_5.bungee.api.chat.ClickEvent.Action.*;
  */
 public class JsonBuilder {
 
-    private final BeansLib lib;
+    private static final BeansLib LOADED_LIB = BeansLib.getLoadedInstance();
 
     private final Player target;
     private final Player parser;
     private final String string;
 
     /**
-     * Converts a {@link String} line to a {@code JsonMessage} object.
+     * Converts a {@link String} line to a {@code JsonBuilder} object.
      * <p> Parses all the required keys from {@link BeansLib} and formats colors.
-     *
-     * @param lib the {@link BeansLib} instance
-     * @param target a target to send a message, can be null
-     * @param parser a parser to parse placeholders
-     * @param string an input string
-     */
-    public JsonBuilder(BeansLib lib, Player target, Player parser, String string) {
-        this.lib = lib != null ? lib : BeansLib.getLoadedInstance();
-        this.target = target == null ? parser : target;
-
-        this.parser = parser;
-        this.string = string;
-    }
-
-    /**
-     * Converts a {@link String} line to a {@code JsonMessage} object.
-     * 
-     * <p> Parses all the required keys and methods from {@link BeansLib}.
      *
      * @param target a target to send a message, can be null
      * @param parser a parser to parse placeholders
      * @param string an input string
      */
     public JsonBuilder(Player target, Player parser, String string) {
-        this(null, target, parser, string);
+        this.target = target == null ? parser : target;
+
+        this.parser = parser;
+        this.string = string;
     }
 
     String removeLastChar(String string) {
@@ -104,7 +89,7 @@ public class JsonBuilder {
 
         for (int i = 0; i < hover.size(); i++) {
             String end = i == hover.size() - 1 ? "" : "\n";
-            array[i] = toComponent(lib.colorize(target, parser, hover.get(i)) + end);
+            array[i] = toComponent(LOADED_LIB.colorize(target, parser, hover.get(i)) + end);
         }
 
         comp.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, array));
@@ -112,7 +97,7 @@ public class JsonBuilder {
 
     void addEvent(TextComponent comp, String type, String string) {
         if (type.matches("(?i)hover")) {
-            String[] array = lib.splitLine(string);
+            String[] array = LOADED_LIB.splitLine(string);
             addHover(comp, Lists.newArrayList(array));
         }
         else if (parseAction(type) != null)
@@ -125,7 +110,7 @@ public class JsonBuilder {
 
     BaseComponent[] toJSON(String click, List<String> hover) {
         String line = TextUtils.parseInteractiveChat(parser, string);
-        line = lib.centerMessage(target, parser, line);
+        line = LOADED_LIB.centerMessage(target, parser, line);
 
         if (!hover.isEmpty() || StringUtils.isNotBlank(click)) {
             final TextComponent comp = toComponent(TextUtils.stripJson(line));
@@ -173,35 +158,41 @@ public class JsonBuilder {
     }
 
     /**
-     * Sends the {@code JsonMessage} object to the target player,
+     * Sends the {@code JsonBuilder} object to the target player,
      * if not defined will be to the parser player.
      *
      * @param click the click string
      * @param hover a string list
      *
-     * @throws NullPointerException if the target is null
+     * @return true if the builder was sent, false otherwise
      */
-    public void send(String click, List<String> hover) {
-        Exceptions.checkPlayer(target).spigot().sendMessage(toJSON(click, hover));
+    public boolean send(String click, List<String> hover) {
+        try {
+            Exceptions.checkPlayer(target);
+            target.spigot().sendMessage(toJSON(click, hover));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
-     * Sends the {@code JsonMessage} object to the target player,
+     * Sends the {@code JsonBuilder} object to the target player,
      * if not defined will be to the parser player.
      *
-     * @throws NullPointerException if the target is null
+     * @return true if the builder was sent, false otherwise
      */
-    public void send() {
-        send(null, new ArrayList<>());
+    public boolean send() {
+        return send(null, new ArrayList<>());
     }
 
     /**
      * Converts a line to a {@link BaseComponent} array using the {@link LibUtils#JSON_PATTERN}.
      *
-     * <p> Example of how to use it:
      * <pre> {@code
+     * // Example of how to use it:
      * String text = "<hover:\"a hover line\">text to apply</text>";
-     * BaseComponent[] array = JsonMessage.fromText(player, text);
+     * BaseComponent[] array = JsonBuilder.fromText(player, text);
      * player.spigot().sendMessage(array);
      * } </pre>
      *
@@ -217,10 +208,10 @@ public class JsonBuilder {
     /**
      * Converts a line to a {@link BaseComponent} array using the {@link LibUtils#JSON_PATTERN}.
      *
-     * <p> Example of how to use it:
      * <pre> {@code
+     * // Example of how to use it:
      * String text = "<hover:\"a hover line\">text to apply</text>";
-     * BaseComponent[] array = JsonMessage.fromText(text);
+     * BaseComponent[] array = JsonBuilder.fromText(text);
      * player.spigot().sendMessage(array);
      * } </pre>
      *

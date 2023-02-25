@@ -9,6 +9,9 @@ import java.lang.reflect.Constructor;
 /**
  * Represents the handler that manages how to send titles between
  * different server versions.
+ *
+ * @author CroaBeast
+ * @since 1.4
  */
 public final class NMSTitle extends Reflection {
 

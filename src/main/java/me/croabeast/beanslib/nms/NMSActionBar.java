@@ -11,6 +11,9 @@ import static net.md_5.bungee.api.chat.TextComponent.fromLegacyText;
 /**
  * Represents the handler that manages how to send action bar
  * messages between different server versions.
+ *
+ * @author CroaBeast
+ * @since 1.4
  */
 public final class NMSActionBar extends Reflection {
 
