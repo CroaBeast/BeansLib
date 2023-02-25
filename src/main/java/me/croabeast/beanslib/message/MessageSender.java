@@ -132,11 +132,13 @@ public class MessageSender implements Cloneable {
         return this;
     }
 
-    /**
+     /**
      * The collection or array of targets that messages will be sent.
      * If empty or null, the output will be on the console.
      *
      * @param targets an array of targets
+     * @param <T> a CommandSender child class
+     *
      * @return a reference of this object
      */
     @SafeVarargs

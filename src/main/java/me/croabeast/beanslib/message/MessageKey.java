@@ -271,6 +271,8 @@ public abstract class MessageKey implements MessageAction, Cloneable {
 
     /**
      * The main key of this object to identify it, but in upper-case.
+     *
+     * @return the key but in upper-case
      */
     public String getUpperKey() {
         return getKey().toUpperCase(Locale.ENGLISH);

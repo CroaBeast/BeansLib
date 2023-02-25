@@ -266,8 +266,6 @@ public class BeansLib {
     /**
      * Creates a new {@link Pattern} instance using the defined char regex string.
      *
-     * <p> More info see {@link #setCharRegex(String)}.
-     *
      * @return the requested pattern
      */
     public Pattern getCharPattern() {
@@ -277,8 +275,6 @@ public class BeansLib {
     /**
      * Creates a new {@link Pattern} instance using the defined custom bossbar
      * internal placeholder.
-     *
-     * <p> More info see {@link #setBossbarRegex(String)}.
      *
      * @return the requested pattern
      */
@@ -508,10 +504,10 @@ public class BeansLib {
      *
      * <pre> {@code
      * // Initialization example of the lib:
-     * @Override
      * public void onEnable() {
      *     new BeansLib(this);
-     * }} </pre>
+     * }
+     * } </pre>
      *
      * @return loaded instance
      */
