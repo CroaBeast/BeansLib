@@ -6,7 +6,7 @@
 
     <groupId>io.github.croabeast</groupId>
     <artifactId>BeansLib</artifactId>
-    <version>1.4-SNAPSHOT-12</version>
+    <version>1.4-SNAPSHOT-25</version>
     <packaging>jar</packaging>
 
     <name>BeansLib</name>
@@ -215,12 +215,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.bstats</groupId>
-            <artifactId>bstats-bukkit</artifactId>
-            <version>3.0.0</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
             <version>2.11.1</version>
@@ -235,9 +229,13 @@
         <dependency>
             <groupId>com.loohp</groupId>
             <artifactId>InteractiveChat</artifactId>
-            <version>4.2.2.5</version>
+            <version>4.2.5.7</version>
             <scope>provided</scope>
             <exclusions>
+                <exclusion>
+                    <groupId>me.clip</groupId>
+                    <artifactId>placeholderapi</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>org.bstats</groupId>
                     <artifactId>bstats-bukkit</artifactId>

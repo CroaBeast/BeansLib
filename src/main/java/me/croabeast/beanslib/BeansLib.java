@@ -174,7 +174,7 @@ public class BeansLib {
         this.plugin = plugin;
 
         keyManager = new KeyManager();
-        logger = new BeansLogger();
+        logger = new BeansLogger(this);
 
         langPrefix = "&e " + (this.plugin == null ?
                 "JavaPlugin" : this.plugin.getName()) + " &8»&7";

@@ -1,9 +1,7 @@
 package me.croabeast.beanslib.object.misc;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.NumberUtils;
 
-import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
@@ -34,45 +32,57 @@ public final class Rounder<T extends Number> {
         return this;
     }
 
-    private String getNumberIdentifier() {
-        if (clazz == Long.class) return "L";
-        if (clazz == Double.class) return "D";
-        if (clazz == Float.class) return "F";
-
-        return "";
-    }
-
     private String getRoundString() {
         String s = "#." + StringUtils.repeat("#", decimalAmount);
         if (decimalAmount == 0) s = "#";
 
         return new DecimalFormat(s,
                 DecimalFormatSymbols.getInstance(Locale.ENGLISH)).
-                format(number) + getNumberIdentifier();
+                format(number);
     }
 
     @SuppressWarnings("unchecked")
     private T result() {
-        Number n = NumberUtils.createNumber(getRoundString());
+        Number n = null;
 
-        if (clazz != BigDecimal.class &&
-                n.getClass() == BigDecimal.class)
-            n = clazz == Double.class ?
-                    Double.parseDouble(getRoundString()) :
-                    Float.parseFloat(getRoundString());
+        if (clazz == Double.class)
+            n = Double.parseDouble(getRoundString());
+        if (clazz == Long.class)
+            n = Long.parseLong(getRoundString());
+        if (clazz == Float.class)
+            n = Float.parseFloat(getRoundString());
+        if (clazz == Byte.class)
+            n = Byte.parseByte(getRoundString());
+        if (clazz == Integer.class)
+            n = Integer.parseInt(getRoundString());
+        if (clazz == Short.class)
+            n = Short.parseShort(getRoundString());
 
         return (T) n;
     }
 
-    private T result(int i) {
-        return setAmount(i).result();
-    }
-
+    /**
+     * Rounds a number to a two-decimal number.
+     *
+     * @param t a number
+     * @return the rounded number
+     *
+     * @param <T> a number class
+     */
     public static <T extends Number> T round(T t) {
         return new Rounder<>(t).result();
     }
 
+    /**
+     * Rounds a number to another number with a fixed amount of decimals.
+     *
+     * @param decimalAmount a fixed amount of decimals
+     * @param t a number
+     * @return the rounded number
+     *
+     * @param <T> a number class
+     */
     public static <T extends Number> T round(int decimalAmount, T t) {
-        return new Rounder<>(t).result(decimalAmount);
+        return new Rounder<>(t).setAmount(decimalAmount).result();
     }
 }

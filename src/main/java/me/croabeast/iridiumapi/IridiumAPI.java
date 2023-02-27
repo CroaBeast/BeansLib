@@ -52,21 +52,21 @@ public final class IridiumAPI {
     private static final List<RGBParser> BASE_PATTERNS =
             Arrays.asList(
                     (s, b) -> {
-                        Matcher matcher = RGBParser.SOLID_PATTERN.matcher(s);
-
-                        while (matcher.find()) {
-                            s = s.replace(matcher.group(),
-                                    IridiumAPI.getColor(matcher.group(1), b) + "");
-                        }
-                        return s;
-                    },
-                    (s, b) -> {
                         Matcher matcher = RGBParser.RAINBOW_PATTERN.matcher(s);
 
                         while (matcher.find()) {
                             String sat = matcher.group(1), c = matcher.group(2);
                             s = s.replace(matcher.group(),
                                     IridiumAPI.rainbow(c, Float.parseFloat(sat), b));
+                        }
+                        return s;
+                    },
+                    (s, b) -> {
+                        Matcher matcher = RGBParser.SOLID_PATTERN.matcher(s);
+
+                        while (matcher.find()) {
+                            s = s.replace(matcher.group(),
+                                    IridiumAPI.getColor(matcher.group(1), b) + "");
                         }
                         return s;
                     },

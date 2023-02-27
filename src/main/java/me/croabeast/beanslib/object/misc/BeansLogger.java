@@ -1,5 +1,6 @@
 package me.croabeast.beanslib.object.misc;
 
+import lombok.RequiredArgsConstructor;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.message.MessageKey;
 import me.croabeast.beanslib.message.MessageSender;
@@ -24,41 +25,42 @@ import static me.croabeast.iridiumapi.IridiumAPI.stripAll;
  * @author CroaBeast
  * @since 1.4
  */
+@RequiredArgsConstructor
 public class BeansLogger {
 
     /**
      * A static instance of the logger.
      */
-    public static final BeansLogger DEFAULT_LOGGER = new BeansLogger();
+    public static final BeansLogger DEFAULT_LOGGER = new BeansLogger(BeansLib.getLoadedInstance());
 
-    private static final BeansLib LOADED_LIB = BeansLib.getLoadedInstance();
+    private final BeansLib lib;
 
     private String colorLogger(String string) {
         final String temp = TextUtils.stripJson(string);
 
-        return LOADED_LIB.isColoredConsole() ?
+        return lib.isColoredConsole() ?
                 process(temp) : stripAll(temp);
     }
 
     private String[] toLogLines(Player player, boolean isLog, String... lines) {
         List<String> list = new ArrayList<>();
 
-        String sp = LOADED_LIB.getLineSeparator();
+        String sp = lib.getLineSeparator();
 
         for (String line : lines) {
             if (line == null) continue;
 
-            line = LOADED_LIB.replacePrefixKey(line, isLog);
+            line = lib.replacePrefixKey(line, isLog);
             line = line.replace(sp, "&f" + sp);
 
             MessageKey k = MessageKey.identifyKey(line);
 
-            if (isLog && LOADED_LIB.isStripPrefix() && k != MessageKey.CHAT_KEY) {
+            if (isLog && lib.isStripPrefix() && k != MessageKey.CHAT_KEY) {
                 Matcher match = k.getPattern().matcher(line);
                 if (match.find()) line = line.replace(match.group(), "");
             }
 
-            list.add(LOADED_LIB.centerMessage(player, player, line));
+            list.add(lib.centerMessage(player, player, line));
         }
 
         return list.toArray(new String[0]);
@@ -98,7 +100,7 @@ public class BeansLogger {
         if (sender instanceof Player)
             playerLog((Player) sender, lines);
 
-        Plugin plugin = LOADED_LIB.getPlugin();
+        Plugin plugin = lib.getPlugin();
         if (plugin == null) return;
 
         for (String s : toLogLines(lines))

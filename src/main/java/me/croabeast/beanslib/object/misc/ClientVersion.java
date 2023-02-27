@@ -1,5 +1,6 @@
 package me.croabeast.beanslib.object.misc;
 
+import com.google.common.collect.Lists;
 import com.viaversion.viaversion.api.Via;
 import lombok.Getter;
 import me.croabeast.beanslib.utility.Exceptions;
@@ -87,7 +88,7 @@ public final class ClientVersion {
      */
     private static List<Integer> fromInts(Integer... numbers) {
         if (numbers.length != 2)
-            return Arrays.asList(numbers);
+            return Lists.newArrayList(numbers);
 
         int z = numbers[1], y = numbers[0];
 
@@ -99,7 +100,7 @@ public final class ClientVersion {
             index++;
         }
 
-        return Arrays.asList(array);
+        return Lists.newArrayList(array);
     }
 
     /**

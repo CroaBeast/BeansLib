@@ -32,8 +32,8 @@ import static me.croabeast.beanslib.object.misc.Rounder.round;
  * It can be animated to change messages, colors, styles and change
  * the progress as the display time runs out.
  *
- * <p> Basic usage of the class:
  * <pre> {@code
+ * // Creating an instance of the builder
  * BossbarBuilder builder = new BossbarBuilder(
  *      yourPlugin, player,
  *      Arrays.asList("My bossbar message", "It changes :D"),
@@ -171,34 +171,41 @@ public class BossbarBuilder {
             return;
         }
 
-        String args = matcher.group(2);
+        @Nullable String args = matcher.group(2);
 
         BarColor c = BarColor.WHITE;
         BarStyle st = BarStyle.SOLID;
 
         if (args != null) {
-            String[] a = args.split(":", 4);
+            String[] a = args.substring(1).split(":", 4);
 
             for (String s : a) {
                 try {
                     time = Integer.parseInt(s) * 20;
-                } catch (Exception e) { continue; }
+                    continue;
+                } catch (Exception ignored) {}
 
-                try {
-                    progressDecrease = Boolean.parseBoolean(s);
-                } catch (Exception e) { continue; }
+                if (s.matches("(?i)true")) {
+                    progressDecrease = true;
+                    continue;
+                }
+                if (s.matches("(?i)false")) {
+                    progressDecrease = false;
+                    continue;
+                }
 
                 try {
                     c = BarColor.valueOf(s);
-                } catch (Exception e) { continue; }
+                    continue;
+                } catch (Exception ignored) {}
 
                 try {
                     st = BarStyle.valueOf(s);
                 } catch (Exception ignored) {}
             }
-
-            formats = Lists.newArrayList(new DoubleValue(c, st));
         }
+
+        formats = Lists.newArrayList(new DoubleValue(c, st));
 
         messages = toList(
                 Lists.newArrayList(matcher.group(3)), 0);
@@ -308,11 +315,10 @@ public class BossbarBuilder {
                 if (initial[0] <= 0.0) { unregister(); cancel(); return; }
 
                 final double interval = round(4, total / time);
+                initial[0] = round(4, initial[0] - interval);
 
-                if (progressDecrease) {
-                    initial[0] = round(4, initial[0] - interval);
-                    bar.setProgress(initial[0]);
-                }
+                if (progressDecrease)
+                    bar.setProgress(Math.max(initial[0], 0.0));
 
                 double msgInt = round((mSize - c1[0]) * (total / mSize)),
                         forInt = round((fSize - c2[0]) * (total / fSize));
@@ -322,7 +328,8 @@ public class BossbarBuilder {
                 if (mSize > 1 && (Objects.equals(init, msgInt) ||
                         round(init - msgInt) <= 0.01) && c1[0] < mSize)
                 {
-                    int i = useRandomMessages ? RANDOM.nextInt(mSize) : c1[0];
+                    int i = useRandomMessages ?
+                            RANDOM.nextInt(mSize) : c1[0];
 
                     bar.setTitle(messages.get(i));
                     if (!useRandomMessages) c1[0]++;
@@ -368,6 +375,11 @@ public class BossbarBuilder {
     static class DoubleValue {
         private final BarColor color;
         private final BarStyle style;
+
+        @Override
+        public String toString() {
+            return "{" + color + ", " + style + "}";
+        }
     }
 
     /**

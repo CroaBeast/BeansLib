@@ -44,7 +44,7 @@ import static net.md_5.bungee.api.chat.ClickEvent.Action.*;
  */
 public class JsonBuilder {
 
-    private static final BeansLib LOADED_LIB = BeansLib.getLoadedInstance();
+    private static final BeansLib B_LIB = BeansLib.getLoadedInstance();
 
     private final Player target;
     private final Player parser;
@@ -89,7 +89,9 @@ public class JsonBuilder {
 
         for (int i = 0; i < hover.size(); i++) {
             String end = i == hover.size() - 1 ? "" : "\n";
-            array[i] = toComponent(LOADED_LIB.colorize(target, parser, hover.get(i)) + end);
+
+            array[i] = toComponent(B_LIB.
+                    colorize(target, parser, hover.get(i)) + end);
         }
 
         comp.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, array));
@@ -97,7 +99,7 @@ public class JsonBuilder {
 
     void addEvent(TextComponent comp, String type, String string) {
         if (type.matches("(?i)hover")) {
-            String[] array = LOADED_LIB.splitLine(string);
+            String[] array = B_LIB.splitLine(string);
             addHover(comp, Lists.newArrayList(array));
         }
         else if (parseAction(type) != null)
@@ -110,7 +112,7 @@ public class JsonBuilder {
 
     BaseComponent[] toJSON(String click, List<String> hover) {
         String line = TextUtils.parseInteractiveChat(parser, string);
-        line = LOADED_LIB.centerMessage(target, parser, line);
+        line = B_LIB.centerMessage(target, parser, line);
 
         if (!hover.isEmpty() || StringUtils.isNotBlank(click)) {
             final TextComponent comp = toComponent(TextUtils.stripJson(line));

@@ -13,8 +13,8 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 
 /**
  * <p> The {@code MessageSender} class represents the action to display a
@@ -49,6 +49,8 @@ import java.util.stream.Collectors;
 @Accessors(chain = true)
 public class MessageSender implements Cloneable {
 
+    private static final BeansLib B_LIB = BeansLib.getLoadedInstance();
+
     /**
      * This flag allows to display action bar messages.
      */
@@ -74,8 +76,6 @@ public class MessageSender implements Cloneable {
      */
     public static final String TITLE = "TITLE";
 
-    private static final BeansLib LOADED_LIB = BeansLib.getLoadedInstance();
-
     private Collection<? extends CommandSender> targets = null;
     /**
      * The player object to parse all the internal and global placeholders, and
@@ -84,10 +84,10 @@ public class MessageSender implements Cloneable {
     @Setter
     private Player parser = null;
 
-    private Set<String> flags;
+    private Set<String> flags = new HashSet<>();
 
     private String[] keys = null, values = null;
-    private List<UnaryOperator<String>> operators = new ArrayList<>();
+    private final List<BiFunction<Player, String, String>> functions = new ArrayList<>();
 
     /**
      * Sets if messages can be sent into the console or not.
@@ -147,17 +147,29 @@ public class MessageSender implements Cloneable {
     }
 
     /**
-     * Sets strings operators to apply them in every string of the list
+     * Adds new player-string functions to apply them in every string of the list
      * in {@link #send(boolean, List)}.
      *
-     * @param ops an array of operator
+     * @param functions an array of functions
      * @return a reference of this object
      */
     @SafeVarargs
-    public final MessageSender setOperators(UnaryOperator<String>... ops) {
-        operators = Lists.newArrayList(ops).stream().
-                filter(Objects::nonNull).
-                collect(Collectors.toList());
+    public final MessageSender addFunctions(BiFunction<Player, String, String>... functions) {
+        this.functions.addAll(Lists.newArrayList(functions));
+        return this;
+    }
+
+    /**
+     * Adds new string operators to apply them in every string of the list
+     * in {@link #send(boolean, List)}.
+     *
+     * @param ops an array of operators
+     * @return a reference of this object
+     */
+    @SafeVarargs
+    public final MessageSender addFunctions(UnaryOperator<String>... ops) {
+        for (UnaryOperator<String> u : Lists.newArrayList(ops))
+            if (u != null) functions.add((p, s) -> u.apply(s));
 
         return this;
     }
@@ -198,13 +210,13 @@ public class MessageSender implements Cloneable {
         return this;
     }
 
-    private String parseOperatorsAndValues(String string) {
+    private String parseOperatorsAndValues(Player parser, String string) {
         final boolean c = caseSensitive;
 
-        for (UnaryOperator<String> operator : operators)
-            string = operator.apply(string);
+        for (BiFunction<Player, String, String> function : functions)
+            string = function.apply(parser, string);
 
-        string = LOADED_LIB.parsePlayerKeys(parser, string, c);
+        string = B_LIB.parsePlayerKeys(parser, string, c);
         return ValueReplacer.forEach(string, keys, values, c);
     }
 
@@ -219,7 +231,7 @@ public class MessageSender implements Cloneable {
             if (key == MessageKey.WEBHOOK_KEY &&
                     !notAllowed(WEBHOOK)) key.execute(parser, s);
 
-            LOADED_LIB.rawLog(s);
+            B_LIB.rawLog(s);
         }
         return output;
     }
@@ -235,12 +247,8 @@ public class MessageSender implements Cloneable {
     public boolean send(boolean noFirstSpaces, List<String> stringList) {
         final List<String> list = new ArrayList<>();
 
-        for (String s : stringList) {
-            if (s == null) continue;
-
-            s = LOADED_LIB.replacePrefixKey(s, false);
-            list.add(parseOperatorsAndValues(s));
-        }
+        for (String s : stringList)
+            if (s != null) list.add(B_LIB.replacePrefixKey(s, false));
 
         // Checks if the messages list is empty or if the first message
         // is blank to not display.
@@ -263,8 +271,8 @@ public class MessageSender implements Cloneable {
         // if there is no player targets, it will display to the console.
         if (targets.isEmpty()) return sendWebhooks(list, false);
 
-        // Displays the messages list to console if enabled.
-        if (isLogger) list.forEach(LOADED_LIB::rawLog);
+        List<String> logList = new ArrayList<>();
+        boolean onlyOne = targets.size() == 1;
 
         // Iterates of every target to display.
         for (Player t : targets)
@@ -272,11 +280,17 @@ public class MessageSender implements Cloneable {
                 final MessageKey k = MessageKey.identifyKey(s);
                 if (notAllowed(k.getUpperKey())) continue;
 
+                Player temp = parser == null ? t : parser;
+                s = parseOperatorsAndValues(temp, s);
+
                 boolean b = noFirstSpaces && k == MessageKey.CHAT_KEY;
-                k.execute(t, parser == null ? t : parser,
-                        b ? TextUtils.removeSpace(s) : s);
+                k.execute(t, temp, b ? TextUtils.removeSpace(s) : s);
+
+                if (onlyOne) logList.add(s);
             }
 
+        // Displays the messages list to console if enabled.
+        if (isLogger) (onlyOne ? logList : list).forEach(B_LIB::rawLog);
         return true;
     }
 

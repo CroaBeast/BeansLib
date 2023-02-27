@@ -44,8 +44,8 @@ import static me.croabeast.beanslib.object.misc.Rounder.round;
  */
 public final class KeyManager {
 
-    private static final Map<Integer, PlayerKey> KEY_MAP = new HashMap<>();
-    private static final Map<Integer, PlayerKey> DEFAULTS = new HashMap<>();
+    private static final HashMap<Integer, PlayerKey> KEY_MAP = new HashMap<>();
+    private static final HashMap<Integer, PlayerKey> DEFAULTS = new HashMap<>();
 
     private static Location loc(Player p) { return p.getLocation(); }
 
@@ -66,8 +66,6 @@ public final class KeyManager {
 
         new PlayerKey("{playerYaw}", p -> round(loc(p).getYaw()));
         new PlayerKey("{playerPitch}", p -> round(loc(p).getPitch()));
-
-        DEFAULTS.putAll(KEY_MAP);
     }
 
     /**
@@ -82,7 +80,7 @@ public final class KeyManager {
         if (StringUtils.isBlank(key)) return this;
         if (function == null) return this;
 
-        new PlayerKey(key, (PlayerFunction<Object>) function);
+        new PlayerKey(key, (PlayerFunction<Object>) function, false);
         return this;
     }
 
@@ -114,7 +112,6 @@ public final class KeyManager {
 
         PlayerKey k = KEY_MAP.getOrDefault(index, null);
         if (k != null) k.setKey(key);
-
         return this;
     }
 
@@ -140,14 +137,15 @@ public final class KeyManager {
         if (StringUtils.isBlank(string)) return string;
         if (player == null) return string;
 
-        for (PlayerKey playerKey : KEY_MAP.values())
-            string = playerKey.parseKey(player, string, c);
+        for (PlayerKey key : KEY_MAP.values())
+            string = key.parseKey(player, string, c);
+
         return string;
     }
 
     interface PlayerFunction<O> extends Function<Player, O> {}
 
-    static class PlayerKey {
+    static class PlayerKey implements Cloneable {
 
         private static int ordinal = 0;
 
@@ -158,14 +156,20 @@ public final class KeyManager {
         private final int index;
         private final PlayerFunction<String> function;
 
-        private PlayerKey(String key, PlayerFunction<Object> function) {
+        private PlayerKey(String key, PlayerFunction<Object> function, boolean isDefault) {
             this.key = key;
             this.index = ordinal;
 
             this.function = p -> String.valueOf(function.apply(p));
 
             KEY_MAP.put(ordinal, this);
+            if (isDefault) DEFAULTS.put(ordinal, clone());
+
             ordinal++;
+        }
+
+        private PlayerKey(String key, PlayerFunction<Object> function) {
+            this(key, function, true);
         }
 
         @Override
@@ -176,6 +180,14 @@ public final class KeyManager {
         String parseKey(Player player, String string, boolean c) {
             final String v = function.apply(player);
             return new ValueReplacer(key, v).setCaseSensitive(c).replace(string);
+        }
+
+        protected PlayerKey clone() {
+            try {
+                return (PlayerKey) super.clone();
+            } catch (Exception e) {
+                return null;
+            }
         }
     }
 }
