@@ -12,7 +12,8 @@ import me.croabeast.beanslib.message.MessageSender;
 import me.croabeast.beanslib.object.misc.BeansLogger;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.iridiumapi.IridiumAPI;
-import org.apache.commons.lang.StringUtils;
+import net.md_5.bungee.api.chat.ClickEvent;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -24,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,15 +46,14 @@ public class BeansLib {
      * The static instance of the lib that doesn't have a plugin's implementation.
      *
      * <p> Methods that use a plugin instance like logging with a plugin prefix,
-     * sending bossbar messages and others plugin-related will not work.
+     * sending bossbar messages and others plugin-related will throw a {@link NullPointerException}.
      */
-    private static final BeansLib WITHOUT_PLUGIN_INSTANCE = new BeansLib(null);
+    private static final BeansLib NO_PLUGIN_INSTANCE = new BeansLib(null);
 
     private static BeansLib loadedInstance = null;
 
-    /**
-     * The {@link Plugin} instance of your project.
-     */
+    @Getter(AccessLevel.NONE)
+    @Nullable
     private final Plugin plugin;
 
     @Getter(AccessLevel.NONE)
@@ -101,24 +102,56 @@ public class BeansLib {
      * <pre> {@code
      * // Examples:
      * String heart = "<U:2764>"; //U+2764 = ❤️
-     * String check = "<U:2714>"; //U+2714 = ✔️️
+     * String check = "<u:2714>"; //U+2714 = ✔️️
      * String airplane = "<U:2708>"; //U+2708 = ✈️
      * } </pre>
      */
     @Getter(AccessLevel.NONE)
-    private String charRegex = "<U:([a-fA-F\\d]{4})>";
+    private String charRegex = "<[Uu]:([a-fA-F\\d]{4})>";
 
     /**
-     * <p> It will identify which line is a bossbar message to be displayed. Also,
-     * the line should be ONLY the placeholder, if not, will not catch the pattern.
+     * The regex pattern that identifies if an input line can be replaced with a
+     * custom bossbar message stored in the {@link #bossbarSection}.
      *
      * <p> Ignores the spaces before and after the placeholder group.
-     *
-     * <p> First group is the placeholder itself, the second group is the bossbar's
-     * name or identifier in the {@link #bossbarSection}.
      */
     @Getter(AccessLevel.NONE)
     private String bossbarRegex = "%bossbar:(.+)%";
+
+    /**
+     * The regex pattern that identifies if an input line should insert an
+     * amount of blank spaces.
+     *
+     * <p> Ignores the spaces before and after the placeholder group.
+     */
+    @Getter(AccessLevel.NONE)
+    private String blankSpaceRegex = "<ADD_SPACE:(\\d+)>";
+
+    /**
+     * A prefix used in the main pattern to identify the json event.
+     */
+    @Getter(AccessLevel.NONE)
+    private String jsonPrefix = "(.[^|]*?):\"(.[^|]*?)\"";
+
+    /**
+     * The main pattern to identify the JSON message in a string.
+     *
+     * <p> Keep in mind that every string can only have one {@link ClickEvent.Action};
+     * a click action has this format:
+     * <pre> {@code
+     * Available Actions: RUN, SUGGEST, URL and all ClickAction values.
+     * "<ACTION>:<the click string>" -> "RUN:/me click to run"
+     * } </pre>
+     *
+     * <pre> {@code
+     * // • Examples:
+     * String hover = "<hover:\"a hover line\">text to apply</text>";
+     * String click = "<run:\"/click me\">text to apply</text>";
+     * String mixed = "<hover:\"a hover line<n>another line\"|run:\"/command\">text to apply</text>";
+     * } </pre>
+     */
+    @Getter(AccessLevel.NONE)
+    private String jsonRegex = "<(" + jsonPrefix + "([|]" + jsonPrefix + ")?)>(.+?)</text>";
 
     /**
      * If the console can use colors or not. Some consoles don't have color support.
@@ -180,6 +213,17 @@ public class BeansLib {
                 "JavaPlugin" : this.plugin.getName()) + " &8»&7";
 
         if (loadedInstance == null) loadedInstance = this;
+    }
+
+    /**
+     * The {@link Plugin} instance of your project.
+     *
+     * @throws NullPointerException if the plugin is null
+     * @return plugin's instance
+     */
+    @NotNull
+    public Plugin getPlugin() throws NullPointerException {
+        return Objects.requireNonNull(plugin, "Plugin instance can not be null");
     }
 
     /**
@@ -279,7 +323,27 @@ public class BeansLib {
      * @return the requested pattern
      */
     public Pattern getBossbarPattern() {
-        return Pattern.compile("^ *?(" + bossbarRegex + ") *?$");
+        return Pattern.compile("(?i)^ *?" + bossbarRegex + " *?$");
+    }
+
+    /**
+     * Creates a new {@link Pattern} instance using the defined blank-space
+     * internal placeholder.
+     *
+     * @return the requested pattern
+     */
+    public Pattern getBlankPattern() {
+        return Pattern.compile("(?i)^ *?" + blankSpaceRegex + " *?$");
+    }
+
+    /**
+     * Creates a new {@link Pattern} instance using the defined in-built
+     * json pattern.
+     *
+     * @return the requested pattern
+     */
+    public Pattern getJsonPattern() {
+        return Pattern.compile("(?i)" + jsonRegex);
     }
 
     /**
@@ -315,7 +379,8 @@ public class BeansLib {
      */
     public String colorize(Player target, Player parser, String string) {
         if (target == null) target = parser;
-        string = parsePAPI(parser, parseChars(string));
+
+        string = PARSE_PLACEHOLDERAPI.apply(parser, parseChars(string));
         return IridiumAPI.process(target, string);
     }
 
@@ -337,7 +402,7 @@ public class BeansLib {
 
         string = string.substring(prefix.length());
 
-        String initial = parseChars(stripJson(string));
+        String initial = parseChars(STRIP_JSON.apply(string));
         initial = colorize(target, parser, initial);
 
         int messagePxSize = 0;
@@ -497,7 +562,7 @@ public class BeansLib {
 
     /**
      * Returns the static instance of the lib that is loaded by a plugin using this lib.
-     * If there is no loaded instance, will return the {@link #WITHOUT_PLUGIN_INSTANCE}.
+     * If there is no loaded instance, will return the {@link #NO_PLUGIN_INSTANCE}.
      *
      * <p> To avoid the no-plugin result, a lib instance should be initialized in the
      * main class of the project, on {@link JavaPlugin#onLoad()} or {@link JavaPlugin#onEnable()}.
@@ -505,14 +570,17 @@ public class BeansLib {
      * <pre> {@code
      * // Initialization example of the lib:
      * public void onEnable() {
-     *     new BeansLib(this);
-     * }
-     * } </pre>
+     *     lib = new BeansLib(this);
+     * }} </pre>
+     *
+     * Methods that depends on the plugin's instance, such as {@link #doLog(String...)},
+     * will throw an {@link NullPointerException} if the {@link #NO_PLUGIN_INSTANCE} is
+     * returned or if the instance has no plugin implementation.
      *
      * @return loaded instance
      */
     @NotNull
     public static BeansLib getLoadedInstance() {
-        return loadedInstance == null ? WITHOUT_PLUGIN_INSTANCE : loadedInstance;
+        return loadedInstance == null ? NO_PLUGIN_INSTANCE : loadedInstance;
     }
 }

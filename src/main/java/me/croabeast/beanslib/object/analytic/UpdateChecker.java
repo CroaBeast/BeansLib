@@ -7,7 +7,7 @@ import com.google.gson.stream.JsonReader;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -97,7 +97,7 @@ public final class UpdateChecker {
                 responseCode = connection.getResponseCode();
 
                 JsonReader reader = new JsonReader(new InputStreamReader(connection.getInputStream()));
-                JsonElement json = new JsonParser().parse(reader);
+                JsonElement json = JsonParser.parseReader(reader);
                 reader.close();
 
                 if (!json.isJsonObject()) return new UpdateResult(UpdateReason.INVALID_JSON);

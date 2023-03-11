@@ -65,7 +65,6 @@ public final class NMSTitle extends Reflection {
         catch (Exception e) { e.printStackTrace(); }
     }
 
-    @FunctionalInterface
     private interface NMSHandler {
         void send(@NotNull Player player, String title, String subtitle, int in, int stay, int out);
     }

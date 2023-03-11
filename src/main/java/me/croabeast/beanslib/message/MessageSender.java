@@ -7,7 +7,7 @@ import lombok.experimental.Accessors;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.key.ValueReplacer;
 import me.croabeast.beanslib.utility.TextUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
@@ -15,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
+import java.util.regex.Matcher;
 
 /**
  * <p> The {@code MessageSender} class represents the action to display a
@@ -41,7 +42,10 @@ import java.util.function.UnaryOperator;
  * );
  * } </pre>
  *
- * See {@link #send(boolean, List)} and/or {@link #send(boolean, String...)} for more info.
+ * Also, this objects implements the {@link Cloneable} interface to allow
+ * cloning an instance, instead of creating new instances separately.
+ *
+ * <p> See {@link #send(boolean, List)} and/or {@link #send(boolean, String...)} for more info.
  *
  * @author CroaBeast
  * @since 1.3
@@ -94,6 +98,11 @@ public class MessageSender implements Cloneable {
      */
     @Setter
     private boolean isLogger = true;
+    /**
+     * Sets if the blank spaces concatenated lines will be shown in the console.
+     */
+    @Setter
+    private boolean printBlankSpaces = false;
     /**
      * Sets if the input defined keys in this object are case-sensitive or not
      * if input keys were set.
@@ -277,14 +286,29 @@ public class MessageSender implements Cloneable {
         // Iterates of every target to display.
         for (Player t : targets)
             for (String s : list) {
-                final MessageKey k = MessageKey.identifyKey(s);
-                if (notAllowed(k.getUpperKey())) continue;
+                Matcher m = B_LIB.getBlankPattern().matcher(s);
+
+                if (m.find()) {
+                    int count = Integer.parseInt(m.group(1));
+                    if (count <= 0) continue;
+
+                    for (int i = 0; i < count; i++) {
+                        t.sendMessage("");
+                        if (printBlankSpaces) B_LIB.rawLog("");
+                    }
+                    continue;
+                }
+
+                final MessageKey key = MessageKey.identifyKey(s);
+                if (notAllowed(key.getUpperKey())) continue;
 
                 Player temp = parser == null ? t : parser;
                 s = parseOperatorsAndValues(temp, s);
 
-                boolean b = noFirstSpaces && k == MessageKey.CHAT_KEY;
-                k.execute(t, temp, b ? TextUtils.removeSpace(s) : s);
+                key.execute(t, temp,
+                        noFirstSpaces && key == MessageKey.CHAT_KEY ?
+                        TextUtils.STRIP_FIRST_SPACES.apply(s) : s
+                );
 
                 if (onlyOne) logList.add(s);
             }

@@ -1,12 +1,9 @@
 package me.croabeast.beanslib.utility;
 
-import net.md_5.bungee.api.chat.ClickEvent;
-import org.apache.commons.lang.SystemUtils;
-import org.apache.commons.lang.WordUtils;
+import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.lang3.text.WordUtils;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.ApiStatus;
-
-import java.util.regex.Pattern;
 
 /**
  * The class that stores static keys for easy access and management.
@@ -21,37 +18,11 @@ public final class LibUtils {
      */
     private LibUtils() {}
 
-    /**
-     * A prefix used in the main pattern to identify the event.
-     * This can't be overridden.
-     */
-    private static final String JSON_PREFIX = "(.[^|]*?):\"(.[^|]*?)\"";
-
-    /**
-     * The main pattern to identify the JSON message in a string.
-     *
-     * <p> Keep in mind that every string can only have one {@link ClickEvent.Action};
-     * a click action has this format:
-     * <pre> {@code
-     * Available Actions: RUN, SUGGEST, URL and all ClickAction values.
-     * "<ACTION>:<the click string>" -> "RUN:/me click to run"
-     * } </pre>
-     *
-     * <pre> {@code
-     * // • Examples:
-     * String hover = "<hover:\"a hover line\">text to apply</text>";
-     * String click = "<run:\"/click me\">text to apply</text>";
-     * String mixed = "<hover:\"a hover line<n>another line\"|run:\"/command\">text to apply</text>";
-     * } </pre>
-     */
-    public static final Pattern JSON_PATTERN =
-            Pattern.compile("(?i)<(" + JSON_PREFIX + "([|]" + JSON_PREFIX + ")?)>(.+?)</text>");
-
     private static String serverVersion() {
-        String temp = Bukkit.getVersion();
-        int i = temp.indexOf("MC:") + 3;
-
-        temp = TextUtils.removeSpace(temp.substring(i));
+        String temp = TextUtils.STRIP_FIRST_SPACES.apply(
+                Bukkit.getVersion().substring(
+                Bukkit.getVersion().indexOf("MC:") + 3)
+        );
         return temp.substring(0, temp.length() - 1);
     }
 
@@ -60,6 +31,7 @@ public final class LibUtils {
      *
      * @return server version and fork
      */
+    @SuppressWarnings("deprecation")
     public static String serverFork() {
         return WordUtils.capitalize(Bukkit.getName()) + " " + serverVersion();
     }

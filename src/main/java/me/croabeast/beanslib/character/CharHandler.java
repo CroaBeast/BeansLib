@@ -1,6 +1,6 @@
 package me.croabeast.beanslib.character;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,7 +52,7 @@ public final class CharHandler {
      * @return the converted character
      */
     @Nullable
-    public static Character toChar(@Nullable String input) {
+    public static Character toChar(String input) {
         if (input == null || input.length() <= 0) return null;
         if (StringUtils.isBlank(input)) return null;
 

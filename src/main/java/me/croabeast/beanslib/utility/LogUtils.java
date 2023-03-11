@@ -1,5 +1,6 @@
 package me.croabeast.beanslib.utility;
 
+import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.object.misc.BeansLogger;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -8,7 +9,8 @@ import org.jetbrains.annotations.ApiStatus;
 /**
  * The class that handles logger utilities.
 
- * @deprecated Use the {@link BeansLogger} object instead.
+ * @deprecated Use the {@link BeansLogger} object instead
+ * or {@link BeansLib} inherited methods.
  *
  * @author CroaBeast
  * @since 1.0
@@ -29,7 +31,7 @@ public final class LogUtils {
      * @param lines the information to send
      */
     public static void playerLog(Player player, String... lines) {
-        BeansLogger.DEFAULT_LOGGER.playerLog(player, lines);
+        BeansLib.getLoadedInstance().playerLog(player, lines);
     }
 
     /**
@@ -38,7 +40,7 @@ public final class LogUtils {
      * @param lines the information to send
      */
     public static void rawLog(String... lines) {
-        BeansLogger.DEFAULT_LOGGER.rawLog(lines);
+        BeansLib.getLoadedInstance().rawLog(lines);
     }
 
     /**
@@ -47,6 +49,6 @@ public final class LogUtils {
      * @param lines the information to send
      */
     public static void doLog(String... lines) {
-        BeansLogger.DEFAULT_LOGGER.doLog(null, lines);
+        BeansLib.getLoadedInstance().doLog(null, lines);
     }
 }

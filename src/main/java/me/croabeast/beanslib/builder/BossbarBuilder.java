@@ -6,9 +6,10 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.iridiumapi.IridiumAPI;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -49,10 +50,24 @@ import static me.croabeast.beanslib.object.misc.Rounder.round;
  */
 public class BossbarBuilder {
 
+    private static final BeansLib LIB = BeansLib.getLoadedInstance();
+
+    private static String start() {
+        return Pattern.quote(LIB.getKeysDelimiters()[0]);
+    }
+
+    private static String end() {
+        return Pattern.quote(LIB.getKeysDelimiters()[1]);
+    }
+
     /**
      * The Bossbar pattern to check bossbar arguments.
      */
-    private static final Pattern PATTERN = Pattern.compile("(?i)(\\[bossbar(:.+)?])(.+)");
+    private static Pattern getPattern() {
+        return Pattern.compile("(?i)(" +
+                Pattern.quote(LIB.getKeysDelimiters()[0]) + "bossbar(:.+)?" +
+                Pattern.quote(LIB.getKeysDelimiters()[1]) + ")(.+)");
+    }
 
     /**
      * The map to get all the players that have a bossbar message displayed.
@@ -150,7 +165,7 @@ public class BossbarBuilder {
 
     /**
      * Creates a new builder using a single line to parse all the necessary
-     * arguments. The line should be using the {@link #PATTERN}.
+     * arguments. The line should be using the {@link #getPattern()}.
      *
      * @param plugin plugin's instance of your project
      * @param player a player, can not be null
@@ -165,7 +180,7 @@ public class BossbarBuilder {
             return;
         }
 
-        Matcher matcher = PATTERN.matcher(string);
+        Matcher matcher = getPattern().matcher(string);
         if (!matcher.find()) {
             messages = toList(Lists.newArrayList(string), 0);
             return;
@@ -231,8 +246,8 @@ public class BossbarBuilder {
         list.replaceAll(s -> {
             if (StringUtils.isBlank(s)) return "";
 
-            s = TextUtils.removeSpace(s);
-            s = TextUtils.parsePAPI(player, s);
+            s = TextUtils.STRIP_FIRST_SPACES.apply(s);
+            s = TextUtils.PARSE_PLACEHOLDERAPI.apply(player, s);
 
             return IridiumAPI.process(player, s);
         });

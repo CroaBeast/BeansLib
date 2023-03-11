@@ -1,7 +1,7 @@
 package me.croabeast.beanslib.nms;
 
 import me.croabeast.beanslib.utility.LibUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,7 +37,6 @@ public final class NMSActionBar extends Reflection {
                 (p, s) -> p.spigot().sendMessage(ACTION_BAR, fromLegacyText(s));
     }
 
-    @FunctionalInterface
     private interface NMSHandler {
         void send(@NotNull Player player, String message);
     }

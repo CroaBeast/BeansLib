@@ -2,7 +2,7 @@ package me.croabeast.beanslib.discord;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.net.ssl.HttpsURLConnection;

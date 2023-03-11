@@ -5,7 +5,7 @@ import me.croabeast.beanslib.object.misc.ClientVersion;
 import me.croabeast.beanslib.utility.LibUtils;
 import me.croabeast.iridiumapi.pattern.*;
 import net.md_5.bungee.api.ChatColor;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -120,7 +120,7 @@ public final class IridiumAPI {
      *
      * @return the colored string
      */
-    public static String color(@NotNull Color color, @NotNull String string) {
+    public static String color(@NotNull Color color, String string) {
         return (SUPPORTS_RGB ? ChatColor.of(color) : getClosestColor(color)) + string;
     }
 
@@ -134,7 +134,7 @@ public final class IridiumAPI {
      *
      * @return the string with the applied gradient
      */
-    public static String color(@NotNull String string, @NotNull Color start, @NotNull Color end, boolean useRGB) {
+    public static String color(String string, @NotNull Color start, @NotNull Color end, boolean useRGB) {
         int step = stripSpecial(string).length();
         return step <= 1 ? string : apply(string, createGradient(start, end, step, useRGB));
     }
@@ -149,7 +149,7 @@ public final class IridiumAPI {
      * @return the string with the applied rainbow gradient
      */
     @NotNull
-    public static String rainbow(@NotNull String string, float saturation, boolean useRGB) {
+    public static String rainbow(String string, float saturation, boolean useRGB) {
         int step = stripSpecial(string).length();
         return step <= 0 ? string : apply(string, createRainbow(step, saturation, useRGB));
     }
@@ -163,7 +163,7 @@ public final class IridiumAPI {
      * @return the requested chat color
      */
     @NotNull
-    public static ChatColor getColor(@NotNull String string, boolean useRGB) {
+    public static ChatColor getColor(String string, boolean useRGB) {
         Color c = new Color(Integer.parseInt(string, 16));
         return useRGB ? ChatColor.of(c) : getClosestColor(c);
     }

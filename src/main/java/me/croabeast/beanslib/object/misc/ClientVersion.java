@@ -17,44 +17,48 @@ import java.util.UUID;
  * @author CroaBeast
  * @since 1.0
  */
-@Getter
 public final class ClientVersion {
 
     private static final List<ClientVersion> PROTOCOL_LIST = new ArrayList<>();
 
-    static final ClientVersion
-            UNKNOWN_CLIENT = new ClientVersion(0, 0, 0),
-            CLIENT_7 = new ClientVersion(7, 0, 5),
-            CLIENT_8 = new ClientVersion(8, 6, 47),
-            CLIENT_9 = new ClientVersion(9, 48, 110),
-            CLIENT_10 = new ClientVersion(10, 201, 210, fromInts(206, 209)),
-            CLIENT_11 = new ClientVersion(11, 301, 316),
-            CLIENT_12 = new ClientVersion(12, 317, 340),
-            CLIENT_13 = new ClientVersion(13, 341, 404),
-            CLIENT_14 = new ClientVersion(14, 441, 500, fromInts(499)),
-            CLIENT_15 = new ClientVersion(15, 550, 578),
-            CLIENT_16 = new ClientVersion(16, 701, 754),
-            CLIENT_17 = new ClientVersion(17, 755, 756),
-            CLIENT_18 = new ClientVersion(18, 757, 758),
-            CLIENT_19 = new ClientVersion(19, 759, 800);
+    private static final ClientVersion UNKNOWN = new ClientVersion(0, 0, 0);
+
+    static {
+        new ClientVersion(7, 0, 5);
+        new ClientVersion(8, 6, 47);
+        new ClientVersion(9, 48, 110);
+        new ClientVersion(10, 201, 210, fromInts(206, 209));
+        new ClientVersion(11, 301, 316);
+        new ClientVersion(12, 317, 340);
+        new ClientVersion(13, 341, 404);
+        new ClientVersion(14, 441, 500, fromInts(499));
+        new ClientVersion(15, 550, 578);
+        new ClientVersion(16, 701, 754);
+        new ClientVersion(17, 755, 756);
+        new ClientVersion(18, 757, 758);
+        new ClientVersion(19, 759, 800);
+    }
 
     /**
      * The major version of the client.
      */
+    @Getter
     private final int version;
 
     /**
      * The protocols list of the major version.
      */
+    @Getter
     private final List<Integer> protocols;
 
-    ClientVersion(int version, int start, int end, List<Integer> ignore) {
+    private ClientVersion(int version, int start, int end, List<Integer> ignore) {
         this.version = version;
 
         List<Integer> range = fromInts(start, end);
 
         if (ignore == null || ignore.isEmpty()) {
             protocols = range;
+            PROTOCOL_LIST.add(this);
             return;
         }
 
@@ -64,7 +68,7 @@ public final class ClientVersion {
         PROTOCOL_LIST.add(this);
     }
 
-    ClientVersion(int version, int start, int end) {
+    private ClientVersion(int version, int start, int end) {
         this(version, start, end, null);
     }
 
@@ -100,7 +104,7 @@ public final class ClientVersion {
             index++;
         }
 
-        return Lists.newArrayList(array);
+        return new ArrayList<>(Arrays.asList(array));
     }
 
     /**
@@ -127,7 +131,7 @@ public final class ClientVersion {
      * @return the major version
      */
     public static int getClientVersion(Player player) {
-        int o = UNKNOWN_CLIENT.getVersion();
+        int o = UNKNOWN.getVersion();
 
         if (!Exceptions.isPluginEnabled("ViaVersion"))
             return o;
@@ -142,7 +146,7 @@ public final class ClientVersion {
         int i = Via.getAPI().getPlayerVersion(u);
 
         for (ClientVersion p : values()) {
-            if (p == UNKNOWN_CLIENT) continue;
+            if (p == UNKNOWN) continue;
 
             if (p.getProtocols().contains(i))
                 return p.getVersion();

@@ -26,6 +26,4 @@ public interface RGBParser {
      * @return the processed line
      */
     String process(String string, boolean useRGB);
-
-
 }

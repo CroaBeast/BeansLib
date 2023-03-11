@@ -3,7 +3,7 @@ package me.croabeast.beanslib.key;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,7 +13,6 @@ import java.util.regex.Pattern;
  * a given value in an input string, using the {@link #replace(String)} method.
  */
 @RequiredArgsConstructor
-@Accessors(chain = true)
 public class ValueReplacer {
 
     private final String key;
@@ -22,6 +21,7 @@ public class ValueReplacer {
     /**
      * If the key is case-sensitive or not, {@code true} by default.
      */
+    @Accessors(chain = true)
     @Setter
     private boolean caseSensitive = true;
 

@@ -36,10 +36,8 @@ public class BeansLogger {
     private final BeansLib lib;
 
     private String colorLogger(String string) {
-        final String temp = TextUtils.stripJson(string);
-
-        return lib.isColoredConsole() ?
-                process(temp) : stripAll(temp);
+        final String temp = TextUtils.STRIP_JSON.apply(string);
+        return lib.isColoredConsole() ? process(temp) : stripAll(temp);
     }
 
     private String[] toLogLines(Player player, boolean isLog, String... lines) {
@@ -95,22 +93,22 @@ public class BeansLogger {
      *
      * @param sender a valid sender, can be the console or a player
      * @param lines the information to send
+     *
+     * @throws NullPointerException if the plugin is null
      */
     public void doLog(CommandSender sender, String... lines) {
         if (sender instanceof Player)
             playerLog((Player) sender, lines);
 
-        Plugin plugin = lib.getPlugin();
-        if (plugin == null) return;
-
         for (String s : toLogLines(lines))
-            plugin.getLogger().info(colorLogger(s));
+            lib.getPlugin().getLogger().info(colorLogger(s));
     }
 
     /**
      * Sends requested information to the console.
      *
      * @param lines the information to send
+     * @throws NullPointerException if the plugin is null
      */
     public void doLog(String... lines) {
         doLog(null, lines);

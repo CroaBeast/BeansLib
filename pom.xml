@@ -6,7 +6,7 @@
 
     <groupId>io.github.croabeast</groupId>
     <artifactId>BeansLib</artifactId>
-    <version>1.4-SNAPSHOT-25</version>
+    <version>1.4-SNAPSHOT-31</version>
     <packaging>jar</packaging>
 
     <name>BeansLib</name>
@@ -205,8 +205,14 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.16.5-R0.1-SNAPSHOT</version>
+            <version>1.19.3-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -251,6 +257,10 @@
                 <exclusion>
                     <groupId>org.bstats</groupId>
                     <artifactId>bstats-velocity</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

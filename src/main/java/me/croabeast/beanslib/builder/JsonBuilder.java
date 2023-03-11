@@ -3,13 +3,12 @@ package me.croabeast.beanslib.builder;
 import com.google.common.collect.Lists;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.utility.Exceptions;
-import me.croabeast.beanslib.utility.LibUtils;
 import me.croabeast.beanslib.utility.TextUtils;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -25,11 +24,12 @@ import static net.md_5.bungee.api.chat.ClickEvent.Action.*;
  * to apply a hover event.
  *
  * <p> If click and hover values are null/empty, it will use the
- * {@link LibUtils#JSON_PATTERN} to parse the respective actions and
+ * {@link BeansLib#jsonRegex} to parse the respective actions and
  * add then in the chat component.
  *
  * <p> After all the actions are set in the chat component, the
  * message is sent to the target player.
+ *
  * <pre> {@code
  * JsonConverter json = new JsonConverter(player, "my message");
  * // Sends the message to the target using a
@@ -111,11 +111,13 @@ public class JsonBuilder {
     }
 
     BaseComponent[] toJSON(String click, List<String> hover) {
-        String line = TextUtils.parseInteractiveChat(parser, string);
+        String line = TextUtils.PARSE_INTERACTIVE_CHAT.apply(parser, string);
         line = B_LIB.centerMessage(target, parser, line);
 
         if (!hover.isEmpty() || StringUtils.isNotBlank(click)) {
-            final TextComponent comp = toComponent(TextUtils.stripJson(line));
+            line = TextUtils.STRIP_JSON.apply(line);
+
+            final TextComponent comp = toComponent(line);
             if (!hover.isEmpty()) addHover(comp, hover);
 
             if (StringUtils.isNotBlank(click)) {
@@ -128,8 +130,8 @@ public class JsonBuilder {
             return Lists.newArrayList(comp).toArray(new BaseComponent[0]);
         }
 
-        line = TextUtils.convertOldJson(line);
-        Matcher match = LibUtils.JSON_PATTERN.matcher(line);
+        line = TextUtils.CONVERT_OLD_JSON.apply(line);
+        Matcher match = B_LIB.getJsonPattern().matcher(line);
 
         int lastEnd = 0;
         List<BaseComponent> components = new ArrayList<>();
@@ -189,7 +191,7 @@ public class JsonBuilder {
     }
 
     /**
-     * Converts a line to a {@link BaseComponent} array using the {@link LibUtils#JSON_PATTERN}.
+     * Converts a line to a {@link BaseComponent} array using the {@link BeansLib#jsonRegex}.
      *
      * <pre> {@code
      * // Example of how to use it:
@@ -208,7 +210,7 @@ public class JsonBuilder {
     }
 
     /**
-     * Converts a line to a {@link BaseComponent} array using the {@link LibUtils#JSON_PATTERN}.
+     * Converts a line to a {@link BaseComponent} array using the {@link BeansLib#jsonRegex}.
      *
      * <pre> {@code
      * // Example of how to use it:

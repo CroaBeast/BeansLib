@@ -3,20 +3,19 @@ package me.croabeast.beanslib.key;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import me.croabeast.beanslib.utility.TextUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 import static me.croabeast.beanslib.object.misc.Rounder.round;
 
 /**
- * The {@code PlayerKeyHandler} class manages all the player variables that
+ * The {@code KeyManager} class manages all the player variables that
  * can be replaced to its respective defined values.
  *
  * <p> It's possible to add more keys using {@link #createKey(String, Function)}, and
@@ -50,7 +49,7 @@ public final class KeyManager {
     private static Location loc(Player p) { return p.getLocation(); }
 
     /**
-     * Creates a new instance of the handler.
+     * Creates a new instance of the manager.
      */
     public KeyManager() {
         new PlayerKey("{player}", HumanEntity::getName);
@@ -80,7 +79,7 @@ public final class KeyManager {
         if (StringUtils.isBlank(key)) return this;
         if (function == null) return this;
 
-        new PlayerKey(key, (PlayerFunction<Object>) function, false);
+        new PlayerKey(key, function, false);
         return this;
     }
 
@@ -143,8 +142,6 @@ public final class KeyManager {
         return string;
     }
 
-    interface PlayerFunction<O> extends Function<Player, O> {}
-
     static class PlayerKey implements Cloneable {
 
         private static int ordinal = 0;
@@ -154,9 +151,9 @@ public final class KeyManager {
         private String key;
 
         private final int index;
-        private final PlayerFunction<String> function;
+        private final Function<Player, String> function;
 
-        private PlayerKey(String key, PlayerFunction<Object> function, boolean isDefault) {
+        private PlayerKey(String key, Function<Player, Object> function, boolean isDefault) {
             this.key = key;
             this.index = ordinal;
 
@@ -168,7 +165,7 @@ public final class KeyManager {
             ordinal++;
         }
 
-        private PlayerKey(String key, PlayerFunction<Object> function) {
+        private PlayerKey(String key, Function<Player, Object> function) {
             this(key, function, true);
         }
 

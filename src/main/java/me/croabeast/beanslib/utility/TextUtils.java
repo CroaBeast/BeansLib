@@ -1,29 +1,33 @@
 package me.croabeast.beanslib.utility;
 
 import com.google.common.collect.Lists;
+import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.key.ValueReplacer;
 import me.croabeast.beanslib.nms.NMSActionBar;
 import me.croabeast.beanslib.nms.NMSTitle;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
+import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A class that stores static methods for text, string, configurations, and more.
+ * A class that stores static methods for text, string, configurations,
+ * and more.
  *
  * @author CroaBeast
  * @since 1.0
@@ -31,15 +35,98 @@ import java.util.regex.Pattern;
 public final class TextUtils {
 
     /**
+     * Parse all the {@link PlaceholderAPI} placeholders of an input string if
+     * {@link PlaceholderAPI} is enabled.
+     *
+     * <p> Use the <code>apply(Player, String)</code> method to apply it on a string.
+     */
+    public static final BiFunction<Player, String, String> PARSE_PLACEHOLDERAPI = (p, s) -> {
+        if (StringUtils.isBlank(s)) return s;
+        if (!Exceptions.isPluginEnabled("PlaceholderAPI")) return s;
+
+        return PlaceholderAPI.setPlaceholders(p, s);
+    };
+
+    /**
+     * Parse all the {@link InteractiveChat} values of an input string if
+     * {@link InteractiveChat} is enabled.
+     *
+     * <p> Use the <code>apply(Player, String)</code> method to apply it on a string.
+     */
+    public static final BiFunction<Player, String, String> PARSE_INTERACTIVE_CHAT = (p, s) -> {
+        if (!Exceptions.isPluginEnabled("InteractiveChat"))
+            return s;
+
+        try {
+            UUID u = Exceptions.checkPlayer(p).getUniqueId();
+            return InteractiveChatAPI.markSender(s, u);
+        } catch (Exception e) {
+            return s;
+        }
+    };
+
+    /**
+     * Strips the first spaces of an input string.
+     *
+     * <p> Use the <code>apply(String)</code> method to apply it on a string.
+     */
+    public static final UnaryOperator<String> STRIP_FIRST_SPACES = s -> {
+        if (StringUtils.isBlank(s)) return s;
+        String startLine = s;
+
+        try {
+            while (s.charAt(0) == ' ') s = s.substring(1);
+            return s;
+        } catch (IndexOutOfBoundsException e) {
+            return startLine;
+        }
+    };
+
+    /**
+     * Coverts the old Json format to the new in-built one.
+     *
+     * <p> Use the <code>apply(String)</code> method to apply it on a string.
+     */
+    public static final UnaryOperator<String> CONVERT_OLD_JSON = s -> {
+        if (StringUtils.isBlank(s)) return s;
+
+        String p = "(?i)(hover|run|suggest|url)=\\[(.[^|\\[\\]]*)]";
+        Matcher old = Pattern.compile(p).matcher(s);
+
+        while (old.find()) {
+            String temp = old.group(1) + ":\"" + old.group(2) + "\"";
+            s = s.replace(old.group(), temp);
+        }
+        return s;
+    };
+
+    /**
      * Check if the line uses a valid json format on any part of the string.
      *
-     * <pre> {@code
-     * // • Usage example:
-     * if (IS_JSON.apply("a string")) doSomething();
-     * } </pre>
+     * <p> Use the <code>apply(String)</code> method to check a string.
      */
-    public static final Function<String, Boolean> IS_JSON =
-            s -> LibUtils.JSON_PATTERN.matcher(convertOldJson(s)).find();
+    public static final Function<String, Boolean> IS_JSON = s ->
+            BeansLib.getLoadedInstance().getJsonPattern().matcher(s).find();
+
+    /**
+     * Removes the in-built JSON pattern of a string, if there is any format.
+     *
+     * <p> Use the <code>apply(String)</code> method to apply it on a string.
+     */
+    public static final UnaryOperator<String> STRIP_JSON = s -> {
+        if (StringUtils.isBlank(s)) return s;
+
+        s = CONVERT_OLD_JSON.apply(s);
+        if (!IS_JSON.apply(s)) return s;
+
+        Matcher m = BeansLib.getLoadedInstance().
+                getJsonPattern().matcher(s);
+
+        while (m.find())
+            s = s.replace(m.group(), m.group(7));
+
+        return s;
+    };
 
     /**
      * Initializing this class is blocked.
@@ -54,11 +141,22 @@ public final class TextUtils {
      *
      * @return the parsed message
      */
+    @Deprecated
     public static String parsePAPI(Player player, String string) {
-        if (StringUtils.isBlank(string)) return string;
+        return PARSE_PLACEHOLDERAPI.apply(player, string);
+    }
 
-        return Exceptions.isPluginEnabled("PlaceholderAPI") ?
-                PlaceholderAPI.setPlaceholders(player, string) : string;
+    /**
+     * Parse InteractiveChat placeholders for using it a JSON message.
+     *
+     * @param player the requested player
+     * @param string the line to parse
+     *
+     * @return the line with the parsed placeholders.
+     */
+    @Deprecated
+    public static String parseInteractiveChat(Player player, String string) {
+        return PARSE_INTERACTIVE_CHAT.apply(player, string);
     }
 
     /**
@@ -67,21 +165,36 @@ public final class TextUtils {
      * @param string the input line
      * @return the line without the first spaces
      */
+    @Deprecated
     public static String removeSpace(String string) {
-        if (StringUtils.isBlank(string)) return string;
-        String startLine = string;
-
-        try {
-            while (string.charAt(0) == ' ') string = string.substring(1);
-            return string;
-        } catch (IndexOutOfBoundsException e) {
-            return startLine;
-        }
+        return STRIP_FIRST_SPACES.apply(string);
     }
 
     /**
-     * Combines an array with one or more additional arrays
-     * into a new array of the same type.
+     * Converts the old JSON format to the new one.
+     *
+     * @param string an input string
+     * @return the converted string
+     */
+    @Deprecated
+    public static String convertOldJson(String string) {
+        return CONVERT_OLD_JSON.apply(string);
+    }
+
+    /**
+     * Strips the JSON format from an input string.
+     *
+     * @param string an input string.
+     * @return the stripped line.
+     */
+    @Deprecated
+    public static String stripJson(String string) {
+        return STRIP_JSON.apply(string);
+    }
+
+    /**
+     * Combines an array with one or more additional arrays into a new
+     * array of the same type.
      *
      * @author Kihsomray
      * @since 1.3
@@ -110,78 +223,27 @@ public final class TextUtils {
     }
 
     /**
-     * Replace a {@link String} array of keys with another {@link String} array of values.
-     * <p> Special characters are quoted to avoid errors.
+     * Converts a {@link String} to a {@link List} from a configuration section if it's not a list.
      *
-     * @param string an input string
-     * @param keys the array of keys
-     * @param values the array of values
-     * @param caseSensitive if keys are case-sensitive
+     * @param section a config file or section, can be null
+     * @param path the path to locate the string or list
+     * @param def a default string list if value is not found
      *
-     * @deprecated See {@link ValueReplacer}.
-     * @return the parsed string with the respective values
+     * @return the converted string list or default value if section is null
      */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
-    @Deprecated
-    public static String replaceEach(String string, String[] keys, String[] values, boolean caseSensitive) {
-        return ValueReplacer.forEach(string, keys, values, caseSensitive);
+    @SuppressWarnings("unchecked")
+    public static List<String> toList(ConfigurationSection section, String path, List<String> def) {
+        if (section == null) return def;
+
+        if (section.isList(path))
+            return (List<String>) section.getList(path, def);
+
+        String temp = section.getString(path);
+        return temp == null ? def : Lists.newArrayList(temp);
     }
 
     /**
-     * Replace a {@link String} key with a {@link String} value.
-     * <p> Special characters are quoted to avoid errors.
-     *
-     * @param string an input string
-     * @param key a key
-     * @param value a value
-     * @param caseSensitive if key is case-sensitive
-     *
-     * @deprecated See {@link ValueReplacer}.
-     * @return the parsed string with the respective value
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
-    @Deprecated
-    public static String replaceEach(String string, String key, String value, boolean caseSensitive) {
-        return new ValueReplacer(key, value).setCaseSensitive(caseSensitive).replace(string);
-    }
-
-    /**
-     * Replace a {@link String} array of keys with another {@link String} array of values.
-     * <p> It's case-insensitive and special characters are quoted to avoid errors.
-     *
-     * @param string an input string
-     * @param keys the array of keys
-     * @param values the array of values
-     *
-     * @deprecated See {@link ValueReplacer}.
-     * @return the parsed string with the respective values
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
-    @Deprecated
-    public static String replaceInsensitiveEach(String string, String[] keys, String[] values) {
-        return ValueReplacer.forEach(string, keys, values);
-    }
-
-    /**
-     * Replace a {@link String} key with a {@link String} value.
-     * <p> It's case-insensitive and special characters are quoted to avoid errors.
-     *
-     * @param string an input string
-     * @param key a key
-     * @param value a value
-     *
-     * @deprecated See {@link ValueReplacer}.
-     * @return the parsed string with the respective value
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
-    @Deprecated
-    public static String replaceInsensitiveEach(String string, String key, String value) {
-        return new ValueReplacer(key, value).setCaseSensitive(false).replace(string);
-    }
-
-    /**
-     * Converts a {@link String} to a {@link List} from
-     * a config file or section if it's not a list.
+     * Converts a {@link String} to a {@link List} from a configuration section if it's not a list.
      *
      * @param section a config file or section, can be null
      * @param path the path to locate the string or list
@@ -189,71 +251,8 @@ public final class TextUtils {
      * @return the converted string list or an empty list if section is null
      */
     @NotNull
-    public static List<String> toList(@Nullable ConfigurationSection section, String path) {
-        if (section == null) return new ArrayList<>();
-
-        final String temp = section.getString(path);
-        if (temp == null) return new ArrayList<>();
-
-        if (section.isList(path)) return section.getStringList(path);
-        return Lists.newArrayList(temp);
-    }
-
-    /**
-     * Converts the old JSON format to the new one.
-     *
-     * @param string an input string
-     * @return the converted string
-     */
-    public static String convertOldJson(String string) {
-        if (StringUtils.isBlank(string)) return string;
-
-        String s = "(?i)(hover|run|suggest|url)=\\[(.[^|\\[\\]]*)]";
-        Matcher old = Pattern.compile(s).matcher(string);
-
-        while (old.find()) {
-            String temp = old.group(1) + ":\"" + old.group(2) + "\"";
-            string = string.replace(old.group(), temp);
-        }
-        return string;
-    }
-
-    /**
-     * Strips the JSON format from an input string.
-     *
-     * @param string an input string.
-     * @return the stripped line.
-     */
-    public static String stripJson(String string) {
-        if (StringUtils.isBlank(string)) return string;
-
-        string = convertOldJson(string);
-        if (!IS_JSON.apply(string)) return string;
-
-        Matcher m = LibUtils.JSON_PATTERN.matcher(string);
-        while (m.find())
-            string = string.replace(m.group(), m.group(7));
-
-        return string;
-    }
-
-    /**
-     * Parse InteractiveChat placeholders for using it a JSON message.
-     *
-     * @param player the requested player
-     * @param line the line to parse
-     *
-     * @return the line with the parsed placeholders.
-     */
-    public static String parseInteractiveChat(Player player, String line) {
-        if (!Exceptions.isPluginEnabled("InteractiveChat")) return line;
-
-        try {
-            Exceptions.checkPlayer(player);
-            return InteractiveChatAPI.markSender(line, player.getUniqueId());
-        } catch (Exception e) {
-            return line;
-        }
+    public static List<String> toList(ConfigurationSection section, String path) {
+        return toList(section, path, new ArrayList<>());
     }
 
     /**
@@ -297,8 +296,8 @@ public final class TextUtils {
      */
     public static void sendTitle(Player player, @NotNull String[] message, int in, int stay, int out) {
         if (message.length <= 0 || message.length > 2) return;
-        String subtitle = message.length == 1 ? "" : message[1];
-        sendTitle(player, message[0], subtitle, in, stay, out);
+
+        sendTitle(player, message[0], message.length == 1 ? "" : message[1], in, stay, out);
     }
 
     /**
@@ -326,5 +325,82 @@ public final class TextUtils {
         }
 
         return name + "=[" + builder + "]";
+    }
+
+    /**
+     * Replace a {@link String} array of keys with another {@link String}
+     * array of values.
+     *
+     * <p> Special characters are quoted to avoid errors.
+     *
+     * @param string an input string
+     * @param keys the array of keys
+     * @param values the array of values
+     * @param caseSensitive if keys are case-sensitive
+     *
+     * @deprecated See {@link ValueReplacer}.
+     * @return the parsed string with the respective values
+     */
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @Deprecated
+    public static String replaceEach(String string, String[] keys, String[] values, boolean caseSensitive) {
+        return ValueReplacer.forEach(string, keys, values, caseSensitive);
+    }
+
+    /**
+     * Replace a {@link String} key with a {@link String} value.
+     * <p> Special characters are quoted to avoid errors.
+     *
+     * @param string an input string
+     * @param key a key
+     * @param value a value
+     * @param caseSensitive if key is case-sensitive
+     *
+     * @deprecated See {@link ValueReplacer}.
+     * @return the parsed string with the respective value
+     */
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @Deprecated
+    public static String replaceEach(String string, String key, String value, boolean caseSensitive) {
+        return new ValueReplacer(key, value).setCaseSensitive(caseSensitive).replace(string);
+    }
+
+    /**
+     * Replace a {@link String} array of keys with another {@link String}
+     * array of values.
+     *
+     * <p> It's case-insensitive and special characters are quoted
+     * to avoid errors.
+     *
+     * @param string an input string
+     * @param keys the array of keys
+     * @param values the array of values
+     *
+     * @deprecated See {@link ValueReplacer}.
+     * @return the parsed string with the respective values
+     */
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @Deprecated
+    public static String replaceInsensitiveEach(String string, String[] keys, String[] values) {
+        return ValueReplacer.forEach(string, keys, values);
+    }
+
+    /**
+     * Replace a {@link String} key with a {@link String} value.
+     *
+     * <p> It's case-insensitive and special characters are quoted
+     * to avoid errors.
+     *
+     * @param string an input string
+     * @param key a key
+     * @param value a value
+     *
+     * @deprecated See {@link ValueReplacer}.
+     * @return the parsed string with the respective value
+     */
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @Deprecated
+    public static String replaceInsensitiveEach(String string, String key, String value) {
+        return new ValueReplacer(key, value).setCaseSensitive(false).replace(string);
     }
 }

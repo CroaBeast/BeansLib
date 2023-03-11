@@ -3,10 +3,10 @@ package me.croabeast.beanslib.utility;
 import com.google.common.collect.Lists;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -27,10 +27,24 @@ public final class Exceptions {
      * Sure, you can just call the Bukkit method, but I like shorter methods.
      *
      * @param name the plugin's name
+     * @param checkRunning if it needs to check if the plugin's is running
+     *
+     * @return if the plugin is enabled
+     */
+    public static boolean isPluginEnabled(String name, boolean checkRunning) {
+        Plugin plugin = Bukkit.getPluginManager().getPlugin(name);
+        return plugin != null && (!checkRunning || plugin.isEnabled());
+    }
+
+    /**
+     * Checks if a plugin is enabled.
+     * Sure, you can just call the Bukkit method, but I like shorter methods.
+     *
+     * @param name the plugin's name
      * @return if the plugin is enabled
      */
     public static boolean isPluginEnabled(String name) {
-        return Bukkit.getPluginManager().isPluginEnabled(name);
+        return isPluginEnabled(name, true);
     }
 
     /**

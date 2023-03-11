@@ -9,7 +9,7 @@ import me.croabeast.beanslib.discord.Webhook;
 import me.croabeast.beanslib.builder.BossbarBuilder;
 import me.croabeast.beanslib.builder.JsonBuilder;
 import me.croabeast.iridiumapi.IridiumAPI;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -28,13 +28,16 @@ import static me.croabeast.beanslib.utility.TextUtils.*;
  * a respective registered prefix and an optional additional regex parameter to
  * check if more arguments will be needed to identify the message type.
  *
- * <p> This class can not have more instances or child classes to avoid errors with
- * the existing keys.
- *
  * <p> Each default instance of this class have a setter for the main key and the
  * regex, if It's necessary to change those values.
  *
- * <p> See {@link MessageSender}, it uses these keys to parse, format, and send
+ * <p> The default key and regex of each  instance depends mostly on the
+ * {@link BeansLib#getLoadedInstance()}.
+ *
+ * <p> This class can not have more instances or child classes to avoid errors with
+ * the existing keys.
+ *
+ * <p> See {@link MessageSender}, it uses the default instances to parse, format, and send
  * messages to players.
  *
  * @author CroaBeast
@@ -166,15 +169,13 @@ public abstract class MessageKey implements MessageAction, Cloneable {
         @Override
         public boolean execute(Player t, Player parser, String s) {
             Plugin plugin = B_LIB.getPlugin();
-            if (plugin == null) return false;
-
             Matcher m2 = B_LIB.getBossbarPattern().matcher(s);
 
             if (m2.find()) {
                 ConfigurationSection c = B_LIB.getBossbarSection();
                 if (c == null) return false;
 
-                c = c.getConfigurationSection(m2.group(2));
+                c = c.getConfigurationSection(m2.group(1));
                 if (c == null) return false;
 
                 new BossbarBuilder(plugin, t, c).display();
@@ -278,8 +279,8 @@ public abstract class MessageKey implements MessageAction, Cloneable {
         return getKey().toUpperCase(Locale.ENGLISH);
     }
 
-    protected String getRegex() {
-        String s = StringUtils.isBlank(regex) ? key : (key + regex);
+    private String getRegex() {
+        String s = key + (StringUtils.isBlank(regex) ? "" : regex);
 
         return "(?i)^" +
                 Pattern.quote(B_LIB.getKeysDelimiters()[0]) + s +
@@ -303,19 +304,20 @@ public abstract class MessageKey implements MessageAction, Cloneable {
         Matcher m = getPattern().matcher(s);
 
         while (m.find()) s = s.replace(m.group(), "");
-        s = removeSpace(stripJson(s));
+        s = STRIP_FIRST_SPACES.apply(STRIP_JSON.apply(s));
 
-        if (!color) {
-            s = parsePAPI(parser, B_LIB.parseChars(s));
-            return IridiumAPI.stripAll(s);
-        }
+        if (!color)
+            return IridiumAPI.stripAll(
+                    PARSE_PLACEHOLDERAPI.apply(
+                    parser, B_LIB.parseChars(s))
+            );
 
         return B_LIB.colorize(target, parser, s);
     }
 
     /**
      * Returns the key instance of an input string to check what message type
-     * is the string. If there is no type, will return the chat key.
+     * is the string. If there is no defined type, will return the chat key.
      *
      * @param s an input string
      * @return the requested message key
