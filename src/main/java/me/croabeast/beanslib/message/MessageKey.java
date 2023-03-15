@@ -190,20 +190,23 @@ public abstract class MessageKey implements MessageAction, Cloneable {
     /**
      * The {@link MessageKey} instance to identify default chat messages.
      *
-     * <p> It's not necessary to identify a string with this prefix, because
+     * <p> It's not necessary to identify a string with this prefix; because
      * if a string doesn't have a prefix, it will by default a chat message.
      *
      * <p> The setters of this instance will throw an {@link UnsupportedOperationException}.
      */
     public static final MessageKey CHAT_KEY = new MessageKey("chat") {
+        private static final String MESSAGE_EXCEPTION =
+                "Setter is not supported on this instance";
+
         @Override
         public MessageKey setKey(String key) {
-            throw new UnsupportedOperationException("Setter is not supported on this instance");
+            throw new UnsupportedOperationException(MESSAGE_EXCEPTION);
         }
 
         @Override
         public MessageKey setRegex(String regex) {
-            throw new UnsupportedOperationException("Setter is not supported on this instance");
+            throw new UnsupportedOperationException(MESSAGE_EXCEPTION);
         }
 
         @Override
@@ -261,7 +264,7 @@ public abstract class MessageKey implements MessageAction, Cloneable {
      *
      * @return a clone of this instance
      */
-    @Override @Nullable
+    @Nullable
     protected MessageKey clone() {
         try {
             return (MessageKey) super.clone();
@@ -317,7 +320,7 @@ public abstract class MessageKey implements MessageAction, Cloneable {
 
     /**
      * Returns the key instance of an input string to check what message type
-     * is the string. If there is no defined type, will return the chat key.
+     * is the string. If there is no defined type, will return the {@link #CHAT_KEY}.
      *
      * @param s an input string
      * @return the requested message key
@@ -331,6 +334,23 @@ public abstract class MessageKey implements MessageAction, Cloneable {
 
         if (B_LIB.getBossbarPattern().
                 matcher(s).find()) return BOSSBAR_KEY;
+
+        return CHAT_KEY;
+    }
+
+    /**
+     * Returns the key instance of an input key that could match with any existing
+     * defined key. If there is no match, will return the {@link #CHAT_KEY}.
+     *
+     * @param k an input string
+     * @return the requested message key
+     */
+    @NotNull
+    public static MessageKey matchKey(String k) {
+        if (StringUtils.isBlank(k)) return CHAT_KEY;
+
+        for (MessageKey key : MESSAGE_KEY_MAP.values())
+            if (k.matches("(?i)" + key.getKey())) return key;
 
         return CHAT_KEY;
     }

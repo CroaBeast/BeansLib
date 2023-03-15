@@ -12,7 +12,7 @@ import org.bukkit.entity.Player;
 import java.util.HashMap;
 import java.util.function.Function;
 
-import static me.croabeast.beanslib.object.misc.Rounder.round;
+import static me.croabeast.beanslib.misc.Rounder.round;
 
 /**
  * The {@code KeyManager} class manages all the player variables that

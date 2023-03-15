@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.object.misc;
+package me.croabeast.beanslib.misc;
 
 import org.apache.commons.lang3.StringUtils;
 

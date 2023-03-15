@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.object.misc;
+package me.croabeast.beanslib.misc;
 
 import lombok.RequiredArgsConstructor;
 import me.croabeast.beanslib.BeansLib;
@@ -8,7 +8,6 @@ import me.croabeast.beanslib.utility.TextUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,7 +54,9 @@ public class BeansLogger {
 
             if (isLog && lib.isStripPrefix() && k != MessageKey.CHAT_KEY) {
                 Matcher match = k.getPattern().matcher(line);
-                if (match.find()) line = line.replace(match.group(), "");
+
+                if (match.find())
+                    line = line.replace(match.group(), "");
             }
 
             list.add(lib.centerMessage(player, player, line));

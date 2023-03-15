@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.object.analytic;
+package me.croabeast.beanslib.analytic;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonElement;

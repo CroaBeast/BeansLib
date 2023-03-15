@@ -9,7 +9,7 @@ import me.croabeast.beanslib.character.CharHandler;
 import me.croabeast.beanslib.character.CharacterInfo;
 import me.croabeast.beanslib.key.KeyManager;
 import me.croabeast.beanslib.message.MessageSender;
-import me.croabeast.beanslib.object.misc.BeansLogger;
+import me.croabeast.beanslib.misc.BeansLogger;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.iridiumapi.IridiumAPI;
 import net.md_5.bungee.api.chat.ClickEvent;

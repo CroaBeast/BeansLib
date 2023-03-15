@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.object.misc;
+package me.croabeast.beanslib.misc;
 
 import com.google.common.collect.Lists;
 import com.viaversion.viaversion.api.Via;

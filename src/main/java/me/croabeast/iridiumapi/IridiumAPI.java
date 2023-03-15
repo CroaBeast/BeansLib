@@ -1,7 +1,7 @@
 package me.croabeast.iridiumapi;
 
 import com.google.common.collect.ImmutableMap;
-import me.croabeast.beanslib.object.misc.ClientVersion;
+import me.croabeast.beanslib.misc.ClientVersion;
 import me.croabeast.beanslib.utility.LibUtils;
 import me.croabeast.iridiumapi.pattern.*;
 import net.md_5.bungee.api.ChatColor;

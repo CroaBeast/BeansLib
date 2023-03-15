@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import me.croabeast.beanslib.BeansLib;
+import me.croabeast.beanslib.message.MessageKey;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.iridiumapi.IridiumAPI;
 import org.apache.commons.lang3.StringUtils;
@@ -23,9 +23,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import static me.croabeast.beanslib.object.misc.Rounder.round;
+import static me.croabeast.beanslib.message.MessageKey.BOSSBAR_KEY;
+import static me.croabeast.beanslib.misc.Rounder.round;
 
 /**
  * This class manages how to create a {@link BossBar} instance for
@@ -48,26 +48,9 @@ import static me.croabeast.beanslib.object.misc.Rounder.round;
  * builder.display(); // Displays the bossbar to the player.
  * } </pre>
  */
+@Accessors(chain = true)
+@Setter
 public class BossbarBuilder {
-
-    private static final BeansLib LIB = BeansLib.getLoadedInstance();
-
-    private static String start() {
-        return Pattern.quote(LIB.getKeysDelimiters()[0]);
-    }
-
-    private static String end() {
-        return Pattern.quote(LIB.getKeysDelimiters()[1]);
-    }
-
-    /**
-     * The Bossbar pattern to check bossbar arguments.
-     */
-    private static Pattern getPattern() {
-        return Pattern.compile("(?i)(" +
-                Pattern.quote(LIB.getKeysDelimiters()[0]) + "bossbar(:.+)?" +
-                Pattern.quote(LIB.getKeysDelimiters()[1]) + ")(.+)");
-    }
 
     /**
      * The map to get all the players that have a bossbar message displayed.
@@ -82,20 +65,21 @@ public class BossbarBuilder {
     private final Plugin plugin;
     private final Player player;
 
+    @Setter(AccessLevel.NONE)
     private BossBar bar = null;
 
-    private final List<String> messages;
+    private List<String> messages;
 
+    @Setter(AccessLevel.NONE)
     private List<DoubleValue> formats = Lists.newArrayList(DEFAULT_FORMAT);
 
     private int time = 3 * 20;
     private boolean progressDecrease = false;
 
-    @Accessors(chain = true)
-    @Setter
     private boolean useRandomMessages = false,
             useRandomFormats = false;
 
+    @Setter(AccessLevel.NONE)
     private BukkitRunnable run = null;
 
     /**
@@ -164,8 +148,8 @@ public class BossbarBuilder {
     }
 
     /**
-     * Creates a new builder using a single line to parse all the necessary
-     * arguments. The line should be using the {@link #getPattern()}.
+     * Creates a new builder using a single line to parse all the necessary arguments.
+     * The line should be using the {@link MessageKey#BOSSBAR_KEY} pattern.
      *
      * @param plugin plugin's instance of your project
      * @param player a player, can not be null
@@ -180,7 +164,7 @@ public class BossbarBuilder {
             return;
         }
 
-        Matcher matcher = getPattern().matcher(string);
+        Matcher matcher = BOSSBAR_KEY.getPattern().matcher(string);
         if (!matcher.find()) {
             messages = toList(Lists.newArrayList(string), 0);
             return;

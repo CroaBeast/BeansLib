@@ -281,40 +281,44 @@ public class MessageSender implements Cloneable {
         if (targets.isEmpty()) return sendWebhooks(list, false);
 
         List<String> logList = new ArrayList<>();
-        boolean onlyOne = targets.size() == 1;
 
-        // Iterates of every target to display.
-        for (Player t : targets)
-            for (String s : list) {
-                Matcher m = B_LIB.getBlankPattern().matcher(s);
+        for (String s : list) {
+            Matcher m = B_LIB.getBlankPattern().matcher(s);
 
-                if (m.find()) {
-                    int count = Integer.parseInt(m.group(1));
-                    if (count <= 0) continue;
+            boolean isMatching = m.find();
+            int count = isMatching ?
+                    Integer.parseInt(m.group(1)) : 0;
 
-                    for (int i = 0; i < count; i++) {
-                        t.sendMessage("");
-                        if (printBlankSpaces) B_LIB.rawLog("");
-                    }
+            isMatching = isMatching && count > 0;
+
+            MessageKey key = MessageKey.identifyKey(s);
+            if (notAllowed(key.getUpperKey())) continue;
+
+            for (Player t : targets) {
+                if (isMatching) {
+                    for (int i = 0; i < count; i++) t.sendMessage("");
                     continue;
                 }
 
-                final MessageKey key = MessageKey.identifyKey(s);
-                if (notAllowed(key.getUpperKey())) continue;
-
                 Player temp = parser == null ? t : parser;
-                s = parseOperatorsAndValues(temp, s);
+                String p = parseOperatorsAndValues(temp, s);
 
                 key.execute(t, temp,
                         noFirstSpaces && key == MessageKey.CHAT_KEY ?
-                        TextUtils.STRIP_FIRST_SPACES.apply(s) : s
+                        TextUtils.STRIP_FIRST_SPACES.apply(p) : p
                 );
-
-                if (onlyOne) logList.add(s);
             }
 
+            if (!isMatching || !printBlankSpaces) {
+                logList.add(parseOperatorsAndValues(parser, s));
+                continue;
+            }
+
+            for (int i = 0; i < count; i++) logList.add("");
+        }
+
         // Displays the messages list to console if enabled.
-        if (isLogger) (onlyOne ? logList : list).forEach(B_LIB::rawLog);
+        if (isLogger) logList.forEach(B_LIB::rawLog);
         return true;
     }
 

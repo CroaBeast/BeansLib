@@ -1,8 +1,9 @@
 package me.croabeast.beanslib.utility;
 
 import me.croabeast.beanslib.BeansLib;
-import me.croabeast.beanslib.object.misc.BeansLogger;
+import me.croabeast.beanslib.misc.BeansLogger;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -46,9 +47,19 @@ public final class LogUtils {
     /**
      * Sends requested information to the console.
      *
+     * @param sender a valid sender, can be the console or a player
+     * @param lines the information to send
+     */
+    public static void doLog(CommandSender sender, String... lines) {
+        BeansLib.getLoadedInstance().doLog(sender, lines);
+    }
+
+    /**
+     * Sends requested information to the console.
+     *
      * @param lines the information to send
      */
     public static void doLog(String... lines) {
-        BeansLib.getLoadedInstance().doLog(null, lines);
+        BeansLib.getLoadedInstance().doLog(lines);
     }
 }
