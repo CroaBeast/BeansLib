@@ -1,6 +1,7 @@
 package me.croabeast.beanslib.builder;
 
 import com.google.common.collect.Lists;
+import lombok.var;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.utility.Exceptions;
 import me.croabeast.beanslib.utility.TextUtils;
@@ -13,7 +14,6 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
 
 import static net.md_5.bungee.api.chat.ClickEvent.Action.*;
 
@@ -44,7 +44,9 @@ import static net.md_5.bungee.api.chat.ClickEvent.Action.*;
  */
 public class JsonBuilder {
 
-    private static final BeansLib B_LIB = BeansLib.getLoadedInstance();
+    private static BeansLib getLib() {
+        return BeansLib.getLoadedInstance();
+    }
 
     private final Player target;
     private final Player parser;
@@ -78,19 +80,18 @@ public class JsonBuilder {
         if (input.matches("(?i)url")) return OPEN_URL;
         if (input.matches("(?i)run")) return RUN_COMMAND;
 
-        for (ClickEvent.Action ac : values())
-            if (input.matches("(?i)" + ac)) return ac;
+        for (var ac : values()) if (input.matches("(?i)" + ac)) return ac;
         return null;
     }
 
     @SuppressWarnings("deprecation")
     void addHover(TextComponent comp, List<String> hover) {
-        BaseComponent[] array = new BaseComponent[hover.size()];
+        var array = new BaseComponent[hover.size()];
 
         for (int i = 0; i < hover.size(); i++) {
-            String end = i == hover.size() - 1 ? "" : "\n";
+            var end = i == hover.size() - 1 ? "" : "\n";
 
-            array[i] = toComponent(B_LIB.
+            array[i] = toComponent(getLib().
                     colorize(target, parser, hover.get(i)) + end);
         }
 
@@ -99,7 +100,7 @@ public class JsonBuilder {
 
     void addEvent(TextComponent comp, String type, String string) {
         if (type.matches("(?i)hover")) {
-            String[] array = B_LIB.splitLine(string);
+            var array = getLib().splitLine(string);
             addHover(comp, Lists.newArrayList(array));
         }
         else if (parseAction(type) != null)
@@ -111,18 +112,20 @@ public class JsonBuilder {
     }
 
     BaseComponent[] toJSON(String click, List<String> hover) {
-        String line = TextUtils.PARSE_INTERACTIVE_CHAT.apply(parser, string);
-        line = B_LIB.centerMessage(target, parser, line);
+        var line = TextUtils.PARSE_INTERACTIVE_CHAT.apply(parser, string);
+        line = getLib().centerMessage(target, parser, line);
 
-        if (!hover.isEmpty() || StringUtils.isNotBlank(click)) {
+        var isListNotNull = hover != null && !hover.isEmpty();
+
+        if (isListNotNull || StringUtils.isNotBlank(click)) {
             line = TextUtils.STRIP_JSON.apply(line);
 
-            final TextComponent comp = toComponent(line);
-            if (!hover.isEmpty()) addHover(comp, hover);
+            final var comp = toComponent(line);
+            if (isListNotNull) addHover(comp, hover);
 
             if (StringUtils.isNotBlank(click)) {
                 try {
-                    String[] input = click.split(":", 2);
+                    var input = click.split(":", 2);
                     comp.setClickEvent(new ClickEvent(parseAction(input[0]), input[1]));
                 } catch (Exception ignored) {}
             }
@@ -131,23 +134,23 @@ public class JsonBuilder {
         }
 
         line = TextUtils.CONVERT_OLD_JSON.apply(line);
-        Matcher match = B_LIB.getJsonPattern().matcher(line);
+        var match = getLib().getJsonPattern().matcher(line);
 
         int lastEnd = 0;
-        List<BaseComponent> components = new ArrayList<>();
+        var components = new ArrayList<BaseComponent>();
 
         while (match.find()) {
-            final TextComponent comp = toComponent(match.group(7));
-            final String[] arguments = match.group(1).split("[|]", 2);
+            final var comp = toComponent(match.group(7));
+            final var arguments = match.group(1).split("[|]", 2);
 
             components.addAll(compList(
                     line.substring(lastEnd, match.start())));
 
-            String[] event1 = arguments[0].split(":\"");
+            var event1 = arguments[0].split(":\"");
             addEvent(comp, event1[0], removeLastChar(event1[1]));
 
             if (arguments.length == 2) {
-                String[] event2 = arguments[1].split(":\"");
+                var event2 = arguments[1].split(":\"");
                 addEvent(comp, event2[0], removeLastChar(event2[1]));
             }
 
@@ -176,6 +179,7 @@ public class JsonBuilder {
             target.spigot().sendMessage(toJSON(click, hover));
             return true;
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -187,7 +191,7 @@ public class JsonBuilder {
      * @return true if the builder was sent, false otherwise
      */
     public boolean send() {
-        return send(null, new ArrayList<>());
+        return send(null, null);
     }
 
     /**

@@ -4,9 +4,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import lombok.var;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.croabeast.beanslib.character.CharHandler;
-import me.croabeast.beanslib.character.CharacterInfo;
 import me.croabeast.beanslib.key.KeyManager;
 import me.croabeast.beanslib.message.MessageSender;
 import me.croabeast.beanslib.misc.BeansLogger;
@@ -24,12 +24,11 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.Matcher;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
-
-import static me.croabeast.beanslib.utility.TextUtils.*;
 
 /**
  * The main class of this lib. Most of the variables can be changed
@@ -227,18 +226,6 @@ public class BeansLib {
     }
 
     /**
-     * Replace the {@link #langPrefixKey} with the {@link #langPrefix}.
-     *
-     * @param string an input string
-     * @param remove if the prefix will be removed
-     *
-     * @return the formatted string
-     */
-    public String replacePrefixKey(String string, boolean remove) {
-        return string.replace(getLangPrefixKey(), remove ? "" : getLangPrefix());
-    }
-
-    /**
      * Sets the default title ticks values.
      *
      * @param in in server ticks
@@ -279,6 +266,18 @@ public class BeansLib {
     @Deprecated
     public boolean fixColorLogger() {
         return !coloredConsole;
+    }
+
+    /**
+     * Replace the {@link #langPrefixKey} with the {@link #langPrefix}.
+     *
+     * @param string an input string
+     * @param remove if the prefix will be removed
+     *
+     * @return the formatted string
+     */
+    public String replacePrefixKey(String string, boolean remove) {
+        return string.replace(getLangPrefixKey(), remove ? "" : getLangPrefix());
     }
 
     /**
@@ -357,10 +356,10 @@ public class BeansLib {
     public String parseChars(String string) {
         if (StringUtils.isBlank(string)) return string;
 
-        Matcher m = getCharPattern().matcher(string);
+        var m = getCharPattern().matcher(string);
 
         while (m.find()) {
-            char s = (char) Integer.parseInt(m.group(1), 16);
+            var s = (char) Integer.parseInt(m.group(1), 16);
             string = string.replace(m.group(), s + "");
         }
 
@@ -380,7 +379,7 @@ public class BeansLib {
     public String colorize(Player target, Player parser, String string) {
         if (target == null) target = parser;
 
-        string = PARSE_PLACEHOLDERAPI.apply(parser, parseChars(string));
+        string = TextUtils.PARSE_PLACEHOLDERAPI.apply(parser, parseChars(string));
         return IridiumAPI.process(target, string);
     }
 
@@ -395,21 +394,21 @@ public class BeansLib {
      * @return the centered chat message.
      */
     public String centerMessage(Player target, Player parser, String string) {
-        final String prefix = getCenterPrefix();
+        final var prefix = getCenterPrefix();
 
-        final String output = colorize(target, parser, string);
+        final var output = colorize(target, parser, string);
         if (!string.startsWith(prefix)) return output;
 
         string = string.substring(prefix.length());
 
-        String initial = parseChars(STRIP_JSON.apply(string));
+        var initial = parseChars(TextUtils.STRIP_JSON.apply(string));
         initial = colorize(target, parser, initial);
 
-        int messagePxSize = 0;
-        boolean previousCode = false;
-        boolean isBold = false;
+        var messagePxSize = 0;
+        var previousCode = false;
+        var isBold = false;
 
-        for (char c : initial.toCharArray()) {
+        for (var c : initial.toCharArray()) {
             if (c == '§') {
                 previousCode = true;
                 continue;
@@ -421,7 +420,7 @@ public class BeansLib {
                 continue;
             }
 
-            CharacterInfo dFI = CharHandler.getInfo(c);
+            var dFI = CharHandler.getInfo(c);
             messagePxSize += isBold ?
                     dFI.getBoldLength() : dFI.getLength();
             messagePxSize++;
@@ -431,7 +430,7 @@ public class BeansLib {
         int toCompensate = 154 - halvedMessageSize;
         int compensated = 0;
 
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         while (compensated < toCompensate) {
             sb.append(" ");
             compensated += 4; // 4 is the SPACE char length (3) + 1
@@ -452,6 +451,19 @@ public class BeansLib {
      */
     public final String parsePlayerKeys(Player parser, String string, boolean c) {
         return keyManager.parseKeys(parser, string, c);
+    }
+
+    /**
+     * Parses the players keys defined in your {@link #keyManager} object
+     * to its respective player variables. Keys are case-insensitive.
+     *
+     * @param parser a player
+     * @param string an input string
+     *
+     * @return the requested string
+     */
+    public final String parsePlayerKeys(Player parser, String string) {
+        return parsePlayerKeys(parser, string, false);
     }
 
     /**
@@ -528,7 +540,7 @@ public class BeansLib {
     @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
     @Deprecated
     public void sendMessageList(CommandSender sender, ConfigurationSection section, String path, String[] keys, String[] values) {
-        sendMessageList(sender, toList(section, path), keys, values);
+        sendMessageList(sender, TextUtils.toList(section, path), keys, values);
     }
 
     /**
@@ -557,7 +569,7 @@ public class BeansLib {
     @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
     @Deprecated
     public void sendMessageList(CommandSender sender, ConfigurationSection section, String path) {
-        sendMessageList(sender, toList(section, path));
+        sendMessageList(sender, TextUtils.toList(section, path));
     }
 
     /**
@@ -568,7 +580,7 @@ public class BeansLib {
      * main class of the project, on {@link JavaPlugin#onLoad()} or {@link JavaPlugin#onEnable()}.
      *
      * <pre> {@code
-     * // Initialization example of the lib:
+     * "Initialization example of the lib"
      * public void onEnable() {
      *     lib = new BeansLib(this);
      * }} </pre>

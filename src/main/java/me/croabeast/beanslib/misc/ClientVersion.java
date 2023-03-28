@@ -3,13 +3,13 @@ package me.croabeast.beanslib.misc;
 import com.google.common.collect.Lists;
 import com.viaversion.viaversion.api.Via;
 import lombok.Getter;
+import lombok.var;
 import me.croabeast.beanslib.utility.Exceptions;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * The class for checking the client's protocol version.
@@ -54,7 +54,7 @@ public final class ClientVersion {
     private ClientVersion(int version, int start, int end, List<Integer> ignore) {
         this.version = version;
 
-        List<Integer> range = fromInts(start, end);
+        var range = fromInts(start, end);
 
         if (ignore == null || ignore.isEmpty()) {
             protocols = range;
@@ -96,7 +96,7 @@ public final class ClientVersion {
 
         int z = numbers[1], y = numbers[0];
 
-        Integer[] array = new Integer[(z - y) + 1];
+        var array = new Integer[(z - y) + 1];
         int index = 0;
 
         for (int i = y; i <= z; i++) {
@@ -142,10 +142,10 @@ public final class ClientVersion {
             return o;
         }
 
-        UUID u = player.getUniqueId();
+        var u = player.getUniqueId();
         int i = Via.getAPI().getPlayerVersion(u);
 
-        for (ClientVersion p : values()) {
+        for (var p : values()) {
             if (p == UNKNOWN) continue;
 
             if (p.getProtocols().contains(i))

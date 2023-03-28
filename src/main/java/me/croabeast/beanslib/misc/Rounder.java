@@ -1,5 +1,6 @@
 package me.croabeast.beanslib.misc;
 
+import lombok.var;
 import org.apache.commons.lang3.StringUtils;
 
 import java.text.DecimalFormat;
@@ -33,12 +34,11 @@ public final class Rounder<T extends Number> {
     }
 
     private String getRoundString() {
-        String s = "#." + StringUtils.repeat("#", decimalAmount);
+        var s = "#." + StringUtils.repeat("#", decimalAmount);
         if (decimalAmount == 0) s = "#";
 
-        return new DecimalFormat(s,
-                DecimalFormatSymbols.getInstance(Locale.ENGLISH)).
-                format(number);
+        var d = DecimalFormatSymbols.getInstance(Locale.ENGLISH);
+        return new DecimalFormat(s, d).format(number);
     }
 
     @SuppressWarnings("unchecked")

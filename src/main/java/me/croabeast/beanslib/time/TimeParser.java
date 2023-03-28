@@ -1,5 +1,6 @@
 package me.croabeast.beanslib.time;
 
+import lombok.var;
 import me.croabeast.beanslib.BeansLib;
 import org.bukkit.entity.Player;
 
@@ -90,7 +91,7 @@ public class TimeParser {
      * @return formatted string with seconds, minutes, hours and days
      */
     public String formatTime(Player parser) {
-        final String split = keys.getSplitter();
+        final var split = keys.getSplitter();
         long result = this.seconds;
 
         if (result <= 0)
@@ -99,7 +100,7 @@ public class TimeParser {
                     isPlural(0, keys.getSecondFormat())
             );
 
-        StringBuilder formattedTime = new StringBuilder();
+        var formattedTime = new StringBuilder();
         long years, months, weeks, days, hours, mins;
 
         years = getFixedTime(result, YEAR);

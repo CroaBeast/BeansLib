@@ -1,10 +1,10 @@
 package me.croabeast.beanslib.discord;
 
+import lombok.var;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -89,23 +89,23 @@ public class Webhook {
                 setUsername(sec.getString("username")).
                 setTTS(sec.getBoolean("tts"));
 
-        ConfigurationSection s = sec.getConfigurationSection("embeds");
+        var s = sec.getConfigurationSection("embeds");
         if (s == null) {
             notRegistered = false;
             return hook;
         }
 
-        List<String> keys = new ArrayList<>(s.getKeys(false));
+        var keys = new ArrayList<>(s.getKeys(false));
         if (keys.isEmpty()) {
             notRegistered = false;
             return hook;
         }
 
-        for (String key : keys) {
-            ConfigurationSection em = s.getConfigurationSection(key);
+        for (var key : keys) {
+            var em = s.getConfigurationSection(key);
             if (em == null) continue;
 
-            EmbedObject embed = new EmbedObject(token, message).
+            var embed = new EmbedObject(token, message).
                     setTitle(em.getString("title")).
                     setDescription(em.getString("description")).
                     setUrl(em.getString("url")).
@@ -128,14 +128,14 @@ public class Webhook {
                 continue;
             }
 
-            List<String> fields = new ArrayList<>(em.getKeys(false));
+            var fields = new ArrayList<>(em.getKeys(false));
             if (fields.isEmpty()) {
                 hook.addEmbed(embed);
                 continue;
             }
 
-            for (String f : fields) {
-                ConfigurationSection fl = em.getConfigurationSection(f);
+            for (var f : fields) {
+                var fl = em.getConfigurationSection(f);
                 if (fl != null)
                     embed.addField(
                             fl.getString("name"),

@@ -1,10 +1,9 @@
 package me.croabeast.beanslib.nms;
 
+import lombok.var;
 import me.croabeast.beanslib.utility.LibUtils;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-
-import java.lang.reflect.Constructor;
 
 /**
  * Represents the handler that manages how to send titles between
@@ -39,13 +38,14 @@ public final class NMSTitle extends Reflection {
 
     void createLegacyDisplay(Player player, String message, int in, int stay, int out, boolean isTitle) {
         try {
-            Class<?> pClass =  getPacketPlay("Title"), pField = pClass.getDeclaredClasses()[0];
+            var pClass =  getPacketPlay("Title");
+            var pField = pClass.getDeclaredClasses()[0];
 
-            Object pTimes = pField.getField("TIMES").get(null);
-            Object chatMessage = invokeMethod(message);
+            var pTimes = pField.getField("TIMES").get(null);
+            var chatMessage = invokeMethod(message);
 
-            Constructor<?> subCons = pClass.getConstructor(pField, getChatClass(), INT_C, INT_C, INT_C);
-            Object titlePacket = subCons.newInstance(pTimes, chatMessage, in, stay, out);
+            var subCons = pClass.getConstructor(pField, getChatClass(), INT_C, INT_C, INT_C);
+            var titlePacket = subCons.newInstance(pTimes, chatMessage, in, stay, out);
 
             sendPacket(player, titlePacket);
 

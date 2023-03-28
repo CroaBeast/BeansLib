@@ -1,12 +1,13 @@
 package me.croabeast.beanslib.nms;
 
+import lombok.var;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 class Reflection {
 
     Class<?> getNMSClass(String name) {
-        String version = Bukkit.getServer().getClass().getPackage().
+        var version = Bukkit.getServer().getClass().getPackage().
                 getName().split("\\.")[3];
 
         try {
@@ -32,8 +33,8 @@ class Reflection {
 
     void sendPacket(Player player, Object packet) {
         try {
-            Object handler  = player.getClass().getMethod("getHandle").invoke(player);
-            Object connect = handler.getClass().getField("playerConnection").get(handler);
+            var handler  = player.getClass().getMethod("getHandle").invoke(player);
+            var connect = handler.getClass().getField("playerConnection").get(handler);
 
             connect.getClass().getMethod("sendPacket",
                     getNMSClass("Packet")).invoke(connect, packet);

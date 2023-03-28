@@ -3,6 +3,8 @@ package me.croabeast.beanslib.utility;
 import com.google.common.collect.Lists;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
+import lombok.experimental.UtilityClass;
+import lombok.var;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.key.ValueReplacer;
@@ -18,11 +20,9 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -32,7 +32,8 @@ import java.util.regex.Pattern;
  * @author CroaBeast
  * @since 1.0
  */
-public final class TextUtils {
+@UtilityClass
+public class TextUtils {
 
     /**
      * Parse all the {@link PlaceholderAPI} placeholders of an input string if
@@ -40,7 +41,7 @@ public final class TextUtils {
      *
      * <p> Use the <code>apply(Player, String)</code> method to apply it on a string.
      */
-    public static final BiFunction<Player, String, String> PARSE_PLACEHOLDERAPI = (p, s) -> {
+    public final BiFunction<Player, String, String> PARSE_PLACEHOLDERAPI = (p, s) -> {
         if (StringUtils.isBlank(s)) return s;
         if (!Exceptions.isPluginEnabled("PlaceholderAPI")) return s;
 
@@ -53,12 +54,12 @@ public final class TextUtils {
      *
      * <p> Use the <code>apply(Player, String)</code> method to apply it on a string.
      */
-    public static final BiFunction<Player, String, String> PARSE_INTERACTIVE_CHAT = (p, s) -> {
+    public final BiFunction<Player, String, String> PARSE_INTERACTIVE_CHAT = (p, s) -> {
         if (!Exceptions.isPluginEnabled("InteractiveChat"))
             return s;
 
         try {
-            UUID u = Exceptions.checkPlayer(p).getUniqueId();
+            var u = Exceptions.checkPlayer(p).getUniqueId();
             return InteractiveChatAPI.markSender(s, u);
         } catch (Exception e) {
             return s;
@@ -70,9 +71,9 @@ public final class TextUtils {
      *
      * <p> Use the <code>apply(String)</code> method to apply it on a string.
      */
-    public static final UnaryOperator<String> STRIP_FIRST_SPACES = s -> {
+    public final UnaryOperator<String> STRIP_FIRST_SPACES = s -> {
         if (StringUtils.isBlank(s)) return s;
-        String startLine = s;
+        var startLine = s;
 
         try {
             while (s.charAt(0) == ' ') s = s.substring(1);
@@ -87,14 +88,14 @@ public final class TextUtils {
      *
      * <p> Use the <code>apply(String)</code> method to apply it on a string.
      */
-    public static final UnaryOperator<String> CONVERT_OLD_JSON = s -> {
+    public final UnaryOperator<String> CONVERT_OLD_JSON = s -> {
         if (StringUtils.isBlank(s)) return s;
 
-        String p = "(?i)(hover|run|suggest|url)=\\[(.[^|\\[\\]]*)]";
-        Matcher old = Pattern.compile(p).matcher(s);
+        var p = "(?i)(hover|run|suggest|url)=\\[(.[^|\\[\\]]*)]";
+        var old = Pattern.compile(p).matcher(s);
 
         while (old.find()) {
-            String temp = old.group(1) + ":\"" + old.group(2) + "\"";
+            var temp = old.group(1) + ":\"" + old.group(2) + "\"";
             s = s.replace(old.group(), temp);
         }
         return s;
@@ -105,7 +106,7 @@ public final class TextUtils {
      *
      * <p> Use the <code>apply(String)</code> method to check a string.
      */
-    public static final Function<String, Boolean> IS_JSON = s ->
+    public final Function<String, Boolean> IS_JSON = s ->
             BeansLib.getLoadedInstance().getJsonPattern().matcher(s).find();
 
     /**
@@ -113,13 +114,13 @@ public final class TextUtils {
      *
      * <p> Use the <code>apply(String)</code> method to apply it on a string.
      */
-    public static final UnaryOperator<String> STRIP_JSON = s -> {
+    public final UnaryOperator<String> STRIP_JSON = s -> {
         if (StringUtils.isBlank(s)) return s;
 
         s = CONVERT_OLD_JSON.apply(s);
         if (!IS_JSON.apply(s)) return s;
 
-        Matcher m = BeansLib.getLoadedInstance().
+        var m = BeansLib.getLoadedInstance().
                 getJsonPattern().matcher(s);
 
         while (m.find())
@@ -127,11 +128,6 @@ public final class TextUtils {
 
         return s;
     };
-
-    /**
-     * Initializing this class is blocked.
-     */
-    private TextUtils() {}
 
     /**
      * Parses the placeholders from {@link PlaceholderAPI} if is enabled.
@@ -142,7 +138,7 @@ public final class TextUtils {
      * @return the parsed message
      */
     @Deprecated
-    public static String parsePAPI(Player player, String string) {
+    public String parsePAPI(Player player, String string) {
         return PARSE_PLACEHOLDERAPI.apply(player, string);
     }
 
@@ -155,7 +151,7 @@ public final class TextUtils {
      * @return the line with the parsed placeholders.
      */
     @Deprecated
-    public static String parseInteractiveChat(Player player, String string) {
+    public String parseInteractiveChat(Player player, String string) {
         return PARSE_INTERACTIVE_CHAT.apply(player, string);
     }
 
@@ -166,7 +162,7 @@ public final class TextUtils {
      * @return the line without the first spaces
      */
     @Deprecated
-    public static String removeSpace(String string) {
+    public String removeSpace(String string) {
         return STRIP_FIRST_SPACES.apply(string);
     }
 
@@ -177,7 +173,7 @@ public final class TextUtils {
      * @return the converted string
      */
     @Deprecated
-    public static String convertOldJson(String string) {
+    public String convertOldJson(String string) {
         return CONVERT_OLD_JSON.apply(string);
     }
 
@@ -188,7 +184,7 @@ public final class TextUtils {
      * @return the stripped line.
      */
     @Deprecated
-    public static String stripJson(String string) {
+    public String stripJson(String string) {
         return STRIP_JSON.apply(string);
     }
 
@@ -206,18 +202,18 @@ public final class TextUtils {
      * @return New array of combined values
      */
     @SuppressWarnings("unchecked") @SafeVarargs
-    public static <T> T[] combineArrays(@NotNull T[] array, T[]... extraArrays) {
+    public <T> T[] combineArrays(@NotNull T[] array, T[]... extraArrays) {
         if (extraArrays == null || extraArrays.length < 1)
             return array;
 
-        List<T> resultList = new ArrayList<>();
+        var resultList = new ArrayList<T>();
         Collections.addAll(resultList, array);
 
-        for (T[] a : extraArrays)
+        for (var a : extraArrays)
             if (a != null) Collections.addAll(resultList, a);
 
-        Class<?> clazz = array.getClass().getComponentType();
-        T[] resultArray = (T[]) Array.newInstance(clazz, 0);
+        var clazz = array.getClass().getComponentType();
+        var resultArray = (T[]) Array.newInstance(clazz, 0);
 
         return resultList.toArray(resultArray);
     }
@@ -232,13 +228,13 @@ public final class TextUtils {
      * @return the converted string list or default value if section is null
      */
     @SuppressWarnings("unchecked")
-    public static List<String> toList(ConfigurationSection section, String path, List<String> def) {
+    public List<String> toList(ConfigurationSection section, String path, List<String> def) {
         if (section == null) return def;
 
         if (section.isList(path))
             return (List<String>) section.getList(path, def);
 
-        String temp = section.getString(path);
+        var temp = section.getString(path);
         return temp == null ? def : Lists.newArrayList(temp);
     }
 
@@ -251,7 +247,7 @@ public final class TextUtils {
      * @return the converted string list or an empty list if section is null
      */
     @NotNull
-    public static List<String> toList(ConfigurationSection section, String path) {
+    public List<String> toList(ConfigurationSection section, String path) {
         return toList(section, path, new ArrayList<>());
     }
 
@@ -263,7 +259,7 @@ public final class TextUtils {
      * @param player a player
      * @param message the message
      */
-    public static void sendActionBar(Player player, String message) {
+    public void sendActionBar(Player player, String message) {
         NMSActionBar.INSTANCE.send(player, message);
     }
 
@@ -279,7 +275,7 @@ public final class TextUtils {
      * @param stay the stay number in ticks
      * @param out the fadeOut number in ticks
      */
-    public static void sendTitle(Player player, String title, String subtitle, int in, int stay, int out) {
+    public void sendTitle(Player player, String title, String subtitle, int in, int stay, int out) {
         NMSTitle.INSTANCE.send(player, title, subtitle, in, stay, out);
     }
 
@@ -294,7 +290,7 @@ public final class TextUtils {
      * @param stay the stay number in ticks
      * @param out the fadeOut number in ticks
      */
-    public static void sendTitle(Player player, @NotNull String[] message, int in, int stay, int out) {
+    public void sendTitle(Player player, @NotNull String[] message, int in, int stay, int out) {
         if (message.length <= 0 || message.length > 2) return;
 
         sendTitle(player, message[0], message.length == 1 ? "" : message[1], in, stay, out);
@@ -310,11 +306,11 @@ public final class TextUtils {
      *
      * @return the formatted class
      */
-    public static String classFormat(Object obj, String split, boolean use, Object... args) {
-        final String name = obj.getClass().getSimpleName();
+    public String classFormat(Object obj, String split, boolean use, Object... args) {
+        final var name = obj.getClass().getSimpleName();
 
         if (args == null || args.length == 0) return name + "=[]";
-        StringBuilder builder = new StringBuilder();
+        var builder = new StringBuilder();
 
         for (int i = 0; i < args.length; i++) {
             if (i > 0) builder.append(split);
@@ -324,7 +320,7 @@ public final class TextUtils {
             if (use) builder.append("\"");
         }
 
-        return name + "=[" + builder + "]";
+        return name + "{" + builder + "}";
     }
 
     /**
@@ -343,7 +339,7 @@ public final class TextUtils {
      */
     @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
     @Deprecated
-    public static String replaceEach(String string, String[] keys, String[] values, boolean caseSensitive) {
+    public String replaceEach(String string, String[] keys, String[] values, boolean caseSensitive) {
         return ValueReplacer.forEach(string, keys, values, caseSensitive);
     }
 
@@ -361,8 +357,8 @@ public final class TextUtils {
      */
     @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
     @Deprecated
-    public static String replaceEach(String string, String key, String value, boolean caseSensitive) {
-        return new ValueReplacer(key, value).setCaseSensitive(caseSensitive).replace(string);
+    public String replaceEach(String string, String key, String value, boolean caseSensitive) {
+        return ValueReplacer.of(key, value).setCaseSensitive(caseSensitive).replace(string);
     }
 
     /**
@@ -381,7 +377,7 @@ public final class TextUtils {
      */
     @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
     @Deprecated
-    public static String replaceInsensitiveEach(String string, String[] keys, String[] values) {
+    public String replaceInsensitiveEach(String string, String[] keys, String[] values) {
         return ValueReplacer.forEach(string, keys, values);
     }
 
@@ -400,7 +396,7 @@ public final class TextUtils {
      */
     @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
     @Deprecated
-    public static String replaceInsensitiveEach(String string, String key, String value) {
-        return new ValueReplacer(key, value).setCaseSensitive(false).replace(string);
+    public String replaceInsensitiveEach(String string, String key, String value) {
+        return ValueReplacer.of(key, value).setCaseSensitive(false).replace(string);
     }
 }

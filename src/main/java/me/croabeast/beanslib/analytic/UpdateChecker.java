@@ -1,12 +1,12 @@
 package me.croabeast.beanslib.analytic;
 
 import com.google.common.base.Preconditions;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.var;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -18,7 +18,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -42,7 +41,8 @@ public final class UpdateChecker {
      * The default version scheme for this update checker.
      */
     public static final VersionScheme VERSION_SCHEME_DECIMAL = (first, second) -> {
-        String[] firstSplit = splitVersionInfo(first), secondSplit = splitVersionInfo(second);
+        var firstSplit = splitVersionInfo(first);
+        var secondSplit = splitVersionInfo(second);
 
         if (firstSplit == null || secondSplit == null) return null;
 
@@ -91,20 +91,20 @@ public final class UpdateChecker {
             int responseCode;
 
             try {
-                URL url = new URL(String.format(UPDATE_URL, pluginID));
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                var url = new URL(String.format(UPDATE_URL, pluginID));
+                var connection = (HttpURLConnection) url.openConnection();
                 connection.addRequestProperty("User-Agent", USER_AGENT);
                 responseCode = connection.getResponseCode();
 
-                JsonReader reader = new JsonReader(new InputStreamReader(connection.getInputStream()));
-                JsonElement json = JsonParser.parseReader(reader);
+                var reader = new JsonReader(new InputStreamReader(connection.getInputStream()));
+                var json = JsonParser.parseReader(reader);
                 reader.close();
 
                 if (!json.isJsonObject()) return new UpdateResult(UpdateReason.INVALID_JSON);
 
                 currentVersion = json.getAsJsonObject().get("current_version").getAsString();
-                String pluginVersion = plugin.getDescription().getVersion();
-                String latest = versionScheme.compareVersions(pluginVersion, currentVersion);
+                var pluginVersion = plugin.getDescription().getVersion();
+                var latest = versionScheme.compareVersions(pluginVersion, currentVersion);
 
                 if (latest == null)
                     return new UpdateResult(UpdateReason.UNSUPPORTED_VERSION_SCHEME);
@@ -128,7 +128,7 @@ public final class UpdateChecker {
     private static String[] splitVersionInfo(String version) {
         version = version.replace("-R", ".").replaceAll("-(HF|DEV)", ".");
 
-        Matcher matcher = DECIMAL_SCHEME_PATTERN.matcher(version);
+        var matcher = DECIMAL_SCHEME_PATTERN.matcher(version);
         return matcher.find() ? matcher.group().split("\\.") : null;
     }
 

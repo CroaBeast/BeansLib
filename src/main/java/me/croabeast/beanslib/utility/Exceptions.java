@@ -1,9 +1,10 @@
 package me.croabeast.beanslib.utility;
 
 import com.google.common.collect.Lists;
+import lombok.experimental.UtilityClass;
+import lombok.var;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -15,12 +16,8 @@ import java.util.Objects;
  * @author CroaBeast
  * @since 1.2
  */
-public final class Exceptions {
-
-    /**
-     * Initializing this class is blocked.
-     */
-    private Exceptions() {}
+@UtilityClass
+public class Exceptions {
 
     /**
      * Checks if a plugin is enabled.
@@ -31,8 +28,8 @@ public final class Exceptions {
      *
      * @return if the plugin is enabled
      */
-    public static boolean isPluginEnabled(String name, boolean checkRunning) {
-        Plugin plugin = Bukkit.getPluginManager().getPlugin(name);
+    public boolean isPluginEnabled(String name, boolean checkRunning) {
+        var plugin = Bukkit.getPluginManager().getPlugin(name);
         return plugin != null && (!checkRunning || plugin.isEnabled());
     }
 
@@ -43,7 +40,7 @@ public final class Exceptions {
      * @param name the plugin's name
      * @return if the plugin is enabled
      */
-    public static boolean isPluginEnabled(String name) {
+    public boolean isPluginEnabled(String name) {
         return isPluginEnabled(name, true);
     }
 
@@ -59,16 +56,16 @@ public final class Exceptions {
      *
      * @return the respective value
      */
-    public static boolean arePluginsEnabled(boolean isInclusive, Collection<? extends String> names) {
+    public boolean arePluginsEnabled(boolean isInclusive, Collection<String> names) {
         if (names.size() == 0) return false;
 
         if (names.size() == 1) {
-            String s = names.toArray(new String[0])[0];
+            var s = names.toArray(new String[0])[0];
             return isPluginEnabled(s);
         }
 
-        for (String name : names) {
-            boolean isEnabled = isPluginEnabled(name);
+        for (var name : names) {
+            var isEnabled = isPluginEnabled(name);
 
             if (!isInclusive) {
                 if (isEnabled) return true;
@@ -92,7 +89,7 @@ public final class Exceptions {
      *
      * @return the respective value
      */
-    public static boolean arePluginsEnabled(boolean isInclusive, String... names) {
+    public boolean arePluginsEnabled(boolean isInclusive, String... names) {
         return arePluginsEnabled(isInclusive, Lists.newArrayList(names));
     }
 
@@ -105,7 +102,7 @@ public final class Exceptions {
      * @throws NullPointerException if player is null
      */
     @NotNull
-    public static Player checkPlayer(Player player) {
+    public Player checkPlayer(Player player) {
         return Objects.requireNonNull(player, "Player can not be null");
     }
 }

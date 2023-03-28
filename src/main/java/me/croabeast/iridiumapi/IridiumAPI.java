@@ -1,19 +1,20 @@
 package me.croabeast.iridiumapi;
 
 import com.google.common.collect.ImmutableMap;
+import lombok.var;
 import me.croabeast.beanslib.misc.ClientVersion;
 import me.croabeast.beanslib.utility.LibUtils;
-import me.croabeast.iridiumapi.pattern.*;
+import me.croabeast.iridiumapi.pattern.Gradient;
+import me.croabeast.iridiumapi.pattern.RGBParser;
 import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -52,7 +53,7 @@ public final class IridiumAPI {
     private static final List<RGBParser> BASE_PATTERNS =
             Arrays.asList(
                     (s, b) -> {
-                        Matcher matcher = RGBParser.RAINBOW_PATTERN.matcher(s);
+                        var matcher = RGBParser.RAINBOW_PATTERN.matcher(s);
 
                         while (matcher.find()) {
                             String sat = matcher.group(1), c = matcher.group(2);
@@ -62,7 +63,7 @@ public final class IridiumAPI {
                         return s;
                     },
                     (s, b) -> {
-                        Matcher matcher = RGBParser.SOLID_PATTERN.matcher(s);
+                        var matcher = RGBParser.SOLID_PATTERN.matcher(s);
 
                         while (matcher.find()) {
                             s = s.replace(matcher.group(),
@@ -84,7 +85,7 @@ public final class IridiumAPI {
     public static String process(String s, boolean useRGB) {
         if (StringUtils.isBlank(s)) return s;
 
-        for (RGBParser p : BASE_PATTERNS) s = p.process(s, useRGB);
+        for (var p : BASE_PATTERNS) s = p.process(s, useRGB);
         return ChatColor.translateAlternateColorCodes('&', s);
     }
 
@@ -164,7 +165,7 @@ public final class IridiumAPI {
      */
     @NotNull
     public static ChatColor getColor(String string, boolean useRGB) {
-        Color c = new Color(Integer.parseInt(string, 16));
+        var c = new Color(Integer.parseInt(string, 16));
         return useRGB ? ChatColor.of(c) : getClosestColor(c);
     }
 
@@ -202,11 +203,11 @@ public final class IridiumAPI {
 
         string = Gradient.convertLegacy(string);
 
-        Matcher gradient = Gradient.GRADIENT_PATTERN.matcher(string);
+        var gradient = Gradient.GRADIENT_PATTERN.matcher(string);
         while (gradient.find())
             string = string.replace(gradient.group(), gradient.group(2));
 
-        Matcher rgb = RGBParser.SOLID_PATTERN.matcher(string);
+        var rgb = RGBParser.SOLID_PATTERN.matcher(string);
         while (rgb.find()) string = string.replace(rgb.group(), "");
 
         string = string.replaceAll("(?i)(<R:\\d{1,3}>|</R>)", "");
@@ -248,18 +249,18 @@ public final class IridiumAPI {
         if (string == null || string.length() < 1)
             throw new IndexOutOfBoundsException("String can not be empty");
 
-        String lastColor = ""; // an empty string if not found
+        var lastColor = ""; // an empty string if not found
 
-        boolean hasKey = key != null && key.length() >= 1;
+        var hasKey = key != null && key.length() >= 1;
         if (hasKey) key = Pattern.quote(key);
 
-        String regex = "(?i)(([&§][a-f\\d]|[{&<]?#([\\da-f]{6})[}>]?)" +
+        var regex = "(?i)(([&§][a-f\\d]|[{&<]?#([\\da-f]{6})[}>]?)" +
                 (getSpecial ? "([&§][k-or])*" : "") + ")";
 
-        String[] inputs = !hasKey ? new String[] {string} :
+        var inputs = !hasKey ? new String[] {string} :
                 string.split((checkBefore ? "" : (regex + "?")) + key);
 
-        Matcher match = Pattern.compile(regex).matcher(inputs[0]);
+        var match = Pattern.compile(regex).matcher(inputs[0]);
 
         while (match.find()) lastColor = match.group();
         return lastColor;
@@ -267,12 +268,12 @@ public final class IridiumAPI {
 
     @NotNull
     private static String apply(@NotNull String source, @NotNull ChatColor[] colors) {
-        StringBuilder specials = new StringBuilder(),
-                builder = new StringBuilder();
+        var specials = new StringBuilder();
+        var builder = new StringBuilder();
 
         if (StringUtils.isBlank(source)) return source;
 
-        String[] characters = source.split("");
+        var characters = source.split("");
         int outIndex = 0;
 
         for (int i = 0; i < characters.length; i++) {
@@ -293,11 +294,11 @@ public final class IridiumAPI {
 
     @NotNull
     private static ChatColor[] createRainbow(int step, float saturation, boolean useRGB) {
-        ChatColor[] colors = new ChatColor[step];
-        double colorStep = (1.00 / step);
+        var colors = new ChatColor[step];
+        var colorStep = (1.00 / step);
 
         for (int i = 0; i < step; i++) {
-            Color color = Color.getHSBColor((float) (colorStep * i), saturation, saturation);
+            var color = Color.getHSBColor((float) (colorStep * i), saturation, saturation);
             colors[i] = useRGB ? ChatColor.of(color) : getClosestColor(color);
         }
         return colors;
@@ -305,20 +306,20 @@ public final class IridiumAPI {
 
     @NotNull
     private static ChatColor[] createGradient(@NotNull Color start, @NotNull Color end, int step, boolean useRGB) {
-        ChatColor[] colors = new ChatColor[step];
+        var colors = new ChatColor[step];
 
         int stepR = Math.abs(start.getRed() - end.getRed()) / (step - 1),
                 stepG = Math.abs(start.getGreen() - end.getGreen()) / (step - 1),
                 stepB = Math.abs(start.getBlue() - end.getBlue()) / (step - 1);
 
-        int[] direction = new int[] {
+        var direction = new int[] {
                 start.getRed() < end.getRed() ? +1 : -1,
                 start.getGreen() < end.getGreen() ? +1 : -1,
                 start.getBlue() < end.getBlue() ? +1 : -1
         };
 
         for (int i = 0; i < step; i++) {
-            Color color = new Color(start.getRed() + ((stepR * i) * direction[0]),
+            var color = new Color(start.getRed() + ((stepR * i) * direction[0]),
                     start.getGreen() + ((stepG * i) * direction[1]),
                     start.getBlue() + ((stepB * i) * direction[2]));
             colors[i] = useRGB ? ChatColor.of(color) : getClosestColor(color);
@@ -332,8 +333,8 @@ public final class IridiumAPI {
         Color nearestColor = null;
         double nearestDistance = Integer.MAX_VALUE;
 
-        for (Color c : COLORS.keySet()) {
-            double distance =
+        for (var c : COLORS.keySet()) {
+            var distance =
                     Math.pow(color.getRed() - c.getRed(), 2) +
                     Math.pow(color.getGreen() - c.getGreen(), 2) +
                     Math.pow(color.getBlue() - c.getBlue(), 2);

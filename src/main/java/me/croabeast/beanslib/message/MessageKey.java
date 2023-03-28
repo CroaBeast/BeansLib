@@ -4,21 +4,21 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import lombok.var;
 import me.croabeast.beanslib.BeansLib;
-import me.croabeast.beanslib.discord.Webhook;
 import me.croabeast.beanslib.builder.BossbarBuilder;
 import me.croabeast.beanslib.builder.JsonBuilder;
+import me.croabeast.beanslib.discord.Webhook;
 import me.croabeast.iridiumapi.IridiumAPI;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
-import java.util.regex.Matcher;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import static me.croabeast.beanslib.utility.TextUtils.*;
@@ -47,7 +47,9 @@ import static me.croabeast.beanslib.utility.TextUtils.*;
 @Setter
 public abstract class MessageKey implements MessageAction, Cloneable {
 
-    private static final BeansLib B_LIB = BeansLib.getLoadedInstance();
+    private static BeansLib getLib() {
+        return BeansLib.getLoadedInstance();
+    }
 
     private static final HashMap<Integer, MessageKey>
             MESSAGE_KEY_MAP = new HashMap<>(), DEFAULT_KEY_MAP = new HashMap<>();
@@ -76,14 +78,14 @@ public abstract class MessageKey implements MessageAction, Cloneable {
     public static final MessageKey TITLE_KEY = new MessageKey("title", "(:\\d+)?") {
         @Override
         public boolean execute(Player t, Player parser, String s) {
-            Matcher m1 = getPattern().matcher(s);
+            var m1 = getPattern().matcher(s);
             String tm = null;
 
             try {
                 if (m1.find()) tm = m1.group(1).substring(1);
             } catch (Exception ignored) {}
 
-            int[] a = B_LIB.getDefaultTitleTicks();
+            int[] a = getLib().getDefaultTitleTicks();
             int time = a[1];
 
             try {
@@ -91,10 +93,10 @@ public abstract class MessageKey implements MessageAction, Cloneable {
                     time = Integer.parseInt(tm) * 20;
             } catch (Exception ignored) {}
 
-            String t1 = formatString(t, parser, s);
+            var t1 = formatString(t, parser, s);
 
             try {
-                sendTitle(t, B_LIB.splitLine(t1), a[0], time, a[2]);
+                sendTitle(t, getLib().splitLine(t1), a[0], time, a[2]);
                 return true;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -111,24 +113,24 @@ public abstract class MessageKey implements MessageAction, Cloneable {
     public static final MessageKey WEBHOOK_KEY = new MessageKey("webhook", "(:.+)?") {
         @Override
         public boolean execute(Player t, Player parser, String s) {
-            ConfigurationSection id = B_LIB.getWebhookSection();
+            var id = getLib().getWebhookSection();
             if (id == null) return false;
 
-            List<String> list = new ArrayList<>(id.getKeys(false));
+            var list = new ArrayList<>(id.getKeys(false));
             if (list.isEmpty()) return false;
 
-            Matcher m3 = getPattern().matcher(s);
-            String line = formatString(t, parser, s);
+            var m3 = getPattern().matcher(s);
+            var line = formatString(t, parser, s);
 
-            String path = list.get(0);
+            var path = list.get(0);
 
             if (m3.find()) {
-                String[] split = m3.group().
-                        replace(B_LIB.getKeysDelimiters()[0], "").
-                        replace(B_LIB.getKeysDelimiters()[1], "").
+                var split = m3.group().
+                        replace(getLib().getKeysDelimiters()[0], "").
+                        replace(getLib().getKeysDelimiters()[1], "").
                         split(":", 2);
 
-                String temp = split.length == 2 ? split[1] : null;
+                var temp = split.length == 2 ? split[1] : null;
                 if (temp != null) path = temp;
             }
 
@@ -168,11 +170,11 @@ public abstract class MessageKey implements MessageAction, Cloneable {
     public static final MessageKey BOSSBAR_KEY = new MessageKey("bossbar", "(:.+)?") {
         @Override
         public boolean execute(Player t, Player parser, String s) {
-            Plugin plugin = B_LIB.getPlugin();
-            Matcher m2 = B_LIB.getBossbarPattern().matcher(s);
+            var plugin = getLib().getPlugin();
+            var m2 = getLib().getBossbarPattern().matcher(s);
 
             if (m2.find()) {
-                ConfigurationSection c = B_LIB.getBossbarSection();
+                var c = getLib().getBossbarSection();
                 if (c == null) return false;
 
                 c = c.getConfigurationSection(m2.group(1));
@@ -196,24 +198,22 @@ public abstract class MessageKey implements MessageAction, Cloneable {
      * <p> The setters of this instance will throw an {@link UnsupportedOperationException}.
      */
     public static final MessageKey CHAT_KEY = new MessageKey("chat") {
-        private static final String MESSAGE_EXCEPTION =
-                "Setter is not supported on this instance";
+        private static final String MSG_EX = "Setter is not supported on this instance";
 
         @Override
         public MessageKey setKey(String key) {
-            throw new UnsupportedOperationException(MESSAGE_EXCEPTION);
+            throw new UnsupportedOperationException(MSG_EX);
         }
 
         @Override
         public MessageKey setRegex(String regex) {
-            throw new UnsupportedOperationException(MESSAGE_EXCEPTION);
+            throw new UnsupportedOperationException(MSG_EX);
         }
 
         @Override
         public boolean execute(Player t, Player parser, String s) {
             try {
-                new JsonBuilder(t, parser, s).send();
-                return true;
+                return new JsonBuilder(t, parser, s).send();
             } catch (Exception e) {
                 e.printStackTrace();
                 return false;
@@ -283,11 +283,11 @@ public abstract class MessageKey implements MessageAction, Cloneable {
     }
 
     private String getRegex() {
-        String s = key + (StringUtils.isBlank(regex) ? "" : regex);
+        var s = key + (StringUtils.isBlank(regex) ? "" : regex);
 
         return "(?i)^" +
-                Pattern.quote(B_LIB.getKeysDelimiters()[0]) + s +
-                Pattern.quote(B_LIB.getKeysDelimiters()[1]);
+                Pattern.quote(getLib().getKeysDelimiters()[0]) + s +
+                Pattern.quote(getLib().getKeysDelimiters()[1]);
     }
 
     /**
@@ -304,18 +304,20 @@ public abstract class MessageKey implements MessageAction, Cloneable {
     }
 
     String formatString(Player target, Player parser, String s) {
-        Matcher m = getPattern().matcher(s);
+        var m = getPattern().matcher(s);
 
         while (m.find()) s = s.replace(m.group(), "");
+
         s = STRIP_FIRST_SPACES.apply(STRIP_JSON.apply(s));
+        s = getLib().parsePlayerKeys(parser, s, false);
 
         if (!color)
             return IridiumAPI.stripAll(
                     PARSE_PLACEHOLDERAPI.apply(
-                    parser, B_LIB.parseChars(s))
+                    parser, getLib().parseChars(s))
             );
 
-        return B_LIB.colorize(target, parser, s);
+        return getLib().colorize(target, parser, s);
     }
 
     /**
@@ -329,10 +331,10 @@ public abstract class MessageKey implements MessageAction, Cloneable {
     public static MessageKey identifyKey(String s) {
         if (StringUtils.isBlank(s)) return CHAT_KEY;
 
-        for (MessageKey key : MESSAGE_KEY_MAP.values())
+        for (var key : MESSAGE_KEY_MAP.values())
             if (key.getPattern().matcher(s).find()) return key;
 
-        if (B_LIB.getBossbarPattern().
+        if (getLib().getBossbarPattern().
                 matcher(s).find()) return BOSSBAR_KEY;
 
         return CHAT_KEY;
@@ -349,7 +351,7 @@ public abstract class MessageKey implements MessageAction, Cloneable {
     public static MessageKey matchKey(String k) {
         if (StringUtils.isBlank(k)) return CHAT_KEY;
 
-        for (MessageKey key : MESSAGE_KEY_MAP.values())
+        for (var key : MESSAGE_KEY_MAP.values())
             if (k.matches("(?i)" + key.getKey())) return key;
 
         return CHAT_KEY;

@@ -1,5 +1,7 @@
 package me.croabeast.beanslib.utility;
 
+import lombok.experimental.UtilityClass;
+import lombok.var;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.bukkit.Bukkit;
@@ -11,15 +13,11 @@ import org.jetbrains.annotations.ApiStatus;
  * @author CroaBeast
  * @since 1.0
  */
-public final class LibUtils {
+@UtilityClass
+public class LibUtils {
 
-    /**
-     * Initializing this class is blocked.
-     */
-    private LibUtils() {}
-
-    private static String serverVersion() {
-        String temp = TextUtils.STRIP_FIRST_SPACES.apply(
+    private String serverVersion() {
+        var temp = TextUtils.STRIP_FIRST_SPACES.apply(
                 Bukkit.getVersion().substring(
                 Bukkit.getVersion().indexOf("MC:") + 3)
         );
@@ -32,7 +30,7 @@ public final class LibUtils {
      * @return server version and fork
      */
     @SuppressWarnings("deprecation")
-    public static String serverFork() {
+    public String serverFork() {
         return WordUtils.capitalize(Bukkit.getName()) + " " + serverVersion();
     }
 
@@ -42,7 +40,7 @@ public final class LibUtils {
      *
      * @return server's major version
      */
-    public static int majorVersion() {
+    public int majorVersion() {
         return Integer.parseInt(serverVersion().split("\\.", 3)[1]);
     }
 
@@ -52,8 +50,8 @@ public final class LibUtils {
      *
      * @return server's java version
      */
-    public static int majorJavaVersion() {
-        String version = SystemUtils.JAVA_VERSION;
+    public int majorJavaVersion() {
+        var version = SystemUtils.JAVA_VERSION;
 
         if (!version.startsWith("1.")) {
             int dot = version.indexOf(".");
@@ -70,10 +68,10 @@ public final class LibUtils {
      *
      * @return if is Paper environment
      */
-    public static boolean isPaper() {
+    public boolean isPaper() {
         if (majorVersion() < 8) return false;
 
-        String clazz = majorVersion() >= 12 ?
+        var clazz = majorVersion() >= 12 ?
                 "com.destroystokyo.paper.ParticleBuilder" :
                 "io.papermc.paperclip.Paperclip";
 
@@ -93,7 +91,7 @@ public final class LibUtils {
      */
     @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
     @Deprecated
-    public static boolean isWindows() {
+    public boolean isWindows() {
         return SystemUtils.OS_NAME.matches("(?i)Windows");
     }
 }

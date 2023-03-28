@@ -2,6 +2,7 @@ package me.croabeast.beanslib.key;
 
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import lombok.var;
 import me.croabeast.beanslib.utility.TextUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Location;
@@ -109,7 +110,7 @@ public final class KeyManager {
     public KeyManager setKey(int index, String key) {
         if (StringUtils.isBlank(key)) return this;
 
-        PlayerKey k = KEY_MAP.getOrDefault(index, null);
+        var k = KEY_MAP.getOrDefault(index, null);
         if (k != null) k.setKey(key);
         return this;
     }
@@ -136,7 +137,7 @@ public final class KeyManager {
         if (StringUtils.isBlank(string)) return string;
         if (player == null) return string;
 
-        for (PlayerKey key : KEY_MAP.values())
+        for (var key : KEY_MAP.values())
             string = key.parseKey(player, string, c);
 
         return string;
@@ -175,15 +176,17 @@ public final class KeyManager {
         }
 
         String parseKey(Player player, String string, boolean c) {
-            final String v = function.apply(player);
-            return new ValueReplacer(key, v).setCaseSensitive(c).replace(string);
+            final var v = function.apply(player);
+
+            return ValueReplacer.of(key, v).
+                    setCaseSensitive(c).replace(string);
         }
 
         protected PlayerKey clone() {
             try {
                 return (PlayerKey) super.clone();
             } catch (Exception e) {
-                return null;
+                return this;
             }
         }
     }

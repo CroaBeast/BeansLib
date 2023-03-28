@@ -1,18 +1,18 @@
 package me.croabeast.beanslib.misc;
 
 import lombok.RequiredArgsConstructor;
+import lombok.var;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.message.MessageKey;
 import me.croabeast.beanslib.message.MessageSender;
 import me.croabeast.beanslib.utility.TextUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.regex.Matcher;
 
 import static me.croabeast.iridiumapi.IridiumAPI.process;
 import static me.croabeast.iridiumapi.IridiumAPI.stripAll;
@@ -28,38 +28,38 @@ import static me.croabeast.iridiumapi.IridiumAPI.stripAll;
 public class BeansLogger {
 
     /**
-     * A static instance of the logger.
+     * The static instance of the logger.
      */
     public static final BeansLogger DEFAULT_LOGGER = new BeansLogger(BeansLib.getLoadedInstance());
 
     private final BeansLib lib;
 
     private String colorLogger(String string) {
-        final String temp = TextUtils.STRIP_JSON.apply(string);
-        return lib.isColoredConsole() ? process(temp) : stripAll(temp);
+        final String s = TextUtils.STRIP_JSON.apply(string);
+        return lib.isColoredConsole() ? process(s) : stripAll(s);
     }
 
-    private String[] toLogLines(Player player, boolean isLog, String... lines) {
-        List<String> list = new ArrayList<>();
+    private String[] toLogLines(Player p, boolean isLog, String... lines) {
+        final var splitter = lib.getLineSeparator();
+        final var list = new ArrayList<String>();
 
-        String sp = lib.getLineSeparator();
-
-        for (String line : lines) {
-            if (line == null) continue;
+        for (var line : lines) {
+            if (StringUtils.isBlank(line)) continue;
 
             line = lib.replacePrefixKey(line, isLog);
-            line = line.replace(sp, "&f" + sp);
+            line = line.replace(splitter, "&f" + splitter);
 
-            MessageKey k = MessageKey.identifyKey(line);
+            isLog = isLog && lib.isStripPrefix();
+            var key = MessageKey.identifyKey(line);
 
-            if (isLog && lib.isStripPrefix() && k != MessageKey.CHAT_KEY) {
-                Matcher match = k.getPattern().matcher(line);
+            if (isLog && key != MessageKey.CHAT_KEY) {
+                var match = key.getPattern().matcher(line);
+                if (!match.find()) continue;
 
-                if (match.find())
-                    line = line.replace(match.group(), "");
+                line = line.replace(match.group(), "");
             }
 
-            list.add(lib.centerMessage(player, player, line));
+            list.add(lib.centerMessage(p, p, line));
         }
 
         return list.toArray(new String[0]);
@@ -86,7 +86,7 @@ public class BeansLogger {
      * @param lines the information to send
      */
     public void rawLog(String... lines) {
-        for (String s : toLogLines(lines)) Bukkit.getLogger().info(colorLogger(s));
+        for (var s : toLogLines(lines)) Bukkit.getLogger().info(colorLogger(s));
     }
 
     /**
@@ -98,10 +98,9 @@ public class BeansLogger {
      * @throws NullPointerException if the plugin is null
      */
     public void doLog(CommandSender sender, String... lines) {
-        if (sender instanceof Player)
-            playerLog((Player) sender, lines);
+        if (sender instanceof Player) playerLog((Player) sender, lines);
 
-        for (String s : toLogLines(lines))
+        for (var s : toLogLines(lines))
             lib.getPlugin().getLogger().info(colorLogger(s));
     }
 

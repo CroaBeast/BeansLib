@@ -1,8 +1,10 @@
 package me.croabeast.beanslib.discord;
 
+import com.loohp.interactivechat.libs.org.apache.commons.lang3.StringUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.var;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -58,9 +60,11 @@ public class EmbedObject {
      */
     @NotNull
     private String replace(String string) {
-        if (string == null) return "";
+        if (StringUtils.isBlank(string)) return "";
+
         if (getMessage() == null) return string;
         if (getToken() == null) return string;
+
         return string.replace(getToken(), getMessage());
     }
 
@@ -137,7 +141,7 @@ public class EmbedObject {
             try {
                 c = Color.decode(color);
             } catch (Exception e) {
-                Class<?> clazz = Class.forName("java.awt.Color");
+                var clazz = Class.forName("java.awt.Color");
                 c = ((Color) clazz.getField(color).get(null));
             }
         } catch (Exception ignored) {}

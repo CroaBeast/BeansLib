@@ -1,12 +1,11 @@
 package me.croabeast.iridiumapi.pattern;
 
-import me.croabeast.iridiumapi.*;
+import lombok.var;
+import me.croabeast.iridiumapi.IridiumAPI;
 import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -43,10 +42,11 @@ public final class Gradient implements RGBParser {
     public static String convertLegacy(String string) {
         if (StringUtils.isBlank(string)) return string;
 
-        Matcher match = LEGACY_GRADIENT.matcher(string);
+        var match = LEGACY_GRADIENT.matcher(string);
 
         while (match.find()) {
             String start = match.group(1), end = match.group(3);
+
             string = string.replace(match.group(),
                     gradientFormat(start, false) +
                             match.group(2) +
@@ -71,23 +71,23 @@ public final class Gradient implements RGBParser {
     public String process(String string, boolean useRGB) {
         string = convertLegacy(string);
 
-        Matcher match = GRADIENT_PATTERN.matcher(string);
+        var match = GRADIENT_PATTERN.matcher(string);
 
         while (match.find()) {
             String x = match.group(1), text = match.group(2),
                     z = match.group(3), r = "(?i)" + gradientFormat();
 
-            Matcher insideMatch = Pattern.compile(r).matcher(text);
-            String[] array = text.split(r);
+            var insideMatch = Pattern.compile(r).matcher(text);
+            var array = text.split(r);
 
-            List<String> ids = new ArrayList<>();
+            var ids = new ArrayList<String>();
 
             ids.add(x);
             while (insideMatch.find()) ids.add(insideMatch.group(1));
 
             ids.add(z);
 
-            StringBuilder result = new StringBuilder();
+            var result = new StringBuilder();
             int i = 0;
 
             while (i < ids.size() - 1) {

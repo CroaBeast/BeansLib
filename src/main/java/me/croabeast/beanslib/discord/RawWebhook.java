@@ -2,17 +2,17 @@ package me.croabeast.beanslib.discord;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.var;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.net.ssl.HttpsURLConnection;
-import java.awt.*;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -125,16 +125,16 @@ public class RawWebhook {
      */
     private JSONObject registerContent(JSONObject json) {
         if (embeds.isEmpty()) return json;
-        List<JSONObject> embedObjects = new ArrayList<>();
+        var embedObjects = new ArrayList<JSONObject>();
 
-        for (EmbedObject embed : embeds) {
-            JSONObject jsonEmbed = new JSONObject().
+        for (var embed : embeds) {
+            var jsonEmbed = new JSONObject().
                     put("title", embed.getTitle()).
                     put("description", embed.getDescription()).
                     put("url", embed.getUrl());
 
             if (embed.getColor() != null) {
-                Color color = embed.getColor();
+                var color = embed.getColor();
                 int rgb = color.getRed();
                 rgb = (rgb << 8) + color.getGreen();
                 rgb = (rgb << 8) + color.getBlue();
@@ -147,8 +147,8 @@ public class RawWebhook {
                     image = embed.getImage(),
                     thumbnail = embed.getThumbnail();
 
-            EmbedObject.Author author = embed.getAuthor();
-            List<EmbedObject.Field> fields = embed.getFields();
+            var author = embed.getAuthor();
+            var fields = embed.getFields();
 
             if (footerText != null || footerIcon != null) {
                 jsonEmbed.put("footer", new JSONObject().
@@ -196,7 +196,7 @@ public class RawWebhook {
         if (content == null)
             throw new NullPointerException("Set a content in the embed");
 
-        JSONObject json = new JSONObject().
+        var json = new JSONObject().
                 put("content", content).
                 put("username", username).
                 put("avatar_url", avatarUrl).
@@ -204,16 +204,18 @@ public class RawWebhook {
 
         json = registerContent(json);
 
-        URL url = new URL(getUrl());
-        HttpsURLConnection c = (HttpsURLConnection) url.openConnection();
+        var url = new URL(getUrl());
+        var c = (HttpsURLConnection) url.openConnection();
 
         c.addRequestProperty("Content-Type", "application/json");
-        c.addRequestProperty("User-Agent", "Java-DiscordWebhook-BY-Gelox_");
+
+        c.addRequestProperty("User-Agent",
+                "Java-DiscordWebhook-BY-Gelox_");
 
         c.setDoOutput(true);
         c.setRequestMethod("POST");
 
-        OutputStream stream = c.getOutputStream();
+        var stream = c.getOutputStream();
 
         stream.write(json.toString().getBytes(StandardCharsets.UTF_8));
         stream.flush();
@@ -261,14 +263,14 @@ public class RawWebhook {
          */
         @Override
         public String toString() {
-            StringBuilder builder = new StringBuilder();
-            Set<Map.Entry<String, Object>> entrySet = map.entrySet();
+            var builder = new StringBuilder();
+            var entrySet = map.entrySet();
 
             builder.append("{");
             int i = 0;
 
-            for (Map.Entry<String, Object> entry : entrySet) {
-                Object val = entry.getValue();
+            for (var entry : entrySet) {
+                var val = entry.getValue();
                 builder.append(quote(entry.getKey())).append(":");
 
                 if (val instanceof Boolean || val instanceof JSONObject)
@@ -280,8 +282,9 @@ public class RawWebhook {
                 else if (val.getClass().isArray()) {
                     builder.append("[");
                     int len = Array.getLength(val);
+
                     for (int j = 0; j < len; j++) {
-                        String temp = Array.get(val, j).toString();
+                        var temp = Array.get(val, j).toString();
                         builder.append(temp).append(j != len - 1 ? "," : "");
                     }
                     builder.append("]");

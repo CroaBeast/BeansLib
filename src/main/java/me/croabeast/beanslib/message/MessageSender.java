@@ -4,18 +4,18 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import lombok.var;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.key.ValueReplacer;
 import me.croabeast.beanslib.utility.TextUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
-import java.util.regex.Matcher;
 
 /**
  * <p> The {@code MessageSender} class represents the action to display a
@@ -53,7 +53,9 @@ import java.util.regex.Matcher;
 @Accessors(chain = true)
 public class MessageSender implements Cloneable {
 
-    private static final BeansLib B_LIB = BeansLib.getLoadedInstance();
+    private static BeansLib getLib() {
+        return BeansLib.getLoadedInstance();
+    }
 
     /**
      * This flag allows to display action bar messages.
@@ -79,6 +81,12 @@ public class MessageSender implements Cloneable {
      * This flag allows to display title messages.
      */
     public static final String TITLE = "TITLE";
+
+    /**
+     * The array that contains all the available flags.
+     */
+    public static final String[] ALL_FLAGS =
+            {ACTION_BAR, CHAT, BOSSBAR, JSON, WEBHOOK, TITLE};
 
     private Collection<? extends CommandSender> targets = null;
     /**
@@ -152,7 +160,7 @@ public class MessageSender implements Cloneable {
      */
     @SafeVarargs
     public final <T extends CommandSender> MessageSender setTargets(T... targets) {
-        return setTargets(Lists.newArrayList(targets));
+        return setTargets(targets == null ? null : Lists.newArrayList(targets));
     }
 
     /**
@@ -177,7 +185,7 @@ public class MessageSender implements Cloneable {
      */
     @SafeVarargs
     public final MessageSender addFunctions(UnaryOperator<String>... ops) {
-        for (UnaryOperator<String> u : Lists.newArrayList(ops))
+        for (var u : Lists.newArrayList(ops))
             if (u != null) functions.add((p, s) -> u.apply(s));
 
         return this;
@@ -193,7 +201,14 @@ public class MessageSender implements Cloneable {
      * @return a reference of this object
      */
     public MessageSender setFlags(String... flags) {
-        this.flags = Sets.newHashSet(flags);
+        var set = Sets.newHashSet(flags);
+
+        set.removeIf(
+                s -> StringUtils.isBlank(s) ||
+                !Arrays.asList(ALL_FLAGS).contains(s)
+        );
+
+        this.flags = set;
         return this;
     }
 
@@ -203,29 +218,54 @@ public class MessageSender implements Cloneable {
      * @param keys an array of keys
      * @return a reference of this object
      */
-    public MessageSender setKeys(String... keys) {
+    public final MessageSender setKeys(String... keys) {
         this.keys = keys;
         return this;
     }
 
+    private static List<String> isArray(Object o) {
+        if (o == null) return Lists.newArrayList("null");
+
+        if (o instanceof CommandSender)
+            return Lists.newArrayList(((CommandSender) o).getName());
+
+        if (o.getClass().isArray()) {
+            var result = new ArrayList<String>();
+
+            for (var element : (Object[]) o)
+                result.addAll(isArray(element));
+
+            return result;
+        }
+
+        return Lists.newArrayList(String.valueOf(o));
+    }
+
     /**
-     * Sets the string values that replaces the input keys.
+     * Sets the string values that replaces the input keys with any kind of object.
+     * <p> Can detect players and entities to get its names.
      *
-     * @param values an array of values
+     * @param values an array of values to be replaced
      * @return a reference of this object
+     * @param <T> the clazz of any given value
      */
-    public MessageSender setValues(String... values) {
-        this.values = values;
+    @SafeVarargs
+    public final <T> MessageSender setValues(T... values) {
+        if (values == null || values.length == 0)
+            return this;
+
+        var list = new ArrayList<String>();
+        for (T o : values) list.addAll(isArray(o));
+
+        this.values = list.toArray(new String[0]);
         return this;
     }
 
-    private String parseOperatorsAndValues(Player parser, String string) {
+    private String formatString(Player parser, String string) {
         final boolean c = caseSensitive;
+        for (var function : functions) string = function.apply(parser, string);
 
-        for (BiFunction<Player, String, String> function : functions)
-            string = function.apply(parser, string);
-
-        string = B_LIB.parsePlayerKeys(parser, string, c);
+        string = getLib().parsePlayerKeys(parser, string, c);
         return ValueReplacer.forEach(string, keys, values, c);
     }
 
@@ -234,13 +274,13 @@ public class MessageSender implements Cloneable {
     }
 
     private boolean sendWebhooks(List<String> list, boolean output) {
-        for (String s : list) {
-            final MessageKey key = MessageKey.identifyKey(s);
+        for (var s : list) {
+            final var key = MessageKey.identifyKey(s);
 
             if (key == MessageKey.WEBHOOK_KEY &&
                     !notAllowed(WEBHOOK)) key.execute(parser, s);
 
-            B_LIB.rawLog(s);
+            getLib().rawLog(formatString(parser, s));
         }
         return output;
     }
@@ -254,10 +294,10 @@ public class MessageSender implements Cloneable {
      * @return true if the list was sent, false otherwise
      */
     public boolean send(boolean noFirstSpaces, List<String> stringList) {
-        final List<String> list = new ArrayList<>();
+        final var list = new ArrayList<String>();
 
-        for (String s : stringList)
-            if (s != null) list.add(B_LIB.replacePrefixKey(s, false));
+        for (var s : stringList)
+            if (s != null) list.add(getLib().replacePrefixKey(s, false));
 
         // Checks if the messages list is empty or if the first message
         // is blank to not display.
@@ -270,38 +310,36 @@ public class MessageSender implements Cloneable {
             return sendWebhooks(list, true);
 
         // Only gets the players from the collection of targets.
-        List<Player> targets = new ArrayList<>();
+        var targets = new ArrayList<Player>();
 
-        for (CommandSender t : this.targets) {
-            if (t == null) continue;
+        for (var t : this.targets)
             if (t instanceof Player) targets.add((Player) t);
-        }
 
         // if there is no player targets, it will display to the console.
         if (targets.isEmpty()) return sendWebhooks(list, false);
 
-        List<String> logList = new ArrayList<>();
+        var logList = new ArrayList<String>();
 
-        for (String s : list) {
-            Matcher m = B_LIB.getBlankPattern().matcher(s);
+        for (var s : list) {
+            var m = getLib().getBlankPattern().matcher(s);
 
-            boolean isMatching = m.find();
+            var isMatching = m.find();
             int count = isMatching ?
                     Integer.parseInt(m.group(1)) : 0;
 
             isMatching = isMatching && count > 0;
 
-            MessageKey key = MessageKey.identifyKey(s);
+            var key = MessageKey.identifyKey(s);
             if (notAllowed(key.getUpperKey())) continue;
 
-            for (Player t : targets) {
+            for (var t : targets) {
                 if (isMatching) {
                     for (int i = 0; i < count; i++) t.sendMessage("");
                     continue;
                 }
 
-                Player temp = parser == null ? t : parser;
-                String p = parseOperatorsAndValues(temp, s);
+                var temp = parser == null ? t : parser;
+                var p = formatString(temp, s);
 
                 key.execute(t, temp,
                         noFirstSpaces && key == MessageKey.CHAT_KEY ?
@@ -310,7 +348,10 @@ public class MessageSender implements Cloneable {
             }
 
             if (!isMatching || !printBlankSpaces) {
-                logList.add(parseOperatorsAndValues(parser, s));
+                logList.add(formatString(parser == null &&
+                        targets.size() == 1 ?
+                        targets.get(0) : parser, s
+                ));
                 continue;
             }
 
@@ -318,7 +359,7 @@ public class MessageSender implements Cloneable {
         }
 
         // Displays the messages list to console if enabled.
-        if (isLogger) logList.forEach(B_LIB::rawLog);
+        if (isLogger) logList.forEach(BeansLib.getLoadedInstance()::rawLog);
         return true;
     }
 
@@ -335,17 +376,17 @@ public class MessageSender implements Cloneable {
     }
 
     /**
-     * Creates and returns a copy of this sender. It will return null
-     * if an error occurs.
+     * Creates and returns a copy of this sender.
      *
      * @return a clone of this instance
      */
-    @Nullable
+    @NotNull
     public MessageSender clone() {
         try {
             return (MessageSender) super.clone();
         } catch (CloneNotSupportedException e) {
-            return null;
+            // this shouldn't happen, since the object is Cloneable
+            return this;
         }
     }
 }

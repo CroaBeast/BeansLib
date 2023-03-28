@@ -1,10 +1,7 @@
 package me.croabeast.beanslib.builder;
 
 import com.google.common.collect.Lists;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.Accessors;
 import me.croabeast.beanslib.message.MessageKey;
 import me.croabeast.beanslib.utility.TextUtils;
@@ -22,7 +19,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.regex.Matcher;
 
 import static me.croabeast.beanslib.message.MessageKey.BOSSBAR_KEY;
 import static me.croabeast.beanslib.misc.Rounder.round;
@@ -117,8 +113,8 @@ public class BossbarBuilder {
     }
 
     private static String checkPathList(ConfigurationSection section, String path) {
-        final String s = ".lines";
-        return section.isSet(path + s) ? path + s : path;
+        final var s = path + ".lines";
+        return section.isSet(s) ? s : path;
     }
 
     /**
@@ -164,21 +160,21 @@ public class BossbarBuilder {
             return;
         }
 
-        Matcher matcher = BOSSBAR_KEY.getPattern().matcher(string);
+        var matcher = BOSSBAR_KEY.getPattern().matcher(string);
         if (!matcher.find()) {
             messages = toList(Lists.newArrayList(string), 0);
             return;
         }
 
-        @Nullable String args = matcher.group(2);
+        @Nullable var args = matcher.group(2);
 
-        BarColor c = BarColor.WHITE;
-        BarStyle st = BarStyle.SOLID;
+        var c = BarColor.WHITE;
+        var st = BarStyle.SOLID;
 
         if (args != null) {
-            String[] a = args.substring(1).split(":", 4);
+            var a = args.substring(1).split(":", 4);
 
-            for (String s : a) {
+            for (var s : a) {
                 try {
                     time = Integer.parseInt(s) * 20;
                     continue;
@@ -213,7 +209,7 @@ public class BossbarBuilder {
     <E> List<E> ifList(List<E> list, int interval, List<E> def) {
         if (interval == 0) return def == null ? list : def;
 
-        List<E> tempList = new ArrayList<>();
+        var tempList = new ArrayList<E>();
         int temp = 0;
 
         for (int i = 0; i <= time / interval; i++) {
@@ -240,12 +236,12 @@ public class BossbarBuilder {
     }
 
     List<DoubleValue> toFormats(List<String> formats, int interval) {
-        List<DoubleValue> f = new ArrayList<>();
+        var f = new ArrayList<DoubleValue>();
 
-        for (String s : formats) {
+        for (var s : formats) {
             if (StringUtils.isBlank(s)) continue;
 
-            String[] a = s.split(":", 2);
+            var a = s.split(":", 2);
 
             BarColor c = null;
             BarStyle t = null;
@@ -284,7 +280,7 @@ public class BossbarBuilder {
      * Displays the bossbar message to the player.
      */
     public void display() {
-        DoubleValue value = formats.get(0);
+        var value = formats.get(0);
 
         bar = Bukkit.createBossBar(
                 messages.get(0),
@@ -340,8 +336,8 @@ public class BossbarBuilder {
 
                 int i = useRandomFormats ? RANDOM.nextInt(fSize) : c2[0];
 
-                BarColor c = formats.get(i).getColor();
-                BarStyle st = formats.get(i).getStyle();
+                var c = formats.get(i).getColor();
+                var st = formats.get(i).getStyle();
 
                 if (c != null) bar.setColor(c);
                 if (st != null) bar.setStyle(st);

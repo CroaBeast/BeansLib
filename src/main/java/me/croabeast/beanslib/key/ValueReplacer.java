@@ -3,16 +3,16 @@ package me.croabeast.beanslib.key;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import lombok.var;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * The {@code ValueReplacer} class manages the replacement of a key with
  * a given value in an input string, using the {@link #replace(String)} method.
  */
-@RequiredArgsConstructor
+@RequiredArgsConstructor(staticName = "of")
 public class ValueReplacer {
 
     private final String key;
@@ -33,16 +33,15 @@ public class ValueReplacer {
      */
     public String replace(String string) {
         if (StringUtils.isBlank(string)) return string;
-
         if (StringUtils.isBlank(key)) return string;
 
-        String temp = caseSensitive ? "" : "(?i)";
+        var temp = caseSensitive ? "" : "(?i)";
         temp = temp + Pattern.quote(key);
 
-        Matcher m = Pattern.compile(temp).matcher(string);
+        var m = Pattern.compile(temp).matcher(string);
 
         if (m.find()) {
-            String v = StringUtils.isBlank(value) ? "" : value;
+            var v = StringUtils.isBlank(value) ? "" : value;
             string = string.replace(m.group(), v);
         }
 
@@ -68,7 +67,7 @@ public class ValueReplacer {
         if (keys.length > values.length) return string;
 
         for (int i = 0; i < keys.length; i++) {
-            ValueReplacer v = new ValueReplacer(keys[i], values[i]);
+            var v = ValueReplacer.of(keys[i], values[i]);
             string = v.setCaseSensitive(isSensitive).replace(string);
         }
 
