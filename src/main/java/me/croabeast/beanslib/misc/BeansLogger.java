@@ -6,7 +6,6 @@ import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.message.MessageKey;
 import me.croabeast.beanslib.message.MessageSender;
 import me.croabeast.beanslib.utility.TextUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -44,7 +43,7 @@ public class BeansLogger {
         final var list = new ArrayList<String>();
 
         for (var line : lines) {
-            if (StringUtils.isBlank(line)) continue;
+            if (line == null) continue;
 
             line = lib.replacePrefixKey(line, isLog);
             line = line.replace(splitter, "&f" + splitter);
@@ -54,9 +53,9 @@ public class BeansLogger {
 
             if (isLog && key != MessageKey.CHAT_KEY) {
                 var match = key.getPattern().matcher(line);
-                if (!match.find()) continue;
 
-                line = line.replace(match.group(), "");
+                if (match.find())
+                    line = line.replace(match.group(), "");
             }
 
             list.add(lib.centerMessage(p, p, line));

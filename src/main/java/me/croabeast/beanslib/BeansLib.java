@@ -24,10 +24,8 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.*;
 import java.util.List;
 import java.util.Objects;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -277,7 +275,8 @@ public class BeansLib {
      * @return the formatted string
      */
     public String replacePrefixKey(String string, boolean remove) {
-        return string.replace(getLangPrefixKey(), remove ? "" : getLangPrefix());
+        return StringUtils.isBlank(string) ? string :
+                string.replace(langPrefixKey, remove ? "" : langPrefix);
     }
 
     /**
@@ -394,6 +393,7 @@ public class BeansLib {
      * @return the centered chat message.
      */
     public String centerMessage(Player target, Player parser, String string) {
+        if (StringUtils.isBlank(string)) return string;
         final var prefix = getCenterPrefix();
 
         final var output = colorize(target, parser, string);
@@ -404,7 +404,7 @@ public class BeansLib {
         var initial = parseChars(TextUtils.STRIP_JSON.apply(string));
         initial = colorize(target, parser, initial);
 
-        var messagePxSize = 0;
+        int messagePxSize = 0;
         var previousCode = false;
         var isBold = false;
 
