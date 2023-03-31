@@ -467,9 +467,9 @@ public class BeansLib {
     }
 
     /**
-     * Sends requested information for a {@link Player}.
+     * Sends information to a player using the {@link MessageSender} object.
      *
-     * @param player a valid online player
+     * @param player a valid player
      * @param lines the information to send
      */
     public final void playerLog(@NotNull Player player, String... lines) {
@@ -477,7 +477,8 @@ public class BeansLib {
     }
 
     /**
-     * Sends requested information using {@link Bukkit#getLogger()} to the console.
+     * Sends requested information using {@link Bukkit#getLogger()} to the console,
+     * avoiding the plugin prefix.
      *
      * @param lines the information to send
      */
@@ -486,22 +487,52 @@ public class BeansLib {
     }
 
     /**
-     * Sends requested information to a {@link CommandSender}.
+     * Sends requested information to a {@link CommandSender} using the plugin's
+     * logger and its prefix.
      *
-     * @param sender a valid sender, can be the console or a player
+     * <p> If the sender is a {@link Player} and it's not null, it will log using
+     * {@link #playerLog(Player, String...)}.
+     *
+     *
+     * @param sender a valid sender, can be the console, a player or null
      * @param lines the information to send
+     *
+     * @throws NullPointerException if the plugin is null
      */
     public final void doLog(@Nullable CommandSender sender, String... lines) {
         logger.doLog(sender, lines);
     }
 
     /**
-     * Sends requested information to the console.
+     * Sends requested information to a {@link CommandSender} using the plugin's
+     * logger and its prefix.
      *
      * @param lines the information to send
+     * @throws NullPointerException if the plugin is null
      */
     public final void doLog(String... lines) {
         doLog(null, lines);
+    }
+
+    /**
+     * Sends information choosing which of the two main methods will be used
+     * in each line. ({@link #rawLog(String...) rawLog}, {@link #doLog(CommandSender, String...) doLog})
+     *
+     * <p> If the line does not start with a boolean value or that value is false,
+     * it will use the {@link #rawLog(String...)  rawLog} method, otherwise will
+     * use the {@link #doLog(CommandSender, String...) doLog} method.
+     *
+     * <pre> {@code
+     * "My information for the console" >> // Uses the "doLog" method.
+     * "true::My basic log information" >> // Uses the "rawLog" method.
+     * "false::Plugin's information" >> // Uses the "doLog" method.
+     * } </pre>
+     *
+     * @param sender a valid sender, can be the console, a player or null
+     * @param lines the information to send
+     */
+    public final void mixLog(CommandSender sender, String... lines) {
+        logger.mixLog(sender, lines);
     }
 
     /**

@@ -263,7 +263,7 @@ public class MessageSender implements Cloneable {
 
     private String formatString(Player parser, String string) {
         final boolean c = caseSensitive;
-        for (var function : functions) string = function.apply(parser, string);
+        for (var f : functions) string = f.apply(parser, string);
 
         string = getLib().parsePlayerKeys(parser, string, c);
         return ValueReplacer.forEach(string, keys, values, c);

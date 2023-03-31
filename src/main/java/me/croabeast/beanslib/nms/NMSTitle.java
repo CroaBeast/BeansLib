@@ -25,11 +25,15 @@ public final class NMSTitle extends Reflection {
 
     private NMSTitle() {
         handler = LibUtils.majorVersion() < 10 ?
-                (p, t, s, i, st, o) -> {
-                    createLegacyDisplay(p, t, i, st, o, true);
-                    createLegacyDisplay(p, s, i, st, o, false);
+                (p, t, sub, i, s, o) -> {
+                    createLegacyDisplay(p, t, i, s, o, true);
+                    createLegacyDisplay(p, sub, i, s, o, false);
                 } :
                 Player::sendTitle;
+    }
+
+    private interface NMSHandler {
+        void send(@NotNull Player player, String title, String subtitle, int in, int stay, int out);
     }
 
     private int round(int i) {
@@ -63,10 +67,6 @@ public final class NMSTitle extends Reflection {
             sendPacket(player, titlePacket);
         }
         catch (Exception e) { e.printStackTrace(); }
-    }
-
-    private interface NMSHandler {
-        void send(@NotNull Player player, String title, String subtitle, int in, int stay, int out);
     }
 
     /**
