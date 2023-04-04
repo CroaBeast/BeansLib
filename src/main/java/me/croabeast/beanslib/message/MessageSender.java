@@ -45,7 +45,7 @@ import java.util.function.UnaryOperator;
  * Also, this objects implements the {@link Cloneable} interface to allow
  * cloning an instance, instead of creating new instances separately.
  *
- * <p> See {@link #send(boolean, List)} and/or {@link #send(boolean, String...)} for more info.
+ * <p> See {@link #send(List)} and/or {@link #send(String...)} for more info.
  *
  * @author CroaBeast
  * @since 1.3
@@ -106,17 +106,25 @@ public class MessageSender implements Cloneable {
      */
     @Setter
     private boolean isLogger = true;
+
     /**
      * Sets if the blank spaces concatenated lines will be shown in the console.
      */
     @Setter
     private boolean printBlankSpaces = false;
+
     /**
      * Sets if the input defined keys in this object are case-sensitive or not
      * if input keys were set.
      */
     @Setter
     private boolean caseSensitive = true;
+
+    /**
+     * Sets if all chat messages will remove all the first space characters.
+     */
+    @Setter
+    private boolean noFirstSpaces = false;
 
     /**
      * Creates a new sender with a defined collection of targets and a player
@@ -128,6 +136,16 @@ public class MessageSender implements Cloneable {
     public MessageSender(Collection<? extends CommandSender> targets, Player parser) {
         this.targets = targets;
         this.parser = parser;
+    }
+
+    /**
+     * Creates a new sender with a defined target, and if that sender is a
+     * player, will act as the parser.
+     *
+     * @param sender a sender
+     */
+    public MessageSender(CommandSender sender) {
+        this.targets = sender != null ? Lists.newArrayList(sender) : null;
     }
 
     /**
@@ -149,23 +167,20 @@ public class MessageSender implements Cloneable {
         return this;
     }
 
-     /**
-     * The collection or array of targets that messages will be sent.
-     * If empty or null, the output will be on the console.
+    /**
+     * The collection or array of targets that messages will be sent. If null,
+     * the output will be on the console.
      *
      * @param targets an array of targets
-     * @param <T> a CommandSender child class
-     *
      * @return a reference of this object
      */
-    @SafeVarargs
-    public final <T extends CommandSender> MessageSender setTargets(T... targets) {
+    public final MessageSender setTargets(CommandSender... targets) {
         return setTargets(targets == null ? null : Lists.newArrayList(targets));
     }
 
     /**
      * Adds new player-string functions to apply them in every string of the list
-     * in {@link #send(boolean, List)}.
+     * in {@link #send(List)}.
      *
      * @param functions an array of functions
      * @return a reference of this object
@@ -178,7 +193,7 @@ public class MessageSender implements Cloneable {
 
     /**
      * Adds new string operators to apply them in every string of the list
-     * in {@link #send(boolean, List)}.
+     * in {@link #send(List)}.
      *
      * @param ops an array of operators
      * @return a reference of this object
@@ -223,7 +238,7 @@ public class MessageSender implements Cloneable {
         return this;
     }
 
-    private static List<String> isArray(Object o) {
+    private static List<String> listFromObject(Object o) {
         if (o == null) return Lists.newArrayList("null");
 
         if (o instanceof CommandSender)
@@ -233,7 +248,7 @@ public class MessageSender implements Cloneable {
             var result = new ArrayList<String>();
 
             for (var element : (Object[]) o)
-                result.addAll(isArray(element));
+                result.addAll(listFromObject(element));
 
             return result;
         }
@@ -247,6 +262,7 @@ public class MessageSender implements Cloneable {
      *
      * @param values an array of values to be replaced
      * @return a reference of this object
+     *
      * @param <T> the clazz of any given value
      */
     @SafeVarargs
@@ -255,7 +271,7 @@ public class MessageSender implements Cloneable {
             return this;
 
         var list = new ArrayList<String>();
-        for (T o : values) list.addAll(isArray(o));
+        for (T o : values) list.addAll(listFromObject(o));
 
         this.values = list.toArray(new String[0]);
         return this;
@@ -269,53 +285,112 @@ public class MessageSender implements Cloneable {
         return ValueReplacer.forEach(string, keys, values, c);
     }
 
-    private boolean notAllowed(String flag) {
+    private boolean notFlag(String flag) {
         return !flags.isEmpty() && !flags.contains(flag);
     }
 
+    private boolean sendWebhook(String s, boolean output) {
+        final var key = MessageKey.identifyKey(s);
+
+        if (key == MessageKey.WEBHOOK_KEY &&
+                !notFlag(WEBHOOK)) key.execute(parser, s);
+
+        getLib().rawLog(formatString(parser, s));
+        return output;
+    }
+
     private boolean sendWebhooks(List<String> list, boolean output) {
-        for (var s : list) {
-            final var key = MessageKey.identifyKey(s);
-
-            if (key == MessageKey.WEBHOOK_KEY &&
-                    !notAllowed(WEBHOOK)) key.execute(parser, s);
-
-            getLib().rawLog(formatString(parser, s));
-        }
+        list.forEach(s -> sendWebhook(s, output));
         return output;
     }
 
     /**
-     * Sends a string list to the defined targets of the sender.
+     * Sends an input string to the defined targets of the sender.
      *
-     * @param noFirstSpaces if chat messages will remove all the first spaces
-     * @param stringList a string list to display
-     *
-     * @return true if the list was sent, false otherwise
+     * @param string an input string to send
+     * @return true if the string was sent, false otherwise
      */
-    public boolean send(boolean noFirstSpaces, List<String> stringList) {
-        final var list = new ArrayList<String>();
+    public boolean singleSend(String string) {
+        if (string == null) return false;
 
-        for (var s : stringList)
-            if (s != null) list.add(getLib().replacePrefixKey(s, false));
+        string = getLib().replacePrefixKey(string, false);
 
-        // Checks if the messages list is empty or if the first message
-        // is blank to not display.
-        if (list.isEmpty()) return false;
-        if (list.size() == 1 &&
-                StringUtils.isBlank(list.get(0))) return false;
-
-        // if there is no target(s), it will display to the console.
         if (targets == null || targets.isEmpty())
-            return sendWebhooks(list, true);
+            return sendWebhook(string, true);
 
-        // Only gets the players from the collection of targets.
         var targets = new ArrayList<Player>();
 
         for (var t : this.targets)
             if (t instanceof Player) targets.add((Player) t);
 
-        // if there is no player targets, it will display to the console.
+        if (targets.isEmpty()) return sendWebhook(string, false);
+        var m = getLib().getBlankPattern().matcher(string);
+
+        var isMatching = m.find();
+        int count = isMatching ?
+                Integer.parseInt(m.group(1)) : 0;
+
+        isMatching = isMatching && count > 0;
+
+        var key = MessageKey.identifyKey(string);
+        if (notFlag(key.getUpperKey())) return false;
+
+        for (var t : targets) {
+            if (isMatching) {
+                for (int i = 0; i < count; i++) t.sendMessage("");
+                continue;
+            }
+
+            var temp = parser == null ? t : parser;
+            var p = formatString(temp, string);
+
+            key.execute(t, temp,
+                    noFirstSpaces && key == MessageKey.CHAT_KEY ?
+                    TextUtils.STRIP_FIRST_SPACES.apply(p) : p
+            );
+        }
+
+        var logList = new ArrayList<String>();
+
+        if (!isMatching || !printBlankSpaces) {
+            logList.add(formatString(parser == null &&
+                    targets.size() == 1 ?
+                    targets.get(0) : parser, string
+            ));
+        }
+        else for (int i = 0; i < count; i++) logList.add("");
+
+        if (isLogger) logList.forEach(getLib()::rawLog);
+        return true;
+    }
+
+    /**
+     * Sends a string list to the defined targets of the sender.
+     *
+     * <p> If the list is empty, null or contains only one string and that string
+     * is blank/empty, it will not be sent.
+     *
+     * @param stringList a string list to send
+     * @return true if the list was sent, false otherwise
+     */
+    public boolean send(List<String> stringList) {
+        final var list = new ArrayList<String>();
+
+        for (var s : stringList) if (s != null)
+            list.add(getLib().replacePrefixKey(s, false));
+
+        if (list.isEmpty()) return false;
+        if (list.size() == 1 &&
+                StringUtils.isBlank(list.get(0))) return false;
+
+        if (targets == null || targets.isEmpty())
+            return sendWebhooks(list, true);
+
+        var targets = new ArrayList<Player>();
+
+        for (var t : this.targets)
+            if (t instanceof Player) targets.add((Player) t);
+
         if (targets.isEmpty()) return sendWebhooks(list, false);
 
         var logList = new ArrayList<String>();
@@ -330,7 +405,7 @@ public class MessageSender implements Cloneable {
             isMatching = isMatching && count > 0;
 
             var key = MessageKey.identifyKey(s);
-            if (notAllowed(key.getUpperKey())) continue;
+            if (notFlag(key.getUpperKey())) continue;
 
             for (var t : targets) {
                 if (isMatching) {
@@ -358,21 +433,21 @@ public class MessageSender implements Cloneable {
             for (int i = 0; i < count; i++) logList.add("");
         }
 
-        // Displays the messages list to console if enabled.
-        if (isLogger) logList.forEach(BeansLib.getLoadedInstance()::rawLog);
+        if (isLogger) logList.forEach(getLib()::rawLog);
         return true;
     }
 
     /**
      * Sends a string array to the defined targets of the sender.
      *
-     * @param noFirstSpaces if chat messages will remove all the first spaces
-     * @param strings a string array to display
+     * <p> If the array is empty, null or contains only one string and that string
+     * is blank/empty, it will not be sent.
      *
+     * @param strings a string array to send
      * @return true if the list was sent, false otherwise
      */
-    public boolean send(boolean noFirstSpaces, String... strings) {
-        return send(noFirstSpaces, Lists.newArrayList(strings));
+    public boolean send(String... strings) {
+        return send(Lists.newArrayList(strings));
     }
 
     /**
@@ -384,7 +459,7 @@ public class MessageSender implements Cloneable {
     public MessageSender clone() {
         try {
             return (MessageSender) super.clone();
-        } catch (CloneNotSupportedException e) {
+        } catch (Exception e) {
             // this shouldn't happen, since the object is Cloneable
             return this;
         }

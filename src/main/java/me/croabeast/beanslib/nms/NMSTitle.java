@@ -24,7 +24,7 @@ public final class NMSTitle extends Reflection {
     private final NMSHandler handler;
 
     private NMSTitle() {
-        handler = LibUtils.majorVersion() < 10 ?
+        handler = LibUtils.getMainVersion() < 10 ?
                 (p, t, sub, i, s, o) -> {
                     createLegacyDisplay(p, t, i, s, o, true);
                     createLegacyDisplay(p, sub, i, s, o, false);

@@ -206,10 +206,14 @@ public class BeansLib {
         keyManager = new KeyManager();
         logger = new BeansLogger(this);
 
-        langPrefix = "&e " + (this.plugin == null ?
-                "JavaPlugin" : this.plugin.getName()) + " &8»&7";
+        langPrefix = "&e " + (
+                this.plugin != null ?
+                        this.plugin.getName() :
+                        "JavaPlugin"
+        ) + " &8»&7";
 
-        if (loadedInstance == null) loadedInstance = this;
+        if (loadedInstance == null)
+            loadedInstance = this;
     }
 
     /**
@@ -511,21 +515,22 @@ public class BeansLib {
      * @throws NullPointerException if the plugin is null
      */
     public final void doLog(String... lines) {
-        doLog(null, lines);
+        logger.doLog(lines);
     }
 
     /**
-     * Sends information choosing which of the two main methods will be used
-     * in each line. ({@link #rawLog(String...) rawLog}, {@link #doLog(CommandSender, String...) doLog})
+     * Sends information choosing which of the two main methods will be used in each line.
+     * ({@link #rawLog(String...) rawLog}, {@link #doLog(CommandSender, String...) doLog})
      *
      * <p> If the line does not start with a boolean value or that value is false,
-     * it will use the {@link #rawLog(String...)  rawLog} method, otherwise will
-     * use the {@link #doLog(CommandSender, String...) doLog} method.
+     * it will use the {@link #doLog(CommandSender, String...) doLog} method, otherwise
+     * will use the {@link #rawLog(String...) rawLog} method.
      *
      * <pre> {@code
-     * "My information for the console" >> // Uses the "doLog" method.
-     * "true::My basic log information" >> // Uses the "rawLog" method.
-     * "false::Plugin's information" >> // Uses the "doLog" method.
+     * "My information for the console" >> // Uses "doLog"
+     * "true::My basic log information" >> // Uses "rawLog"
+     * "false::Some plugin's information" >> // Uses "doLog"
+     * "" or null >> // Uses "doLog", 'cause is empty/null
      * } </pre>
      *
      * @param sender a valid sender, can be the console, a player or null
@@ -533,6 +538,27 @@ public class BeansLib {
      */
     public final void mixLog(CommandSender sender, String... lines) {
         logger.mixLog(sender, lines);
+    }
+
+    /**
+     * Sends information choosing which of the two main methods will be used in each line.
+     * ({@link #rawLog(String...) rawLog}, {@link #doLog(CommandSender, String...) doLog})
+     *
+     * <p> If the line does not start with a boolean value or that value is false,
+     * it will use the {@link #doLog(CommandSender, String...) doLog} method, otherwise
+     * will use the {@link #rawLog(String...) rawLog} method.
+     *
+     * <pre> {@code
+     * "My information for the console" >> // Uses "doLog"
+     * "true::My basic log information" >> // Uses "rawLog"
+     * "false::Some plugin's information" >> // Uses "doLog"
+     * "" or null >> // Uses "doLog", 'cause is empty/null
+     * } </pre>
+     *
+     * @param lines the information to send
+     */
+    public final void mixLog(String... lines) {
+        logger.mixLog(lines);
     }
 
     /**
@@ -554,7 +580,7 @@ public class BeansLib {
                 setValues(values).
                 setLogger(false).
                 setCaseSensitive(false).
-                send(false, list);
+                send(list);
     }
 
     /**

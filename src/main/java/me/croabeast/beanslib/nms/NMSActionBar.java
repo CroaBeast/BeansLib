@@ -25,7 +25,7 @@ public final class NMSActionBar extends Reflection {
     private final NMSHandler handler;
 
     private NMSActionBar() {
-        handler = LibUtils.majorVersion() < 11 ?
+        handler = LibUtils.getMainVersion() < 11 ?
                 (p, s) -> {
                     try {
                         sendPacket(p, getPacketPlay("Chat").

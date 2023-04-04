@@ -7,6 +7,8 @@ import org.apache.commons.lang3.text.WordUtils;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.ApiStatus;
 
+import java.util.regex.Pattern;
+
 /**
  * The class that stores static keys for easy access and management.
  *
@@ -16,14 +18,6 @@ import org.jetbrains.annotations.ApiStatus;
 @UtilityClass
 public class LibUtils {
 
-    private String serverVersion() {
-        var temp = TextUtils.STRIP_FIRST_SPACES.apply(
-                Bukkit.getVersion().substring(
-                Bukkit.getVersion().indexOf("MC:") + 3)
-        );
-        return temp.substring(0, temp.length() - 1);
-    }
-
     /**
      * Get the spigot-format server version and fork.
      *
@@ -31,22 +25,43 @@ public class LibUtils {
      */
     @SuppressWarnings("deprecation")
     public String serverFork() {
-        return WordUtils.capitalize(Bukkit.getName()) + " " + serverVersion();
+        return WordUtils.capitalize(Bukkit.getName()) + " " + Bukkit.getVersion();
     }
 
     /**
-     * Gets the major version of the server.
-     * <p> Example: if version is <strong>1.16.5</strong>, will return <strong>16</strong>
+     * Returns the major version of the active server.
+     * If version is <code>1.16.5</code>, will return <code>16</code>.
      *
-     * @return server's major version
+     * @return server's major version, <code>0</code> if an error occurs.
+     * @deprecated See {@link #getMainVersion()} to get the double value using the minor
+     *             and patch version of the active server.
      */
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @Deprecated
     public int majorVersion() {
-        return Integer.parseInt(serverVersion().split("\\.", 3)[1]);
+        return (int) getMainVersion();
     }
 
     /**
-     * Gets the Java Major version of the server.
-     * <p> Example: if version is <strong>1.8.0.302</strong>, will return <strong>8</strong>
+     * Returns the main version of the server in a double/decimal format.
+     * If version is <code>1.16.5</code>, will return <code>16.5</code>.
+     *
+     * @return server's main version, <code>0.0</code> if an error occurs.
+     */
+    public double getMainVersion() {
+        var m = Pattern.compile("1\\.(\\d+(\\.\\d+)?)").matcher(Bukkit.getVersion());
+        if (!m.find()) return 0.0;
+
+        try {
+            return Double.parseDouble(m.group(1));
+        } catch (Exception e) {
+            return 0.0;
+        }
+    }
+
+    /**
+     * Returns the Java major version of the server.
+     * <p> Example: if version is <code>1.8.0.302</code>, will return <code>8</code>.
      *
      * @return server's java version
      */
@@ -69,9 +84,9 @@ public class LibUtils {
      * @return if is Paper environment
      */
     public boolean isPaper() {
-        if (majorVersion() < 8) return false;
+        if (getMainVersion() < 8) return false;
 
-        var clazz = majorVersion() >= 12 ?
+        var clazz = getMainVersion() >= 12 ?
                 "com.destroystokyo.paper.ParticleBuilder" :
                 "io.papermc.paperclip.Paperclip";
 
@@ -85,13 +100,13 @@ public class LibUtils {
 
     /**
      * Checks if the server is in a Windows' environment.
-     * <p> Use {@link SystemUtils#IS_OS_WINDOWS} instead.
      *
      * @return if the server is in a Windows system
+     * @deprecated Use {@link SystemUtils#IS_OS_WINDOWS} instead.
      */
     @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
     @Deprecated
     public boolean isWindows() {
-        return SystemUtils.OS_NAME.matches("(?i)Windows");
+        return SystemUtils.IS_OS_WINDOWS;
     }
 }

@@ -7,6 +7,7 @@ import me.croabeast.beanslib.message.MessageKey;
 import me.croabeast.beanslib.message.MessageSender;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.iridiumapi.IridiumAPI;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -15,8 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This class manages logger manages to player and/or console.
- * Have support for color codes.
+ * This class can manages how strings can be logged/sent to a player and/or console.
  *
  * @author CroaBeast
  * @since 1.4
@@ -24,19 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BeansLogger {
 
-    /**
-     * The static instance of the logger.
-     */
-    public static final BeansLogger DEFAULT_LOGGER = new BeansLogger(BeansLib.getLoadedInstance());
-
     private final BeansLib lib;
-
-    private String colorLogger(String string) {
-        final String s = TextUtils.STRIP_JSON.apply(string);
-
-        return lib.isColoredConsole() ?
-                IridiumAPI.process(s) : IridiumAPI.stripAll(s);
-    }
 
     private List<String> toLogLines(Player p, boolean isLog, String... lines) {
         if (lines == null || lines.length == 0)
@@ -78,7 +66,18 @@ public class BeansLogger {
      * @param lines the information to send
      */
     public void playerLog(Player player, String... lines) {
-        new MessageSender().setTargets(player).send(false, toLogLines(player, false, lines));
+        new MessageSender(player).send(toLogLines(player, false, lines));
+    }
+
+    private String colorLogger(String string) {
+        final String s = TextUtils.STRIP_JSON.apply(string);
+
+        return lib.isColoredConsole() ?
+                IridiumAPI.process(s) : IridiumAPI.stripAll(s);
+    }
+
+    private void raw(String line) {
+        Bukkit.getLogger().info(colorLogger(line));
     }
 
     /**
@@ -88,16 +87,19 @@ public class BeansLogger {
      * @param lines the information to send
      */
     public void rawLog(String... lines) {
-        for (var s : toLogLines(lines)) Bukkit.getLogger().info(colorLogger(s));
+        toLogLines(lines).forEach(this::raw);
+    }
+
+    private void log(String line) {
+        lib.getPlugin().getLogger().info(colorLogger(line));
     }
 
     /**
      * Sends requested information to a {@link CommandSender} using the plugin's
      * logger and its prefix.
      *
-     * <p> If the sender is a {@link Player} and it's not null, it will log using
-     * {@link #playerLog(Player, String...)}.
-     *
+     * <p> If the sender is a {@link Player} and it's not null, it will also send
+     * the information to the player using {@link #playerLog(Player, String...)}.
      *
      * @param sender a valid sender, can be the console, a player or null
      * @param lines the information to send
@@ -106,9 +108,7 @@ public class BeansLogger {
      */
     public void doLog(CommandSender sender, String... lines) {
         if (sender instanceof Player) playerLog((Player) sender, lines);
-
-        for (var s : toLogLines(lines))
-            lib.getPlugin().getLogger().info(colorLogger(s));
+        toLogLines(lines).forEach(this::log);
     }
 
     /**
@@ -127,17 +127,18 @@ public class BeansLogger {
     }
 
     /**
-     * Sends information choosing which of the two main methods will be used
-     * in each line. ({@link #rawLog(String...) rawLog}, {@link #doLog(CommandSender, String...) doLog})
+     * Sends information choosing which of the two main methods will be used in each line.
+     * ({@link #rawLog(String...) rawLog}, {@link #doLog(CommandSender, String...) doLog})
      *
      * <p> If the line does not start with a boolean value or that value is false,
-     * it will use the {@link #rawLog(String...)  rawLog} method, otherwise will
-     * use the {@link #doLog(CommandSender, String...) doLog} method.
+     * it will use the {@link #doLog(CommandSender, String...) doLog} method, otherwise
+     * will use the {@link #rawLog(String...) rawLog} method.
      *
      * <pre> {@code
-     * "My information for the console" >> // Uses the "doLog" method.
-     * "true::My basic log information" >> // Uses the "rawLog" method.
-     * "false::Plugin's information" >> // Uses the "doLog" method.
+     * "My information for the console" >> // Uses "doLog"
+     * "true::My basic log information" >> // Uses "rawLog"
+     * "false::Some plugin's information" >> // Uses "doLog"
+     * "" or null >> // Uses "doLog", 'cause is empty/null
      * } </pre>
      *
      * @param sender a valid sender, can be the console, a player or null
@@ -147,20 +148,53 @@ public class BeansLogger {
         if (lines == null || lines.length == 0)
             return;
 
+        var mSender = new MessageSender(sender);
+
         for (var line : lines) {
+            if (StringUtils.isBlank(line)) {
+                if (sender != null) mSender.singleSend(line);
+
+                log(line);
+                continue;
+            }
+
             var array = line.split("::", 2);
 
             if (array.length != 2) {
-                rawLog(line);
+                if (sender != null) mSender.singleSend(line);
+
+                log(line);
                 continue;
             }
 
             if (getBool(array[0])) {
-                doLog(sender, array[1]);
+                raw(array[1]);
                 continue;
             }
 
-            rawLog(array[1]);
+            if (sender != null) mSender.singleSend(array[1]);
+            log(array[1]);
         }
+    }
+
+    /**
+     * Sends information choosing which of the two main methods will be used in each line.
+     * ({@link #rawLog(String...) rawLog}, {@link #doLog(String...) doLog})
+     *
+     * <p> If the line does not start with a boolean value or that value is false,
+     * it will use the {@link #doLog(String...) doLog} method, otherwise will use the
+     * {@link #rawLog(String...) rawLog} method.
+     *
+     * <pre> {@code
+     * "My information for the console" >> // Uses "doLog"
+     * "true::My basic log information" >> // Uses "rawLog"
+     * "false::Some plugin's information" >> // Uses "doLog"
+     * "" or null >> // Uses "doLog", 'cause is empty/null
+     * } </pre>
+     *
+     * @param lines the information to send
+     */
+    public void mixLog(String... lines) {
+        mixLog(null, lines);
     }
 }

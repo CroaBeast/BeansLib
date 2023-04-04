@@ -264,12 +264,13 @@ public abstract class MessageKey implements MessageAction, Cloneable {
      *
      * @return a clone of this instance
      */
-    @Nullable
+    @NotNull
     protected MessageKey clone() {
         try {
             return (MessageKey) super.clone();
         } catch (Exception e) {
-            return null;
+            // this shouldn't happen, since keys are Cloneable
+            return this;
         }
     }
 
