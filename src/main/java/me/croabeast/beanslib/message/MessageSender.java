@@ -324,11 +324,11 @@ public class MessageSender implements Cloneable {
             if (t instanceof Player) targets.add((Player) t);
 
         if (targets.isEmpty()) return sendWebhook(string, false);
+
         var m = getLib().getBlankPattern().matcher(string);
 
         var isMatching = m.find();
-        int count = isMatching ?
-                Integer.parseInt(m.group(1)) : 0;
+        var count = isMatching ? Integer.parseInt(m.group(1)) : 0;
 
         isMatching = isMatching && count > 0;
 
@@ -360,7 +360,7 @@ public class MessageSender implements Cloneable {
         }
         else for (int i = 0; i < count; i++) logList.add("");
 
-        if (isLogger) logList.forEach(getLib()::rawLog);
+        if (isLogger) getLib().rawLog(logList.toArray(new String[0]));
         return true;
     }
 

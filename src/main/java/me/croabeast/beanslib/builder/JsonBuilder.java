@@ -67,15 +67,15 @@ public class JsonBuilder {
         this.string = string;
     }
 
-    String removeLastChar(String string) {
+    static String removeLastChar(String string) {
         return string.substring(0, string.length() - 1);
     }
 
-    TextComponent toComponent(String string) {
+    static TextComponent toComponent(String string) {
         return new TextComponent(TextComponent.fromLegacyText(string));
     }
 
-    ClickEvent.Action parseAction(String input) {
+    static ClickEvent.Action parseAction(String input) {
         if (input.matches("(?i)suggest")) return SUGGEST_COMMAND;
         if (input.matches("(?i)url")) return OPEN_URL;
         if (input.matches("(?i)run")) return RUN_COMMAND;
@@ -107,7 +107,7 @@ public class JsonBuilder {
             comp.setClickEvent(new ClickEvent(parseAction(type), string));
     }
 
-    List<BaseComponent> compList(String string) {
+    static List<BaseComponent> compList(String string) {
         return Lists.newArrayList(TextComponent.fromLegacyText(string));
     }
 
@@ -176,6 +176,12 @@ public class JsonBuilder {
     public boolean send(String click, List<String> hover) {
         try {
             Exceptions.checkPlayer(target);
+
+            if (StringUtils.isBlank(string)) {
+                target.sendMessage("");
+                return true;
+            }
+
             target.spigot().sendMessage(toJSON(click, hover));
             return true;
         } catch (Exception e) {

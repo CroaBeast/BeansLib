@@ -148,7 +148,7 @@ public class BeansLogger {
         if (lines == null || lines.length == 0)
             return;
 
-        var mSender = new MessageSender(sender);
+        var mSender = new MessageSender(sender).setLogger(false);
 
         for (var line : lines) {
             if (StringUtils.isBlank(line)) {
