@@ -433,7 +433,7 @@ public class MessageSender implements Cloneable {
             for (int i = 0; i < count; i++) logList.add("");
         }
 
-        if (isLogger) logList.forEach(getLib()::rawLog);
+        if (isLogger) getLib().rawLog(logList.toArray(new String[0]));
         return true;
     }
 

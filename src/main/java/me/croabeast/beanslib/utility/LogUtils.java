@@ -16,7 +16,7 @@ import org.jetbrains.annotations.ApiStatus;
  * @author CroaBeast
  * @since 1.0
  */
-@ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+@ApiStatus.ScheduledForRemoval(inVersion = "1.4")
 @Deprecated
 public final class LogUtils {
 

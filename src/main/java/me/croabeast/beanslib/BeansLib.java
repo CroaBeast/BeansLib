@@ -206,11 +206,9 @@ public class BeansLib {
         keyManager = new KeyManager();
         logger = new BeansLogger(this);
 
-        langPrefix = "&e " + (
-                this.plugin != null ?
-                        this.plugin.getName() :
-                        "JavaPlugin"
-        ) + " &8»&7";
+        langPrefix = "&e " + (this.plugin != null ?
+                this.plugin.getName() : 
+                "JavaPlugin") + " &8»&7";
 
         if (loadedInstance == null)
             loadedInstance = this;
@@ -264,7 +262,7 @@ public class BeansLib {
      * @deprecated check and/or set the "coloredConsole" variable
      * @return if this fix is enabled
      */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
     public boolean fixColorLogger() {
         return !coloredConsole;
@@ -571,7 +569,7 @@ public class BeansLib {
      *
      * @deprecated See {@link MessageSender} and its constructor.
      */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
     public void sendMessageList(CommandSender sender, List<String> list, String[] keys, String[] values) {
         new MessageSender().
@@ -594,7 +592,7 @@ public class BeansLib {
      *
      * @deprecated See {@link MessageSender} and its constructor.
      */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
     public void sendMessageList(CommandSender sender, ConfigurationSection section, String path, String[] keys, String[] values) {
         sendMessageList(sender, TextUtils.toList(section, path), keys, values);
@@ -608,7 +606,7 @@ public class BeansLib {
      *
      * @deprecated See {@link MessageSender} and its constructor.
      */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
     public void sendMessageList(CommandSender sender, List<String> list) {
         sendMessageList(sender, list, null, null);
@@ -623,7 +621,7 @@ public class BeansLib {
      *
      * @deprecated See {@link MessageSender} and its constructor.
      */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
     public void sendMessageList(CommandSender sender, ConfigurationSection section, String path) {
         sendMessageList(sender, TextUtils.toList(section, path));

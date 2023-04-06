@@ -337,7 +337,7 @@ public class TextUtils {
      * @deprecated See {@link ValueReplacer}.
      * @return the parsed string with the respective values
      */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
     public String replaceEach(String string, String[] keys, String[] values, boolean caseSensitive) {
         return ValueReplacer.forEach(string, keys, values, caseSensitive);
@@ -355,7 +355,7 @@ public class TextUtils {
      * @deprecated See {@link ValueReplacer}.
      * @return the parsed string with the respective value
      */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
     public String replaceEach(String string, String key, String value, boolean caseSensitive) {
         return ValueReplacer.of(key, value).setCaseSensitive(caseSensitive).replace(string);
@@ -375,7 +375,7 @@ public class TextUtils {
      * @deprecated See {@link ValueReplacer}.
      * @return the parsed string with the respective values
      */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
     public String replaceInsensitiveEach(String string, String[] keys, String[] values) {
         return ValueReplacer.forEach(string, keys, values);
@@ -394,7 +394,7 @@ public class TextUtils {
      * @deprecated See {@link ValueReplacer}.
      * @return the parsed string with the respective value
      */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
     public String replaceInsensitiveEach(String string, String key, String value) {
         return ValueReplacer.of(key, value).setCaseSensitive(false).replace(string);

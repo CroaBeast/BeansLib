@@ -36,7 +36,7 @@ public class LibUtils {
      * @deprecated See {@link #getMainVersion()} to get the double value using the minor
      *             and patch version of the active server.
      */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
     public int majorVersion() {
         return (int) getMainVersion();
@@ -104,7 +104,7 @@ public class LibUtils {
      * @return if the server is in a Windows system
      * @deprecated Use {@link SystemUtils#IS_OS_WINDOWS} instead.
      */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.5")
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
     public boolean isWindows() {
         return SystemUtils.IS_OS_WINDOWS;
