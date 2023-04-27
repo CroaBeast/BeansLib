@@ -8,7 +8,18 @@ import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * An object for sending discord webhooks.
+ * A class for sending a webhook to a Discord channel. The class uses a configuration section
+ * to store the webhook settings, and can send both text and embed messages.
+ *
+ * <p> Text messages can be sent directly through the {@link #send()} methods, while embed
+ * messages can be created and added using the register() method.
+ *
+ * <p> To send a message, the {@link #send()} methods can be used. The message can be either
+ * provided as a parameter or set in the configuration section. If the message is not
+ * set in the configuration section and is not provided as a parameter, an empty message
+ * will be sent.
+ *
+ * <p> {@link #sendAsync()} can be used to send asynchronously using {@link CompletableFuture}.
  *
  * @author Kihsomray
  * @fork CroaBeast
@@ -87,7 +98,7 @@ public class Webhook {
         hook.setContent(sec.getString("content")).
                 setAvatarUrl(sec.getString("avatar-url")).
                 setUsername(sec.getString("username")).
-                setTTS(sec.getBoolean("tts"));
+                setTts(sec.getBoolean("tts"));
 
         var s = sec.getConfigurationSection("embeds");
         if (s == null) {
@@ -175,7 +186,6 @@ public class Webhook {
 
     /**
      * Sends the webhook. If the webhook is null or isn't enabled, won't send anything.
-     *
      * <p> If any error happens when connecting to its url, will print an error in the console.
      *
      * @param message a message if no message was declared in the constructor
@@ -186,7 +196,6 @@ public class Webhook {
 
     /**
      * Sends the webhook. If the webhook is null or isn't enabled, won't send anything.
-     *
      * <p> If any error happens when connecting to its url, will print an error in the console.
      */
     public void send() {
@@ -194,8 +203,7 @@ public class Webhook {
     }
 
     /**
-     * Sends the webhook asynchronously.
-     * <p> See {@link #send(String, String)} for more info.
+     * Sends the webhook asynchronously. See {@link #send(String, String)} for more info.
      *
      * @param token a token
      * @param message a message if no message was declared in the constructor
@@ -205,8 +213,7 @@ public class Webhook {
     }
 
     /**
-     * Sends the webhook asynchronously.
-     * <p> See {@link #send(String)} for more info.
+     * Sends the webhook asynchronously. See {@link #send(String)} for more info.
      *
      * @param message a message if no message was declared in the constructor
      */
@@ -215,8 +222,7 @@ public class Webhook {
     }
 
     /**
-     * Sends the webhook asynchronously.
-     * <p> See {@link #send()} for more info.
+     * Sends the webhook asynchronously. See {@link #send()} for more info.
      */
     public void sendAsync() {
         CompletableFuture.runAsync(this::send);

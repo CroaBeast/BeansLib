@@ -2,6 +2,8 @@ package me.croabeast.beanslib.discord;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import lombok.var;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -16,13 +18,27 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * The object that handles the webhook items to display.
+ * A class that represents a raw webhook for sending messages to a Discord channel.
+ *
+ * <p> This class can be used to create and send simple messages or messages with
+ * embedded content, such as images and links.
+ *
+ * <p> To use this class, create an instance of it with the URL of the webhook and
+ * the message to be sent.
+ *
+ * <p> The message can then be further customized with methods to add embedded
+ * content and set additional parameters such as the username, avatar URL, and
+ * text-to-speech (TTS) settings.
+ *
+ * <p> Finally, call the {@link #execute()} method to send the message to the Discord
+ * channel.
+ *
+ * <p> Note: This class requires the Apache Commons Lang and JSON libraries, as well as Java 11 or higher.
  *
  * @author Kihsomray
  * @fork CroaBeast
  * @since 1.1
  */
-@Getter
 public class RawWebhook {
 
     /**
@@ -34,18 +50,21 @@ public class RawWebhook {
     private final String url, token, message;
 
     private String content, username, avatarUrl;
+
+    @Accessors(chain = true)
+    @Setter
     private boolean tts;
 
     /**
-     * Constructs an object using an url.
+     * Constructs a new RawWebhook instance with the specified URL, token and message.
      *
-     * @param url an url, can not be null
-     * @param token a token to replace the message
-     * @param message a basic message
+     * @param url the URL of the webhook.
+     * @param token the token of the webhook.
+     * @param message the message of the webhook.
      *
-     * @throws NullPointerException if the url is null
+     * @throws NullPointerException if the URL is blank.
      */
-    public RawWebhook(String url, String token, String message) throws NullPointerException {
+    public RawWebhook(String url, String token, String message) {
         if (StringUtils.isBlank(url))
             throw new NullPointerException("URL can not be null");
 
@@ -62,11 +81,6 @@ public class RawWebhook {
         embeds.add(embed);
     }
 
-    /**
-     * Replace the {@link #getToken()} with the {@link #getMessage()}.
-     * @param string an input string to replace
-     * @return the replaced string
-     */
     @NotNull
     private String replace(String string) {
         if (StringUtils.isBlank(string)) return "";
@@ -107,22 +121,6 @@ public class RawWebhook {
         return this;
     }
 
-    /**
-     * Sets the TTS boolean for the webhook.
-     * @param tts if tts is enabled or not
-     * @return the object's instance
-     */
-    public RawWebhook setTTS(boolean tts) {
-        this.tts = tts;
-        return this;
-    }
-
-    /**
-     * Registers the content of the {@link #embeds} list to a {@link JSONObject}.
-     *
-     * @param json a json object
-     * @return the updated json object
-     */
     private JSONObject registerContent(JSONObject json) {
         if (embeds.isEmpty()) return json;
         var embedObjects = new ArrayList<JSONObject>();
@@ -187,7 +185,7 @@ public class RawWebhook {
     }
 
     /**
-     * Executes the webhook and display it to the requested URL.
+     * Executes the webhook by sending the message to the channel.
      *
      * @throws IOException if it has an error connecting to the url or if the url is invalid
      * @throws NullPointerException if there is no content or embeds to display
@@ -197,9 +195,9 @@ public class RawWebhook {
             throw new NullPointerException("Set a content in the embed");
 
         var json = new JSONObject().
+                put("avatar_url", avatarUrl).
                 put("content", content).
                 put("username", username).
-                put("avatar_url", avatarUrl).
                 put("tts", tts);
 
         json = registerContent(json);
@@ -217,7 +215,7 @@ public class RawWebhook {
 
         var stream = c.getOutputStream();
 
-        stream.write(json.toString().getBytes(StandardCharsets.UTF_8));
+        stream.write((json + "").getBytes(StandardCharsets.UTF_8));
         stream.flush();
         stream.close();
 
@@ -225,28 +223,10 @@ public class RawWebhook {
         c.disconnect();
     }
 
-    /**
-     * The object that handles JSON messages.
-     * Only accessible inside the package.
-     *
-     * @author Kihsomray
-     * @fork CroaBeast
-     * @since 1.1
-     */
     static class JSONObject {
 
-        /**
-         * The map to store all the values.
-         */
         private final HashMap<String, Object> map = new HashMap<>();
 
-        /**
-         * Adds an object in the {@link #map} of the object.
-         *
-         * @param key   a key for the object
-         * @param value the object
-         * @return a reference of this object
-         */
         JSONObject put(String key, Object value) {
             if (value != null) map.put(key, value);
             return this;
@@ -256,11 +236,6 @@ public class RawWebhook {
             return "\"" + string + "\"";
         }
 
-        /**
-         * Converts all the stored values of the {@link #map} to it string format.
-         *
-         * @return the converted string format
-         */
         @Override
         public String toString() {
             var builder = new StringBuilder();

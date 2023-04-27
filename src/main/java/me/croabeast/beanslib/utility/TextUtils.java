@@ -8,8 +8,9 @@ import lombok.var;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.key.ValueReplacer;
-import me.croabeast.beanslib.nms.NMSActionBar;
-import me.croabeast.beanslib.nms.NMSTitle;
+import me.croabeast.beanslib.nms.ActionBarHandler;
+import me.croabeast.beanslib.nms.TitleHandler;
+import net.md_5.bungee.api.chat.ClickEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -68,7 +69,6 @@ public class TextUtils {
 
     /**
      * Strips the first spaces of an input string.
-     *
      * <p> Use the <code>apply(String)</code> method to apply it on a string.
      */
     public final UnaryOperator<String> STRIP_FIRST_SPACES = s -> {
@@ -85,7 +85,6 @@ public class TextUtils {
 
     /**
      * Coverts the old Json format to the new in-built one.
-     *
      * <p> Use the <code>apply(String)</code> method to apply it on a string.
      */
     public final UnaryOperator<String> CONVERT_OLD_JSON = s -> {
@@ -103,15 +102,13 @@ public class TextUtils {
 
     /**
      * Check if the line uses a valid json format on any part of the string.
-     *
      * <p> Use the <code>apply(String)</code> method to check a string.
      */
     public final Function<String, Boolean> IS_JSON = s ->
-            BeansLib.getLoadedInstance().getJsonPattern().matcher(s).find();
+            TextUtils.FORMATTED_CHAT_PATTERN.matcher(s).find();
 
     /**
      * Removes the in-built JSON pattern of a string, if there is any format.
-     *
      * <p> Use the <code>apply(String)</code> method to apply it on a string.
      */
     public final UnaryOperator<String> STRIP_JSON = s -> {
@@ -120,14 +117,57 @@ public class TextUtils {
         s = CONVERT_OLD_JSON.apply(s);
         if (!IS_JSON.apply(s)) return s;
 
-        var m = BeansLib.getLoadedInstance().
-                getJsonPattern().matcher(s);
+        var m = TextUtils.FORMATTED_CHAT_PATTERN.matcher(s);
 
         while (m.find())
             s = s.replace(m.group(), m.group(7));
 
         return s;
     };
+
+    /**
+     * A regular expression pattern for matching URLs within text.
+     *
+     * <p> This pattern matches URLs that start with "http://" or "https://", or URLs
+     * that start with "www." and end with a valid top-level domain.
+     *
+     * <p> The pattern is case-insensitive and supports various URL formats, including
+     * those with query parameters and fragments.
+     *
+     * <p> Note: this pattern may not match all possible URL formats, as there are many
+     * variations and edge cases in URL syntax.
+     */
+    @SuppressWarnings("all")
+    public static final Pattern URL_PATTERN = Pattern.compile(
+            "(?i)\\b((?:[a-z]+://|" +
+                    "www\\d{0,3}[.]|[a-z\\d.\\-]+[.][a-z]{2,4}/)(?:[^\\s()<>]+" +
+                    "|\\\\(([^\\s()<>]+|(\\([^\\s()<>]+\\)))*\\))+(?:\\((" +
+                    "[^\\s()<>]+|(\\([^\\s()<>]+\\)))*\\\\)|[^\\s`!()\\[\\]{};:" +
+                    "'\".,<>?«»“”‘’]|[^\\s;:\\[\\].,<>]))\\b"
+    );
+
+    static final String FORMAT_PREFIX = "(.[^|]*?):\"(.[^|]*?)\"";
+
+    /**
+     * The main pattern to identify the custom chat message format in a string.
+     *
+     * <p> Keep in mind that every string can only have one {@link ClickEvent.Action};
+     * a click action has this format:
+     * <pre> {@code
+     * Available Actions: RUN, SUGGEST, URL and all ClickAction values.
+     * "<ACTION>:<the click string>" -> "RUN:/me click to run"
+     * } </pre>
+     *
+     * <pre> {@code
+     * // • Examples:
+     * String hover = "<hover:\"a hover line\">text to apply</text>";
+     * String click = "<run:\"/click me\">text to apply</text>";
+     * String mixed = "<hover:\"a hover line<n>another line\"|run:\"/command\">text to apply</text>";
+     * } </pre>
+     */
+    public static final Pattern FORMATTED_CHAT_PATTERN = Pattern.compile(
+            "<(" + FORMAT_PREFIX + "([|]" + FORMAT_PREFIX + ")?)>(.+?)</text>"
+    );
 
     /**
      * Parses the placeholders from {@link PlaceholderAPI} if is enabled.
@@ -201,7 +241,7 @@ public class TextUtils {
      *
      * @return New array of combined values
      */
-    @SuppressWarnings("unchecked") @SafeVarargs
+    @SuppressWarnings("all")
     public <T> T[] combineArrays(@NotNull T[] array, T[]... extraArrays) {
         if (extraArrays == null || extraArrays.length < 1)
             return array;
@@ -227,7 +267,6 @@ public class TextUtils {
      *
      * @return the converted string list or default value if section is null
      */
-    @SuppressWarnings("unchecked")
     public List<String> toList(ConfigurationSection section, String path, List<String> def) {
         if (section == null) return def;
 
@@ -253,19 +292,17 @@ public class TextUtils {
 
     /**
      * Sends an action bar message to a player.
-     *
      * <p> Doesn't format the message. Use {@link BeansLib#colorize(Player, Player, String)}.
      *
      * @param player a player
      * @param message the message
      */
     public void sendActionBar(Player player, String message) {
-        NMSActionBar.INSTANCE.send(player, message);
+        ActionBarHandler.send(player, message);
     }
 
     /**
      * Sends a title message to a player.
-     *
      * <p> Doesn't format the message. Use {@link BeansLib#colorize(Player, Player, String)}.
      *
      * @param player a player
@@ -276,12 +313,11 @@ public class TextUtils {
      * @param out the fadeOut number in ticks
      */
     public void sendTitle(Player player, String title, String subtitle, int in, int stay, int out) {
-        NMSTitle.INSTANCE.send(player, title, subtitle, in, stay, out);
+        TitleHandler.send(player, title, subtitle, in, stay, out);
     }
 
     /**
      * Sends a title message to a player.
-     *
      * <p> Doesn't format the message. Use {@link BeansLib#colorize(Player, Player, String)}.
      *
      * @param player a player
@@ -309,7 +345,7 @@ public class TextUtils {
     public String classFormat(Object obj, String split, boolean use, Object... args) {
         final var name = obj.getClass().getSimpleName();
 
-        if (args == null || args.length == 0) return name + "=[]";
+        if (args == null || args.length == 0) return name + "{}";
         var builder = new StringBuilder();
 
         for (int i = 0; i < args.length; i++) {

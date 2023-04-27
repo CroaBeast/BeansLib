@@ -49,7 +49,7 @@ public class BeansLogger {
                     line = line.replace(match.group(), "");
             }
 
-            list.add(lib.centerMessage(p, p, line));
+            list.add(lib.createCenteredChatMessage(p, p, line));
         }
 
         return list;

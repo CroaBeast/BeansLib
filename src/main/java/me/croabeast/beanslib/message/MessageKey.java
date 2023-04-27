@@ -7,7 +7,7 @@ import lombok.experimental.Accessors;
 import lombok.var;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.builder.BossbarBuilder;
-import me.croabeast.beanslib.builder.JsonBuilder;
+import me.croabeast.beanslib.builder.ChatMessageBuilder;
 import me.croabeast.beanslib.discord.Webhook;
 import me.croabeast.iridiumapi.IridiumAPI;
 import org.apache.commons.lang3.StringUtils;
@@ -212,7 +212,7 @@ public abstract class MessageKey implements MessageAction, Cloneable {
         @Override
         public boolean execute(Player t, Player parser, String s) {
             try {
-                return new JsonBuilder(t, parser, s).send();
+                return new ChatMessageBuilder(s).setPlayers(t, parser).send();
             } catch (Exception e) {
                 e.printStackTrace();
                 return false;
@@ -311,13 +311,9 @@ public abstract class MessageKey implements MessageAction, Cloneable {
         s = STRIP_FIRST_SPACES.apply(STRIP_JSON.apply(s));
         s = getLib().parsePlayerKeys(parser, s, false);
 
-        if (!color)
-            return IridiumAPI.stripAll(
-                    PARSE_PLACEHOLDERAPI.apply(
-                    parser, getLib().parseChars(s))
-            );
-
-        return getLib().colorize(target, parser, s);
+        return !color ?
+                IridiumAPI.stripAll(getLib().formatPlaceholders(parser, s)) :
+                getLib().colorize(target, parser, s);
     }
 
     /**

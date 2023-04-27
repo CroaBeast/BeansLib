@@ -125,32 +125,6 @@ public class BeansLib {
     private String blankSpaceRegex = "<ADD_SPACE:(\\d+)>";
 
     /**
-     * A prefix used in the main pattern to identify the json event.
-     */
-    @Getter(AccessLevel.NONE)
-    private String jsonPrefix = "(.[^|]*?):\"(.[^|]*?)\"";
-
-    /**
-     * The main pattern to identify the JSON message in a string.
-     *
-     * <p> Keep in mind that every string can only have one {@link ClickEvent.Action};
-     * a click action has this format:
-     * <pre> {@code
-     * Available Actions: RUN, SUGGEST, URL and all ClickAction values.
-     * "<ACTION>:<the click string>" -> "RUN:/me click to run"
-     * } </pre>
-     *
-     * <pre> {@code
-     * // • Examples:
-     * String hover = "<hover:\"a hover line\">text to apply</text>";
-     * String click = "<run:\"/click me\">text to apply</text>";
-     * String mixed = "<hover:\"a hover line<n>another line\"|run:\"/command\">text to apply</text>";
-     * } </pre>
-     */
-    @Getter(AccessLevel.NONE)
-    private String jsonRegex = "<(" + jsonPrefix + "([|]" + jsonPrefix + ")?)>(.+?)</text>";
-
-    /**
      * If the console can use colors or not. Some consoles don't have color support.
      */
     private boolean coloredConsole = true;
@@ -337,16 +311,6 @@ public class BeansLib {
     }
 
     /**
-     * Creates a new {@link Pattern} instance using the defined in-built
-     * json pattern.
-     *
-     * @return the requested pattern
-     */
-    public Pattern getJsonPattern() {
-        return Pattern.compile("(?i)" + jsonRegex);
-    }
-
-    /**
      * Use a char pattern to find unicode values and replace them with
      * its respective characters.
      *
@@ -367,6 +331,11 @@ public class BeansLib {
         return string;
     }
 
+    public String formatPlaceholders(Player parser, String string) {
+        string = TextUtils.PARSE_PLACEHOLDERAPI.apply(parser, parseChars(string));
+        return keyManager.parseKeys(parser, string, false);
+    }
+
     /**
      * Formats an input string parsing first {@link PlaceholderAPI} placeholders,
      * replaced chars and then applying the respective colors.
@@ -379,9 +348,7 @@ public class BeansLib {
      */
     public String colorize(Player target, Player parser, String string) {
         if (target == null) target = parser;
-
-        string = TextUtils.PARSE_PLACEHOLDERAPI.apply(parser, parseChars(string));
-        return IridiumAPI.process(target, string);
+        return IridiumAPI.process(target, formatPlaceholders(parser, string));
     }
 
     /**
@@ -394,7 +361,7 @@ public class BeansLib {
      *
      * @return the centered chat message.
      */
-    public String centerMessage(Player target, Player parser, String string) {
+    public String createCenteredChatMessage(Player target, Player parser, String string) {
         if (StringUtils.isBlank(string)) return string;
         final var prefix = getCenterPrefix();
 
@@ -439,6 +406,11 @@ public class BeansLib {
         }
 
         return sb + output.substring(prefix.length());
+    }
+
+    @Deprecated
+    public String centerMessage(Player target, Player parser, String string) {
+        return createCenteredChatMessage(target, parser, string);
     }
 
     /**

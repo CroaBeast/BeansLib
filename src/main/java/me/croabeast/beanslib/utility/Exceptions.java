@@ -105,4 +105,25 @@ public class Exceptions {
     public Player checkPlayer(Player player) {
         return Objects.requireNonNull(player, "Player can not be null");
     }
+
+    /**
+     * Returns the {@code Class} object of the method's caller in the current thread's
+     * stack trace at the specified index.
+     *
+     * <p> The index 0 corresponds to the {@link Thread} class itself, 1 corresponds to
+     * the caller of this method, 2 corresponds to the caller of the method that called
+     * this method, and so on.
+     *
+     * @param index the index of the caller in the current thread's stack trace
+     *
+     * @return the {@code Class} object representing the class of the method's caller
+     * @throws ClassNotFoundException if the class of the method's caller cannot be found
+     *
+     * @see Thread#getStackTrace()
+     * @see StackTraceElement#getClassName()
+     */
+    @NotNull
+    public Class<?> getCallerClass(int index) throws ClassNotFoundException {
+        return Class.forName(Thread.currentThread().getStackTrace()[index].getClassName());
+    }
 }

@@ -30,23 +30,23 @@ public final class IridiumAPI {
      */
     private IridiumAPI() {}
 
-    private static final Map<Color, ChatColor> COLORS = ImmutableMap.<Color, ChatColor>builder()
-            .put(new Color(0), ChatColor.getByChar('0'))
-            .put(new Color(170), ChatColor.getByChar('1'))
-            .put(new Color(43520), ChatColor.getByChar('2'))
-            .put(new Color(43690), ChatColor.getByChar('3'))
-            .put(new Color(11141120), ChatColor.getByChar('4'))
-            .put(new Color(11141290), ChatColor.getByChar('5'))
-            .put(new Color(16755200), ChatColor.getByChar('6'))
-            .put(new Color(11184810), ChatColor.getByChar('7'))
-            .put(new Color(5592405), ChatColor.getByChar('8'))
-            .put(new Color(5592575), ChatColor.getByChar('9'))
-            .put(new Color(5635925), ChatColor.getByChar('a'))
-            .put(new Color(5636095), ChatColor.getByChar('b'))
-            .put(new Color(16733525), ChatColor.getByChar('c'))
-            .put(new Color(16733695), ChatColor.getByChar('d'))
-            .put(new Color(16777045), ChatColor.getByChar('e'))
-            .put(new Color(16777215), ChatColor.getByChar('f')).build();
+    private static final Map<Color, ChatColor> COLORS = ImmutableMap.<Color, ChatColor>builder().
+            put(new Color(0), ChatColor.getByChar('0')).
+            put(new Color(170), ChatColor.getByChar('1')).
+            put(new Color(43520), ChatColor.getByChar('2')).
+            put(new Color(43690), ChatColor.getByChar('3')).
+            put(new Color(11141120), ChatColor.getByChar('4')).
+            put(new Color(11141290), ChatColor.getByChar('5')).
+            put(new Color(16755200), ChatColor.getByChar('6')).
+            put(new Color(11184810), ChatColor.getByChar('7')).
+            put(new Color(5592405), ChatColor.getByChar('8')).
+            put(new Color(5592575), ChatColor.getByChar('9')).
+            put(new Color(5635925), ChatColor.getByChar('a')).
+            put(new Color(5636095), ChatColor.getByChar('b')).
+            put(new Color(16733525), ChatColor.getByChar('c')).
+            put(new Color(16733695), ChatColor.getByChar('d')).
+            put(new Color(16777045), ChatColor.getByChar('e')).
+            put(new Color(16777215), ChatColor.getByChar('f')).build();
 
     private static final List<RGBParser> BASE_PATTERNS =
             Arrays.asList(
@@ -98,7 +98,7 @@ public final class IridiumAPI {
      */
     public static String process(Player player, String s) {
         int i = ClientVersion.getClientVersion(player);
-        return process(s, (i == 0 || i > 15) && LibUtils.getMainVersion() > 15);
+        return process(s, (i == 0 || i > 15) && LibUtils.getMainVersion() >= 16.0);
     }
 
     /**
@@ -176,7 +176,9 @@ public final class IridiumAPI {
      * @return the colored string
      */
     public static String color(@NotNull Color color, String string) {
-        return (LibUtils.getMainVersion() > 15 ? ChatColor.of(color) : getClosestColor(color)) + string;
+        return (LibUtils.getMainVersion() >= 16.0 ?
+                ChatColor.of(color) :
+                getClosestColor(color)) + string;
     }
 
     @NotNull

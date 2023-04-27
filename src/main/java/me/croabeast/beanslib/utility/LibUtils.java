@@ -29,6 +29,15 @@ public class LibUtils {
     }
 
     /**
+     * Retrieves the version number of the Bukkit package that is currently running.
+     *
+     * @return the Bukkit package version
+     */
+    public String getBukkitVersion() {
+        return Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
+    }
+
+    /**
      * Returns the major version of the active server.
      * If version is <code>1.16.5</code>, will return <code>16</code>.
      *
@@ -49,7 +58,10 @@ public class LibUtils {
      * @return server's main version, <code>0.0</code> if an error occurs.
      */
     public double getMainVersion() {
-        var m = Pattern.compile("1\\.(\\d+(\\.\\d+)?)").matcher(Bukkit.getVersion());
+        var m = Pattern.
+                compile("1\\.(\\d+(\\.\\d+)?)").
+                matcher(Bukkit.getVersion());
+
         if (!m.find()) return 0.0;
 
         try {
@@ -86,14 +98,14 @@ public class LibUtils {
     public boolean isPaper() {
         if (getMainVersion() < 8) return false;
 
-        var clazz = getMainVersion() >= 12 ?
+        var clazz = getMainVersion() >= 12.0 ?
                 "com.destroystokyo.paper.ParticleBuilder" :
                 "io.papermc.paperclip.Paperclip";
 
         try {
             Class.forName(clazz);
             return true;
-        } catch (Exception e) {
+        } catch (ClassNotFoundException e) {
             return false;
         }
     }
