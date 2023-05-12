@@ -2,8 +2,8 @@ package me.croabeast.beanslib.utility;
 
 import lombok.experimental.UtilityClass;
 import lombok.var;
-import org.apache.commons.lang3.SystemUtils;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -23,7 +23,6 @@ public class LibUtils {
      *
      * @return server version and fork
      */
-    @SuppressWarnings("deprecation")
     public String serverFork() {
         return WordUtils.capitalize(Bukkit.getName()) + " " + Bukkit.getVersion();
     }

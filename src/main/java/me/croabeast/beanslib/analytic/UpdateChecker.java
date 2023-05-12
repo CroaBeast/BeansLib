@@ -7,7 +7,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.var;
-import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -92,15 +92,17 @@ public final class UpdateChecker {
 
             try {
                 var url = new URL(String.format(UPDATE_URL, pluginID));
-                var connection = (HttpURLConnection) url.openConnection();
-                connection.addRequestProperty("User-Agent", USER_AGENT);
-                responseCode = connection.getResponseCode();
+                var connect = (HttpURLConnection) url.openConnection();
+                connect.addRequestProperty("User-Agent", USER_AGENT);
+                responseCode = connect.getResponseCode();
 
-                var reader = new JsonReader(new InputStreamReader(connection.getInputStream()));
-                var json = JsonParser.parseReader(reader);
+                var reader = new JsonReader(new InputStreamReader(connect.getInputStream()));
+
+                var json = new JsonParser().parse(reader);
                 reader.close();
 
-                if (!json.isJsonObject()) return new UpdateResult(UpdateReason.INVALID_JSON);
+                if (!json.isJsonObject())
+                    return new UpdateResult(UpdateReason.INVALID_JSON);
 
                 currentVersion = json.getAsJsonObject().get("current_version").getAsString();
                 var pluginVersion = plugin.getDescription().getVersion();

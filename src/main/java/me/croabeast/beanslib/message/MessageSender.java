@@ -8,7 +8,7 @@ import lombok.var;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.key.ValueReplacer;
 import me.croabeast.beanslib.utility.TextUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -106,12 +106,6 @@ public class MessageSender implements Cloneable {
      */
     @Setter
     private boolean isLogger = true;
-
-    /**
-     * Sets if the blank spaces concatenated lines will be shown in the console.
-     */
-    @Setter
-    private boolean printBlankSpaces = false;
 
     /**
      * Sets if the input defined keys in this object are case-sensitive or not
@@ -282,7 +276,7 @@ public class MessageSender implements Cloneable {
         for (var f : functions) string = f.apply(parser, string);
 
         string = getLib().parsePlayerKeys(parser, string, c);
-        return ValueReplacer.forEach(string, keys, values, c);
+        return ValueReplacer.forEach(keys, values, string, c);
     }
 
     private boolean notFlag(String flag) {
@@ -335,6 +329,8 @@ public class MessageSender implements Cloneable {
         var key = MessageKey.identifyKey(string);
         if (notFlag(key.getUpperKey())) return false;
 
+        boolean notSend = true;
+
         for (var t : targets) {
             if (isMatching) {
                 for (int i = 0; i < count; i++) t.sendMessage("");
@@ -344,23 +340,21 @@ public class MessageSender implements Cloneable {
             var temp = parser == null ? t : parser;
             var p = formatString(temp, string);
 
-            key.execute(t, temp,
+            boolean b = key.execute(t, temp,
                     noFirstSpaces && key == MessageKey.CHAT_KEY ?
                     TextUtils.STRIP_FIRST_SPACES.apply(p) : p
             );
+
+            if (notSend && b) notSend = false;
         }
 
-        var logList = new ArrayList<String>();
+        if (notSend) return false;
 
-        if (!isMatching || !printBlankSpaces) {
-            logList.add(formatString(parser == null &&
-                    targets.size() == 1 ?
+        if (isLogger)
+            getLib().rawLog(formatString(
+                    parser == null && targets.size() == 1 ?
                     targets.get(0) : parser, string
             ));
-        }
-        else for (int i = 0; i < count; i++) logList.add("");
-
-        if (isLogger) getLib().rawLog(logList.toArray(new String[0]));
         return true;
     }
 
@@ -376,8 +370,8 @@ public class MessageSender implements Cloneable {
     public boolean send(List<String> stringList) {
         final var list = new ArrayList<String>();
 
-        for (var s : stringList) if (s != null)
-            list.add(getLib().replacePrefixKey(s, false));
+        for (var s : stringList)
+            if (s != null) list.add(getLib().replacePrefixKey(s, false));
 
         if (list.isEmpty()) return false;
         if (list.size() == 1 &&
@@ -386,7 +380,7 @@ public class MessageSender implements Cloneable {
         if (targets == null || targets.isEmpty())
             return sendWebhooks(list, true);
 
-        var targets = new ArrayList<Player>();
+        var targets = new HashSet<Player>();
 
         for (var t : this.targets)
             if (t instanceof Player) targets.add((Player) t);
@@ -407,6 +401,8 @@ public class MessageSender implements Cloneable {
             var key = MessageKey.identifyKey(s);
             if (notFlag(key.getUpperKey())) continue;
 
+            List<Boolean> executed = new ArrayList<>();
+
             for (var t : targets) {
                 if (isMatching) {
                     for (int i = 0; i < count; i++) t.sendMessage("");
@@ -416,24 +412,22 @@ public class MessageSender implements Cloneable {
                 var temp = parser == null ? t : parser;
                 var p = formatString(temp, s);
 
-                key.execute(t, temp,
+                executed.add(key.execute(t, temp,
                         noFirstSpaces && key == MessageKey.CHAT_KEY ?
                         TextUtils.STRIP_FIRST_SPACES.apply(p) : p
-                );
-            }
-
-            if (!isMatching || !printBlankSpaces) {
-                logList.add(formatString(parser == null &&
-                        targets.size() == 1 ?
-                        targets.get(0) : parser, s
                 ));
-                continue;
             }
 
-            for (int i = 0; i < count; i++) logList.add("");
+            if (executed.stream().noneMatch(b -> b)) continue;
+
+            logList.add(formatString(parser == null &&
+                    targets.size() == 1 ?
+                    targets.toArray(new Player[0])[0] : parser, s
+            ));
         }
 
-        if (isLogger) getLib().rawLog(logList.toArray(new String[0]));
+        if (isLogger && logList.size() > 0)
+            getLib().rawLog(logList.toArray(new String[0]));
         return true;
     }
 
@@ -460,7 +454,7 @@ public class MessageSender implements Cloneable {
         try {
             return (MessageSender) super.clone();
         } catch (Exception e) {
-            // this shouldn't happen, since the object is Cloneable
+            // this shouldn't happen, since the sender is Cloneable
             return this;
         }
     }

@@ -40,7 +40,7 @@ public class JsonBuilder {
      * @param string an input string
      */
     public JsonBuilder(Player target, Player parser, String string) {
-        builder = new ChatMessageBuilder(string).setPlayers(target, parser);
+        builder = new ChatMessageBuilder(target, parser, string);
     }
 
     /**

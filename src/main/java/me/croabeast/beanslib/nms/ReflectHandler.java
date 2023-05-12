@@ -5,8 +5,6 @@ import lombok.var;
 import me.croabeast.beanslib.utility.LibUtils;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Function;
 
 @UtilityClass
@@ -45,6 +43,7 @@ class ReflectHandler {
                     invoke(null, "{\"text\":\"" + message + "\"}");
         }
         catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     };
@@ -62,40 +61,6 @@ class ReflectHandler {
 
         connect.getClass().
                 getMethod(VERSION < 18.0 ? "sendPacket" : "a", clazz).
-                invoke(connect, clazz.cast(o));
-    }
-
-    static class InstanceHolder<I> {
-
-        private final Class<I> clazz;
-        private final List<Object> objects = new ArrayList<>();
-
-        InstanceHolder(Class<I> clazz) {
-            this.clazz = clazz;
-        }
-
-        <T> InstanceHolder<I> add(T t, boolean isValid) {
-            if (isValid && t != null) objects.add(t);
-            return this;
-        }
-
-        <T> InstanceHolder<I> add(T t) {
-            return add(t, true);
-        }
-
-         I getInstance() throws Exception {
-            if (objects.size() == 0)
-                return clazz.getDeclaredConstructor().newInstance();
-
-            Class<?>[] cs = new Class<?>[objects.size()];
-            Object[] objs = new Object[objects.size()];
-
-            for (int i = 0; i < objects.size(); i++) {
-                objs[i] = objects.get(i);
-                cs[i] = objects.get(i).getClass();
-            }
-
-            return clazz.getDeclaredConstructor(cs).newInstance(objs);
-        }
+                invoke(connect, o);
     }
 }

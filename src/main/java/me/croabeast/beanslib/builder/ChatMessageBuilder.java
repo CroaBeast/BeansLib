@@ -1,8 +1,8 @@
 package me.croabeast.beanslib.builder;
 
 import com.google.common.collect.Lists;
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.var;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.utility.Exceptions;
@@ -12,13 +12,14 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.apache.commons.lang3.StringUtils;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * A builder class for creating complex chat messages in Minecraft. Allows for
@@ -28,13 +29,13 @@ import java.util.List;
  * {@link IridiumAPI} color formatting, and placeholders can be replaced if
  * the {@link Player} parser variable is defined.
  */
-public class ChatMessageBuilder {
+public class ChatMessageBuilder implements Cloneable {
 
     private static BeansLib getLib() {
         return BeansLib.getLoadedInstance();
     }
 
-    private Player target, parser;
+    private final Player target, parser;
     private boolean parseURLs = true;
 
     private final HashMap<Integer, ChatMessage> messageMap = new HashMap<>();
@@ -43,10 +44,33 @@ public class ChatMessageBuilder {
     /**
      * Constructs a new <code>ChatMessageBuilder</code> object from a string message.
      *
+     * @param target the player that will receive the chat builder
+     * @param parser the player to parse placeholders and colors
+     * @param string the string message to construct the builder from
+     */
+    public ChatMessageBuilder(Player target, Player parser, String string) {
+        this.target = target;
+        this.parser = parser;
+        updateMessageMapping(string);
+    }
+
+    /**
+     * Constructs a new <code>ChatMessageBuilder</code> object from a string message.
+     *
+     * @param player the player to parse placeholders and colors
+     * @param string the string message to construct the builder from
+     */
+    public ChatMessageBuilder(Player player, String string) {
+        this(player, player, string);
+    }
+
+    /**
+     * Constructs a new <code>ChatMessageBuilder</code> object from a string message.
+     *
      * @param string the string message to construct the builder from
      */
     public ChatMessageBuilder(String string) {
-        updateMessageMapping(string, true);
+        this(null, string);
     }
 
     /**
@@ -59,43 +83,40 @@ public class ChatMessageBuilder {
     }
 
     private void toURL(String s) {
-        var m = TextUtils.URL_PATTERN.matcher(s);
+        var matcher = TextUtils.URL_PATTERN.matcher(s);
         int end = 0;
 
-        while (m.find()) {
-            String t = s.substring(end, m.start());
-            if (t.length() > 0) {
-                messageMap.put(index, new ChatMessage(t));
-                index++;
+        while (matcher.find()) {
+            String t = s.substring(end, matcher.start());
+            if (t.length() > 0)
+                messageMap.put(++index, new ChatMessage(t));
+
+
+            if (parseURLs) {
+                final String url = matcher.group();
+
+                var message = new ChatMessage(url);
+                message.handler.setClick(
+                        new ClickAction(ClickType.OPEN_URL, url));
+
+                messageMap.put(++index, message);
             }
 
-            if (!parseURLs) continue;
-
-            final String url = m.group();
-            var message = new ChatMessage(url);
-
-            message.handler.click =
-                    new ClickAction(ClickType.OPEN_URL, url);
-
-            messageMap.put(index, message);
-            index++;
-            end = m.end();
+            end = matcher.end();
         }
 
-        if (end >= (s.length() - 1)) return;
-
-        messageMap.put(index, new ChatMessage(s.substring(end)));
-        index++;
+        if (end <= (s.length() - 1))
+            messageMap.put(++index, new ChatMessage(s.substring(end)));
     }
 
-    private void updateMessageMapping(String string, boolean initialize) {
-        if (StringUtils.isBlank(string)) return;
-        if (initialize) index++; // builder initialization
+    @SuppressWarnings("deprecation")
+    private void updateMessageMapping(String string) {
+        if (string == null || string.length() < 1) return;
 
         var line = TextUtils.PARSE_INTERACTIVE_CHAT.apply(parser, string);
 
-        line = getLib().createCenteredChatMessage(target, parser, line);
         line = TextUtils.CONVERT_OLD_JSON.apply(line);
+        line = getLib().centerMessage(target, parser, line);
 
         var match = TextUtils.FORMATTED_CHAT_PATTERN.matcher(line);
         int last = 0;
@@ -107,44 +128,26 @@ public class ChatMessageBuilder {
             String[] args = match.group(1).split("[|]", 2);
             String hover = null, click = null;
 
-            if (args.length == 1) {
-                if (args[0].matches("(?i)^hover:\"")) hover = args[0];
-                else click = args[0];
-            }
-            else if (args.length == 2) {
-                boolean hoverNotSet = true;
+            for (String s : args) {
+                var m = Pattern.compile("(?i)hover").matcher(s);
 
-                if (args[0].matches("(?i)^hover:\"")) {
-                    hoverNotSet = false;
-                    hover = args[0];
+                if (m.find()) {
+                    hover = s;
+                    continue;
                 }
-                else click = args[0];
-
-                if (args[1].matches("(?i)^hover:\"")
-                        && hoverNotSet) hover = args[1];
-                else click = args[1];
+                click = s;
             }
 
-            messageMap.put(index, new ChatMessage(
-                    new ChatEventsHandler(hover, click),
-                    match.group(7))
-            );
-            index++;
+            var message = new ChatMessage(match.group(7));
+
+            if (click != null || hover != null)
+                message.setHandler(click, hover);
+
+            messageMap.put(++index, message);
             last = match.end();
         }
 
-        if (last < (line.length() - 1)) toURL(line.substring(last));
-    }
-
-    public ChatMessageBuilder setPlayers(Player target, Player parser) {
-        this.parser = parser;
-        this.target = target == null ? parser : target;
-
-        return this;
-    }
-
-    public ChatMessageBuilder setPlayer(Player player) {
-        return setPlayers(player, player);
+        if (last <= (line.length() - 1)) toURL(line.substring(last));
     }
 
     public ChatMessageBuilder setParseURLs(boolean b) {
@@ -153,10 +156,11 @@ public class ChatMessageBuilder {
     }
 
     public ChatMessageBuilder setHover(List<String> hover) {
-        if (index == -1 || hover == null) return this;
+        if (index == -1 || hover == null || hover.isEmpty())
+            return this;
 
         var message = messageMap.get(index);
-        message.handler.hover = new HoverAction(hover.toArray(new String[0]));
+        message.handler.setHover(new HoverAction(hover));
 
         messageMap.put(index, message);
         return this;
@@ -170,10 +174,11 @@ public class ChatMessageBuilder {
     }
 
     public ChatMessageBuilder setClick(ClickType type, String action) {
-        if (index == -1 || type == null || action == null) return this;
+        if (index == -1 || type == null || action == null)
+            return this;
 
         var message = messageMap.get(index);
-        message.handler.click = new ClickAction(type, action);
+        message.handler.setClick(new ClickAction(type, action));
 
         messageMap.put(index, message);
         return this;
@@ -194,7 +199,7 @@ public class ChatMessageBuilder {
     }
 
     public ChatMessageBuilder append(String string) {
-        updateMessageMapping(string, false);
+        updateMessageMapping(string);
         return this;
     }
 
@@ -205,7 +210,7 @@ public class ChatMessageBuilder {
 
         var components = new ArrayList<BaseComponent>();
         for (var message : messageMap.values())
-            components.addAll(Lists.newArrayList(message.asComponent(target, parser)));
+            components.addAll(Lists.newArrayList(message.asComponent()));
 
         return components.toArray(new BaseComponent[0]);
     }
@@ -220,7 +225,7 @@ public class ChatMessageBuilder {
         }
     }
 
-    public String toJsonPattern() {
+    public String toString() {
         if (index == -1) return "";
 
         StringBuilder builder = new StringBuilder();
@@ -231,8 +236,6 @@ public class ChatMessageBuilder {
                 builder.append(message.message);
                 continue;
             }
-
-            builder.append("<");
 
             var click = handler.click;
             var hover = handler.hover;
@@ -269,31 +272,56 @@ public class ChatMessageBuilder {
         return new TextComponent(TextComponent.fromLegacyText(message));
     }
 
-    @RequiredArgsConstructor(access = AccessLevel.MODULE)
-    static class ClickAction {
-
-        @NotNull
-        private final ClickType type;
-        @NotNull
-        private final String action;
-
-        ClickEvent createEvent(Player player) {
-            String s = getLib().formatPlaceholders(player, action);
-            return new ClickEvent(type.asBukkit(), s);
+    @Override
+    public ChatMessageBuilder clone() {
+        try {
+            return (ChatMessageBuilder) super.clone();
+        } catch (Exception e) {
+            return this;
         }
     }
 
-    @RequiredArgsConstructor(access = AccessLevel.MODULE)
-    static class HoverAction {
+    @SuppressWarnings("all")
+    class ClickAction {
 
-        private final String[] hover;
+        final ClickType type;
+        final String action;
+
+        ClickAction(ClickType type, String action) {
+            this.type = type;
+            this.action = IridiumAPI.stripAll(action);
+        }
+
+        ClickEvent createEvent() {
+            String s = getLib().formatPlaceholders(parser, action);
+            return new ClickEvent(type.asBukkit(), s);
+        }
+
+        @Override
+        public String toString() {
+            return "{" + "type=" + type + ", action='" + action + '\'' + '}';
+        }
+    }
+
+    @SuppressWarnings("all")
+    class HoverAction {
+
+        final String[] hover;
+
+        HoverAction(String[] hover) {
+            this.hover = hover;
+        }
+
+        HoverAction(List<String> hover) {
+            this(hover.toArray(new String[0]));
+        }
 
         boolean isEmpty() {
             return hover == null || hover.length == 0;
         }
 
         @SuppressWarnings("deprecation")
-        HoverEvent createEvent(Player target, Player parser) {
+        HoverEvent createEvent() {
             var array = new BaseComponent[hover.length];
 
             for (int i = 0; i < hover.length; i++)
@@ -302,17 +330,27 @@ public class ChatMessageBuilder {
                         (i == hover.length - 1 ? "" : "\n")
                 );
 
-            var showText = HoverEvent.Action.SHOW_TEXT;
-            return new HoverEvent(showText, array);
+            return new HoverEvent(HoverEvent.Action.SHOW_TEXT, array);
+        }
+
+        @Override
+        public String toString() {
+            if (hover == null || hover.length == 0) return "{}";
+
+            var array = Arrays.copyOf(hover, hover.length);
+            array[array.length - 1] = array[array.length - 1] + "§r";
+
+            return '{' + Arrays.toString(array) + '}';
         }
     }
 
-    static class ChatEventsHandler {
+    @Setter
+    class ChatEventsHandler {
 
-        static final ChatEventsHandler EMPTY = new ChatEventsHandler(null, null);
+        ClickAction click = null;
+        HoverAction hover = null;
 
-        private HoverAction hover = null;
-        private ClickAction click = null;
+        ChatEventsHandler() {}
 
         ChatEventsHandler(String click, String hover) {
             if (click != null) {
@@ -336,22 +374,27 @@ public class ChatMessageBuilder {
         }
 
         boolean isEmpty() {
-            return this == EMPTY || (click == null && hover == null);
+            return click == null && hover == null;
+        }
+
+        @Override
+        public String toString() {
+            return "{" + "hover=" + hover + ", click=" + click + '}';
         }
     }
 
-    @RequiredArgsConstructor(access = AccessLevel.MODULE)
-    static class ChatMessage {
+    @RequiredArgsConstructor
+    class ChatMessage {
 
-        @NotNull
-        private final ChatEventsHandler handler;
-        private final String message;
+        @Setter @NotNull
+        ChatEventsHandler handler = new ChatEventsHandler();
+        final String message;
 
-        ChatMessage(String message) {
-            this(ChatEventsHandler.EMPTY, message);
+        void setHandler(String click, String hover) {
+            handler = new ChatEventsHandler(click, hover);
         }
 
-        BaseComponent[] asComponent(Player target, Player parser) {
+        BaseComponent[] asComponent() {
             if (handler.isEmpty())
                 return TextComponent.fromLegacyText(message);
 
@@ -360,11 +403,17 @@ public class ChatMessageBuilder {
             var click = handler.click;
             var hover = handler.hover;
 
-            if (click != null) c.setClickEvent(click.createEvent(parser));
-            if (hover != null && !hover.isEmpty())
-                c.setHoverEvent(hover.createEvent(target, parser));
+            if (click != null) c.setClickEvent(click.createEvent());
 
-            return new BaseComponent[] {c};
+            if (hover != null && !hover.isEmpty())
+                c.setHoverEvent(hover.createEvent());
+
+            return new TextComponent[] {c};
+        }
+
+        @Override
+        public String toString() {
+            return "{" + "handler=" + handler + ", message='" + message + "§r'" + '}';
         }
     }
 }

@@ -1,10 +1,10 @@
 package me.croabeast.beanslib.discord;
 
-import com.loohp.interactivechat.libs.org.apache.commons.lang3.StringUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.var;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;

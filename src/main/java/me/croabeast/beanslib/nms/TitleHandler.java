@@ -11,27 +11,8 @@ import static me.croabeast.beanslib.nms.ReflectHandler.*;
 @UtilityClass
 public class TitleHandler {
 
-    Class<?> getTitlePacket(TitleType type) {
-        if (IS_LEGACY) return from(null, "PacketPlayOutTitle");
-
-        String name = "ClientboundSet";
-        switch (type) {
-            case SUBTITLE:
-                name += "SubtitleTextPacket";
-                break;
-            case TIMES:
-                name += "TitlesAnimationPacket";
-                break;
-            case TITLE: default:
-                name += "TitleTextPacket";
-                break;
-        }
-
-        return from("network.protocol.game.", name);
-    }
-
     private enum TitleType {
-        TITLE, SUBTITLE, TIMES
+        TITLE, SUBTITLE, ANIMATE
     }
 
     int round(int i) {
@@ -43,48 +24,53 @@ public class TitleHandler {
     }
 
     final TimesInitialize TIMES_PACKET_INSTANCE = (in, stay, out) -> {
-        var clazz = getTitlePacket(TitleType.TIMES);
-        if (clazz == null) return null;
-
         try {
-            return clazz.
+            return from(null, "PacketPlayOutTitle").
                     getDeclaredConstructor(int.class, int.class, int.class).
                     newInstance(round(in), round(stay), round(out));
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     };
 
-    @SuppressWarnings("all")
-    final BiFunction<Boolean, String, Object> TEXT_PACKET_INSTANCE = (isTitle, message) -> {
-        var type = isTitle ? TitleType.TIMES : TitleType.SUBTITLE;
-        var component = COMPONENT_SERIALIZER.apply(message);
+    final BiFunction<Boolean, String, Object> LEGACY_PACKET_INSTANCE = (b, s) -> {
+        var type = b ? TitleType.TITLE : TitleType.SUBTITLE;
+        var component = COMPONENT_SERIALIZER.apply(s);
 
         try {
-            var holder = new InstanceHolder<>(getTitlePacket(type));
             var oldEnum = from(
                     VERSION < 8.3 ? "PacketPlayOutTitle$" : null,
                     "EnumTitleAction"
             );
 
-            return holder.add(IS_LEGACY ?
-                            Enum.valueOf((Class<Enum>) oldEnum, type + "") :
-                            BASE_COMP_CLASS.cast(component)
-                    ).
-                    add(BASE_COMP_CLASS.cast(component), IS_LEGACY).
-                    getInstance();
-        } catch (Exception e) {
+            return from(null, "PacketPlayOutTitle").
+                    getDeclaredConstructor(oldEnum, BASE_COMP_CLASS).
+                    newInstance(
+                            oldEnum.getField(type + "").get(null),
+                            component
+                    );
+        }
+        catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     };
 
     public boolean send(Player player, String title, String subtitle, int in, int stay, int out) {
+        if (VERSION >= 11.0) {
+            player.sendTitle(title, subtitle, in, stay, out);
+            return true;
+        }
+
         try {
             sendPacket(player, TIMES_PACKET_INSTANCE.from(in, stay, out));
-            sendPacket(player, TEXT_PACKET_INSTANCE.apply(true, title));
-            sendPacket(player, TEXT_PACKET_INSTANCE.apply(false, subtitle));
+            sendPacket(player, LEGACY_PACKET_INSTANCE.apply(true, title));
+            sendPacket(player, LEGACY_PACKET_INSTANCE.apply(false, subtitle));
             return true;
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }

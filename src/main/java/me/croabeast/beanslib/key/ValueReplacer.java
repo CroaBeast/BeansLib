@@ -1,10 +1,11 @@
 package me.croabeast.beanslib.key;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.var;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.regex.Pattern;
 
@@ -12,18 +13,17 @@ import java.util.regex.Pattern;
  * The {@code ValueReplacer} class manages the replacement of a key with
  * a given value in an input string, using the {@link #replace(String)} method.
  */
-@RequiredArgsConstructor(staticName = "of")
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class ValueReplacer {
 
-    private final String key;
-    private final String value;
+    private final String key, value;
 
     /**
-     * If the key is case-sensitive or not, {@code true} by default.
+     * If the key is case-sensitive or not, {@code false} by default.
      */
     @Accessors(chain = true)
     @Setter
-    private boolean caseSensitive = true;
+    private boolean sensitive = false;
 
     /**
      * Replaces the key with the defined value on an input string.
@@ -31,11 +31,11 @@ public class ValueReplacer {
      * @param string an input string
      * @return the formatted string
      */
-    public String replace(String string) {
+    String replace(String string) {
         if (StringUtils.isBlank(string)) return string;
         if (StringUtils.isBlank(key)) return string;
 
-        var temp = caseSensitive ? "" : "(?i)";
+        var temp = sensitive ? "" : "(?i)";
         temp = temp + Pattern.quote(key);
 
         var m = Pattern.compile(temp).matcher(string);
@@ -48,6 +48,14 @@ public class ValueReplacer {
         return string;
     }
 
+    public static String of(String key, String value, String input, boolean b) {
+        return new ValueReplacer(key, value).setSensitive(b).replace(input);
+    }
+
+    public static String of(String key, String value, String input) {
+        return new ValueReplacer(key, value).replace(input);
+    }
+
     /**
      * Replace an array of string keys with an array of string values in a string.
      *
@@ -56,20 +64,18 @@ public class ValueReplacer {
      * @param string an input string
      * @param keys an array of keys
      * @param values an array of values
-     * @param isSensitive if keys are case-sensitive
+     * @param b if keys are case-sensitive
      *
      * @return the string with the parsed values
      */
-    public static String forEach(String string, String[] keys, String[] values, boolean isSensitive) {
+    public static String forEach(String[] keys, String[] values, String string, boolean b) {
         if (StringUtils.isBlank(string)) return string;
 
         if (keys == null || values == null) return string;
         if (keys.length > values.length) return string;
 
-        for (int i = 0; i < keys.length; i++) {
-            var v = ValueReplacer.of(keys[i], values[i]);
-            string = v.setCaseSensitive(isSensitive).replace(string);
-        }
+        for (int i = 0; i < keys.length; i++)
+            string = ValueReplacer.of(keys[i], values[i], string, b);
 
         return string;
     }
@@ -80,13 +86,13 @@ public class ValueReplacer {
      *
      * <p> All the keys are quoted to avoid replacing errors in the string.
      *
-     * @param string an input string
      * @param keys an array of keys
      * @param values an array of values
+     * @param string an input string
      *
      * @return the string with the parsed values
      */
-    public static String forEach(String string, String[] keys, String[] values) {
-        return forEach(string, keys, values, false);
+    public static String forEach(String[] keys, String[] values, String string) {
+        return forEach(keys, values, string, false);
     }
 }

@@ -2,7 +2,7 @@ package me.croabeast.iridiumapi.pattern;
 
 import lombok.var;
 import me.croabeast.iridiumapi.IridiumAPI;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.awt.*;
 import java.util.ArrayList;

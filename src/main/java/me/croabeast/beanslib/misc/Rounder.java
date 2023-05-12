@@ -1,7 +1,7 @@
 package me.croabeast.beanslib.misc;
 
 import lombok.var;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -41,7 +41,6 @@ public final class Rounder<T extends Number> {
         return new DecimalFormat(s, d).format(number);
     }
 
-    @SuppressWarnings("unchecked")
     private T result() {
         Number n = null;
 

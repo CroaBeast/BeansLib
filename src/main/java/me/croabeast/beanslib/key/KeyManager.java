@@ -3,8 +3,7 @@ package me.croabeast.beanslib.key;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.var;
-import me.croabeast.beanslib.utility.TextUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
@@ -170,16 +169,8 @@ public final class KeyManager {
             this(key, function, true);
         }
 
-        @Override
-        public String toString() {
-            return TextUtils.classFormat(this, ":", false, index, key);
-        }
-
         String parseKey(Player player, String string, boolean c) {
-            final var v = function.apply(player);
-
-            return ValueReplacer.of(key, v).
-                    setCaseSensitive(c).replace(string);
+            return ValueReplacer.of(key, function.apply(player), string, c);
         }
 
         protected PlayerKey clone() {
@@ -188,6 +179,11 @@ public final class KeyManager {
             } catch (Exception e) {
                 return this;
             }
+        }
+
+        @Override
+        public String toString() {
+            return "PlayerKey{" + "key='" + key + '\'' + ", index=" + index + '}';
         }
     }
 }

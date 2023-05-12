@@ -3,7 +3,7 @@ package me.croabeast.beanslib.builder;
 import com.google.common.collect.Lists;
 import lombok.var;
 import net.md_5.bungee.api.chat.ClickEvent;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,20 +79,20 @@ public enum ClickType {
     }
 
     /**
-     * Returns the ClickType that corresponds to the specified name, or {@link #RUN_CMD}
+     * Returns the ClickType that corresponds to the specified name, or {@link #SUGGEST_CMD}
      * if the name is blank or not recognized.
      *
      * @param name the name of the ClickType to retrieve
      * @return the respective ClickType instance
      */
     public static ClickType fromString(String name) {
-        if (StringUtils.isBlank(name)) return RUN_CMD;
+        if (StringUtils.isBlank(name)) return SUGGEST_CMD;
 
         for (var type : values()) {
             String temp = name.toLowerCase(Locale.ENGLISH);
             if (type.names.contains(temp)) return type;
         }
 
-        return RUN_CMD;
+        return SUGGEST_CMD;
     }
 }

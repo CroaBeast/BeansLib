@@ -11,7 +11,7 @@ import me.croabeast.beanslib.key.ValueReplacer;
 import me.croabeast.beanslib.nms.ActionBarHandler;
 import me.croabeast.beanslib.nms.TitleHandler;
 import net.md_5.bungee.api.chat.ClickEvent;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.ApiStatus;
@@ -333,33 +333,6 @@ public class TextUtils {
     }
 
     /**
-     * Formats a class to a string defined format.
-     *
-     * @param obj the object to format
-     * @param split the splitter
-     * @param use use quotes in every object
-     * @param args values for the object
-     *
-     * @return the formatted class
-     */
-    public String classFormat(Object obj, String split, boolean use, Object... args) {
-        final var name = obj.getClass().getSimpleName();
-
-        if (args == null || args.length == 0) return name + "{}";
-        var builder = new StringBuilder();
-
-        for (int i = 0; i < args.length; i++) {
-            if (i > 0) builder.append(split);
-
-            if (use) builder.append("\"");
-            builder.append(args[i]);
-            if (use) builder.append("\"");
-        }
-
-        return name + "{" + builder + "}";
-    }
-
-    /**
      * Replace a {@link String} array of keys with another {@link String}
      * array of values.
      *
@@ -368,15 +341,15 @@ public class TextUtils {
      * @param string an input string
      * @param keys the array of keys
      * @param values the array of values
-     * @param caseSensitive if keys are case-sensitive
+     * @param b if keys are case-sensitive
      *
      * @deprecated See {@link ValueReplacer}.
      * @return the parsed string with the respective values
      */
     @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
-    public String replaceEach(String string, String[] keys, String[] values, boolean caseSensitive) {
-        return ValueReplacer.forEach(string, keys, values, caseSensitive);
+    public String replaceEach(String[] keys, String[] values, String string, boolean b) {
+        return ValueReplacer.forEach(keys, values, string, b);
     }
 
     /**
@@ -386,15 +359,15 @@ public class TextUtils {
      * @param string an input string
      * @param key a key
      * @param value a value
-     * @param caseSensitive if key is case-sensitive
+     * @param b if key is case-sensitive
      *
      * @deprecated See {@link ValueReplacer}.
      * @return the parsed string with the respective value
      */
     @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
-    public String replaceEach(String string, String key, String value, boolean caseSensitive) {
-        return ValueReplacer.of(key, value).setCaseSensitive(caseSensitive).replace(string);
+    public String replaceEach(String key, String value, String string, boolean b) {
+        return ValueReplacer.of(key, value, string, b);
     }
 
     /**
@@ -413,8 +386,8 @@ public class TextUtils {
      */
     @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
-    public String replaceInsensitiveEach(String string, String[] keys, String[] values) {
-        return ValueReplacer.forEach(string, keys, values);
+    public String replaceInsensitiveEach(String[] keys, String[] values, String string) {
+        return ValueReplacer.forEach(keys, values, string);
     }
 
     /**
@@ -432,7 +405,7 @@ public class TextUtils {
      */
     @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
-    public String replaceInsensitiveEach(String string, String key, String value) {
-        return ValueReplacer.of(key, value).setCaseSensitive(false).replace(string);
+    public String replaceInsensitiveEach(String key, String value, String string) {
+        return ValueReplacer.of(key, value, string);
     }
 }

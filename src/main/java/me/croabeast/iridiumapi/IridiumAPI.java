@@ -7,7 +7,7 @@ import me.croabeast.beanslib.utility.LibUtils;
 import me.croabeast.iridiumapi.pattern.Gradient;
 import me.croabeast.iridiumapi.pattern.RGBParser;
 import net.md_5.bungee.api.ChatColor;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -259,7 +259,12 @@ public final class IridiumAPI {
      */
     @NotNull
     public static String stripBukkit(String string) {
-        return StringUtils.isBlank(string) ? string : string.replaceAll("(?i)[&§][a-f\\d]", "");
+        if (StringUtils.isBlank(string)) return string;
+
+        var m = Pattern.compile("(?i)[&§][a-f\\d]").matcher(string);
+        while (m.find()) string = string.replace(m.group(), "");
+
+        return string;
     }
 
     /**
@@ -270,7 +275,12 @@ public final class IridiumAPI {
      */
     @NotNull
     public static String stripSpecial(String string) {
-        return StringUtils.isBlank(string) ? string : string.replaceAll("(?i)[&§][k-or]", "");
+        if (StringUtils.isBlank(string)) return string;
+
+        var m = Pattern.compile("(?i)[&§][k-or]").matcher(string);
+        while (m.find()) string = string.replace(m.group(), "");
+
+        return string;
     }
 
     /**
@@ -285,14 +295,14 @@ public final class IridiumAPI {
 
         string = Gradient.convertLegacy(string);
 
-        var gradient = Gradient.GRADIENT_PATTERN.matcher(string);
-        while (gradient.find())
-            string = string.replace(gradient.group(), gradient.group(2));
+        var r = Pattern.compile("(?i)</?R(:\\d{1,3})?>").matcher(string);
+        while (r.find()) string = string.replace(r.group(), "");
+
+        var g = Gradient.GRADIENT_PATTERN.matcher(string);
+        while (g.find()) string = string.replace(g.group(), g.group(2));
 
         var rgb = RGBParser.SOLID_PATTERN.matcher(string);
         while (rgb.find()) string = string.replace(rgb.group(), "");
-
-        string = string.replaceAll("(?i)(<R:\\d{1,3}>|</R>)", "");
 
         return string;
     }

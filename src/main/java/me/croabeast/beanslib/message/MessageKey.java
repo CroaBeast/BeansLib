@@ -10,7 +10,7 @@ import me.croabeast.beanslib.builder.BossbarBuilder;
 import me.croabeast.beanslib.builder.ChatMessageBuilder;
 import me.croabeast.beanslib.discord.Webhook;
 import me.croabeast.iridiumapi.IridiumAPI;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -212,7 +212,7 @@ public abstract class MessageKey implements MessageAction, Cloneable {
         @Override
         public boolean execute(Player t, Player parser, String s) {
             try {
-                return new ChatMessageBuilder(s).setPlayers(t, parser).send();
+                return new ChatMessageBuilder(t, parser, s).send();
             } catch (Exception e) {
                 e.printStackTrace();
                 return false;

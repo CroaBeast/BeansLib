@@ -12,8 +12,7 @@ import me.croabeast.beanslib.message.MessageSender;
 import me.croabeast.beanslib.misc.BeansLogger;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.iridiumapi.IridiumAPI;
-import net.md_5.bungee.api.chat.ClickEvent;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -332,8 +331,8 @@ public class BeansLib {
     }
 
     public String formatPlaceholders(Player parser, String string) {
-        string = TextUtils.PARSE_PLACEHOLDERAPI.apply(parser, parseChars(string));
-        return keyManager.parseKeys(parser, string, false);
+        string = keyManager.parseKeys(parser, string, false);
+        return TextUtils.PARSE_PLACEHOLDERAPI.apply(parser, parseChars(string));
     }
 
     /**
@@ -532,7 +531,7 @@ public class BeansLib {
     }
 
     /**
-     * Parse keys and values using {@link TextUtils#replaceInsensitiveEach(String, String[], String[])}
+     * Parse keys and values using {@link TextUtils#replaceInsensitiveEach(String[], String[], String)}
      *
      * @param sender a sender to format and send the message
      * @param list the message list
@@ -554,7 +553,7 @@ public class BeansLib {
     }
 
     /**
-     * Parse keys and values using {@link TextUtils#replaceInsensitiveEach(String, String[], String[])}
+     * Parse keys and values using {@link TextUtils#replaceInsensitiveEach(String[], String[], String)}
      *
      * @param sender a sender to format and send the message
      * @param section the config file or section
@@ -571,7 +570,7 @@ public class BeansLib {
     }
 
     /**
-     * Parse keys and values using {@link TextUtils#replaceInsensitiveEach(String, String[], String[])}
+     * Parse keys and values using {@link TextUtils#replaceInsensitiveEach(String[], String[], String)}
      *
      * @param sender a sender to format and send the message
      * @param list the message list
@@ -585,7 +584,7 @@ public class BeansLib {
     }
 
     /**
-     * Parse keys and values using {@link TextUtils#replaceInsensitiveEach(String, String[], String[])}
+     * Parse keys and values using {@link TextUtils#replaceInsensitiveEach(String[], String[], String)}
      *
      * @param sender a sender to format and send the message
      * @param section the config file or section

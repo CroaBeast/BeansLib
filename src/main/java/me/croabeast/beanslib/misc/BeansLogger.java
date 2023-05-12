@@ -7,7 +7,7 @@ import me.croabeast.beanslib.message.MessageKey;
 import me.croabeast.beanslib.message.MessageSender;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.iridiumapi.IridiumAPI;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -66,7 +66,7 @@ public class BeansLogger {
      * @param lines the information to send
      */
     public void playerLog(Player player, String... lines) {
-        new MessageSender(player).send(toLogLines(player, false, lines));
+        new MessageSender(player).setLogger(false).send(toLogLines(player, false, lines));
     }
 
     private String colorLogger(String string) {
