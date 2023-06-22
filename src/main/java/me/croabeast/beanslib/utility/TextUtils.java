@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
@@ -104,8 +104,8 @@ public class TextUtils {
      * Check if the line uses a valid json format on any part of the string.
      * <p> Use the <code>apply(String)</code> method to check a string.
      */
-    public final Function<String, Boolean> IS_JSON = s ->
-            TextUtils.FORMATTED_CHAT_PATTERN.matcher(s).find();
+    public final Predicate<String> IS_JSON = s ->
+            TextUtils.FORMAT_CHAT_PATTERN.matcher(s).find();
 
     /**
      * Removes the in-built JSON pattern of a string, if there is any format.
@@ -115,9 +115,9 @@ public class TextUtils {
         if (StringUtils.isBlank(s)) return s;
 
         s = CONVERT_OLD_JSON.apply(s);
-        if (!IS_JSON.apply(s)) return s;
+        if (!IS_JSON.test(s)) return s;
 
-        var m = TextUtils.FORMATTED_CHAT_PATTERN.matcher(s);
+        var m = TextUtils.FORMAT_CHAT_PATTERN.matcher(s);
 
         while (m.find())
             s = s.replace(m.group(), m.group(7));
@@ -126,27 +126,20 @@ public class TextUtils {
     };
 
     /**
-     * A regular expression pattern for matching URLs within text.
+     * A regular expression pattern for matching URLs in a case-insensitive manner.
      *
-     * <p> This pattern matches URLs that start with "http://" or "https://", or URLs
-     * that start with "www." and end with a valid top-level domain.
+     * <p> The pattern matches URLs that start with an optional protocol (http or https),
+     * followed by a domain name consisting of at least two alphanumeric characters, and
+     * ending with an optional path.
      *
-     * <p> The pattern is case-insensitive and supports various URL formats, including
-     * those with query parameters and fragments.
-     *
-     * <p> Note: this pattern may not match all possible URL formats, as there are many
-     * variations and edge cases in URL syntax.
+     * <p> Note: This pattern is a simplified version that matches basic URL formats and
+     * does not handle all possible cases. It may not validate all edge cases or specific
+     * scenarios. For more comprehensive URL matching, consider using specialized URL
+     * parsing libraries or additional validation.
      */
-    @SuppressWarnings("all")
-    public static final Pattern URL_PATTERN = Pattern.compile(
-            "(?i)\\b((?:[a-z]+://|" +
-                    "www\\d{0,3}[.]|[a-z\\d.\\-]+[.][a-z]{2,4}/)(?:[^\\s()<>]+" +
-                    "|\\\\(([^\\s()<>]+|(\\([^\\s()<>]+\\)))*\\))+(?:\\((" +
-                    "[^\\s()<>]+|(\\([^\\s()<>]+\\)))*\\\\)|[^\\s`!()\\[\\]{};:" +
-                    "'\".,<>?«»“”‘’]|[^\\s;:\\[\\].,<>]))\\b"
-    );
+    public final Pattern URL_PATTERN = Pattern.compile("(?i)^(?:(https?)://)?([-\\w_.]{2,}\\.[a-z]{2,4})(/\\S*)?$");
 
-    static final String FORMAT_PREFIX = "(.[^|]*?):\"(.[^|]*?)\"";
+    final String FORMAT_PREFIX = "(.[^|]*?):\"(.[^|]*?)\"";
 
     /**
      * The main pattern to identify the custom chat message format in a string.
@@ -165,7 +158,7 @@ public class TextUtils {
      * String mixed = "<hover:\"a hover line<n>another line\"|run:\"/command\">text to apply</text>";
      * } </pre>
      */
-    public static final Pattern FORMATTED_CHAT_PATTERN = Pattern.compile(
+    public final Pattern FORMAT_CHAT_PATTERN = Pattern.compile(
             "<(" + FORMAT_PREFIX + "([|]" + FORMAT_PREFIX + ")?)>(.+?)</text>"
     );
 

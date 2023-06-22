@@ -1,5 +1,6 @@
 package me.croabeast.beanslib.utility;
 
+import lombok.experimental.UtilityClass;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.misc.BeansLogger;
 import org.bukkit.Bukkit;
@@ -18,12 +19,8 @@ import org.jetbrains.annotations.ApiStatus;
  */
 @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
 @Deprecated
+@UtilityClass
 public final class LogUtils {
-
-    /**
-     * Initializing this class is blocked.
-     */
-    private LogUtils() {}
 
     /**
      * Sends requested information for a {@link Player}.
@@ -31,7 +28,7 @@ public final class LogUtils {
      * @param player a valid online player
      * @param lines the information to send
      */
-    public static void playerLog(Player player, String... lines) {
+    public void playerLog(Player player, String... lines) {
         BeansLib.getLoadedInstance().playerLog(player, lines);
     }
 
@@ -40,7 +37,7 @@ public final class LogUtils {
      *
      * @param lines the information to send
      */
-    public static void rawLog(String... lines) {
+    public void rawLog(String... lines) {
         BeansLib.getLoadedInstance().rawLog(lines);
     }
 
@@ -50,7 +47,7 @@ public final class LogUtils {
      * @param sender a valid sender, can be the console or a player
      * @param lines the information to send
      */
-    public static void doLog(CommandSender sender, String... lines) {
+    public void doLog(CommandSender sender, String... lines) {
         BeansLib.getLoadedInstance().doLog(sender, lines);
     }
 
@@ -59,7 +56,7 @@ public final class LogUtils {
      *
      * @param lines the information to send
      */
-    public static void doLog(String... lines) {
+    public void doLog(String... lines) {
         BeansLib.getLoadedInstance().doLog(lines);
     }
 }

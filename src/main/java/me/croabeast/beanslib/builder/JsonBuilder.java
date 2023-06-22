@@ -1,14 +1,9 @@
 package me.croabeast.beanslib.builder;
 
-import lombok.var;
 import me.croabeast.beanslib.BeansLib;
-import me.croabeast.beanslib.utility.Exceptions;
 import me.croabeast.beanslib.utility.TextUtils;
 import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.ApiStatus;
-
-import java.util.List;
 
 /**
  * The object class to handle JSON messages to players in chat.
@@ -17,7 +12,7 @@ import java.util.List;
  * to apply a hover event.
  *
  * <p> If click and hover values are null/empty, it will use the
- * {@link TextUtils#FORMATTED_CHAT_PATTERN} to parse the respective actions and
+ * {@link TextUtils#FORMAT_CHAT_PATTERN} to parse the respective actions and
  * add then in the chat component.
  *
  * <p> After all the actions are set in the chat component, the
@@ -55,7 +50,7 @@ public class JsonBuilder {
 
     /**
      * Converts a line to a {@link BaseComponent} array using the
-     * {@link TextUtils#FORMATTED_CHAT_PATTERN}.
+     * {@link TextUtils#FORMAT_CHAT_PATTERN}.
      *
      * <pre> {@code
      * // Example of how to use it:
@@ -75,7 +70,7 @@ public class JsonBuilder {
 
     /**
      * Converts a line to a {@link BaseComponent} array using the
-     * {@link TextUtils#FORMATTED_CHAT_PATTERN}.
+     * {@link TextUtils#FORMAT_CHAT_PATTERN}.
      *
      * <pre> {@code
      * // Example of how to use it:

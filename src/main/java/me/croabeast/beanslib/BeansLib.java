@@ -11,7 +11,7 @@ import me.croabeast.beanslib.key.KeyManager;
 import me.croabeast.beanslib.message.MessageSender;
 import me.croabeast.beanslib.misc.BeansLogger;
 import me.croabeast.beanslib.utility.TextUtils;
-import me.croabeast.iridiumapi.IridiumAPI;
+import me.croabeast.neoprismatic.NeoPrismaticAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -347,7 +347,7 @@ public class BeansLib {
      */
     public String colorize(Player target, Player parser, String string) {
         if (target == null) target = parser;
-        return IridiumAPI.process(target, formatPlaceholders(parser, string));
+        return NeoPrismaticAPI.colorize(target, formatPlaceholders(parser, string));
     }
 
     /**

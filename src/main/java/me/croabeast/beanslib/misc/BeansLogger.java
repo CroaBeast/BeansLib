@@ -6,7 +6,7 @@ import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.message.MessageKey;
 import me.croabeast.beanslib.message.MessageSender;
 import me.croabeast.beanslib.utility.TextUtils;
-import me.croabeast.iridiumapi.IridiumAPI;
+import me.croabeast.neoprismatic.NeoPrismaticAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -73,7 +73,7 @@ public class BeansLogger {
         final String s = TextUtils.STRIP_JSON.apply(string);
 
         return lib.isColoredConsole() ?
-                IridiumAPI.process(s) : IridiumAPI.stripAll(s);
+                NeoPrismaticAPI.colorize(s) : NeoPrismaticAPI.stripAll(s);
     }
 
     private void raw(String line) {

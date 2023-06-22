@@ -7,11 +7,13 @@ import lombok.var;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.utility.Exceptions;
 import me.croabeast.beanslib.utility.TextUtils;
-import me.croabeast.iridiumapi.IridiumAPI;
+import me.croabeast.neoprismatic.NeoPrismaticAPI;
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,13 +22,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * A builder class for creating complex chat messages in Minecraft. Allows for
  * setting hover and click actions on individual parts of the message.
  *
  * <p> Every string that is appended can be colorized if Bukkit color codes,
- * {@link IridiumAPI} color formatting, and placeholders can be replaced if
+ * {@link NeoPrismaticAPI} color formatting, and placeholders can be replaced if
  * the {@link Player} parser variable is defined.
  */
 public class ChatMessageBuilder implements Cloneable {
@@ -82,43 +85,51 @@ public class ChatMessageBuilder implements Cloneable {
         this(null);
     }
 
+    private String putColorToURL() {
+        return ++index > 0 ? messageMap.get(index - 1).getLastColor() + "" : "";
+    }
+
     private void toURL(String s) {
-        var matcher = TextUtils.URL_PATTERN.matcher(s);
+        var urlMatcher = TextUtils.URL_PATTERN.matcher(s);
         int end = 0;
 
-        while (matcher.find()) {
-            String t = s.substring(end, matcher.start());
-            if (t.length() > 0)
-                messageMap.put(++index, new ChatMessage(t));
-
-
-            if (parseURLs) {
-                final String url = matcher.group();
-
-                var message = new ChatMessage(url);
-                message.handler.setClick(
-                        new ClickAction(ClickType.OPEN_URL, url));
-
-                messageMap.put(++index, message);
+        while (urlMatcher.find()) {
+            String t = s.substring(end, urlMatcher.start());
+            if (t.length() > 0) {
+                var m = new ChatMessage(putColorToURL() + t);
+                messageMap.put(index, m);
             }
 
-            end = matcher.end();
+            if (parseURLs) {
+                final String url = urlMatcher.group();
+
+                var c = new ClickAction(ClickType.OPEN_URL, url);
+                var m = new ChatMessage(putColorToURL() + url);
+
+                m.handler.setClick(c);
+                messageMap.put(index, m);
+            }
+
+            end = urlMatcher.end();
         }
 
-        if (end <= (s.length() - 1))
-            messageMap.put(++index, new ChatMessage(s.substring(end)));
+        if (end > (s.length() - 1)) return;
+
+        var st = putColorToURL() + s.substring(end);
+        messageMap.put(index, new ChatMessage(st));
     }
 
     @SuppressWarnings("deprecation")
     private void updateMessageMapping(String string) {
-        if (string == null || string.length() < 1) return;
+        if (StringUtils.isEmpty(string)) return;
 
-        var line = TextUtils.PARSE_INTERACTIVE_CHAT.apply(parser, string);
+        var interactiveChat = TextUtils.PARSE_INTERACTIVE_CHAT;
+        var line = interactiveChat.apply(parser, string);
 
         line = TextUtils.CONVERT_OLD_JSON.apply(line);
         line = getLib().centerMessage(target, parser, line);
 
-        var match = TextUtils.FORMATTED_CHAT_PATTERN.matcher(line);
+        var match = TextUtils.FORMAT_CHAT_PATTERN.matcher(line);
         int last = 0;
 
         while (match.find()) {
@@ -126,22 +137,15 @@ public class ChatMessageBuilder implements Cloneable {
             if (temp.length() > 0) toURL(temp);
 
             String[] args = match.group(1).split("[|]", 2);
-            String hover = null, click = null;
+            String h = null, c = null;
 
             for (String s : args) {
                 var m = Pattern.compile("(?i)hover").matcher(s);
-
-                if (m.find()) {
-                    hover = s;
-                    continue;
-                }
-                click = s;
+                if (m.find()) h = s; else c = s;
             }
 
             var message = new ChatMessage(match.group(7));
-
-            if (click != null || hover != null)
-                message.setHandler(click, hover);
+            if (c != null || h != null) message.setHandler(c, h);
 
             messageMap.put(++index, message);
             last = match.end();
@@ -173,6 +177,16 @@ public class ChatMessageBuilder implements Cloneable {
         );
     }
 
+    public ChatMessageBuilder setHoverToAll(List<String> hover) {
+        if (index == -1 || hover == null || hover.isEmpty())
+            return this;
+
+        for (var m : messageMap.values())
+            m.handler.setHover(new HoverAction(hover));
+
+        return this;
+    }
+
     public ChatMessageBuilder setClick(ClickType type, String action) {
         if (index == -1 || type == null || action == null)
             return this;
@@ -198,6 +212,34 @@ public class ChatMessageBuilder implements Cloneable {
                 c.substring(0, c.length() - 1) : null);
     }
 
+    public ChatMessageBuilder setClickToAll(ClickType type, String action) {
+        if (index == -1 || type == null || action == null)
+            return this;
+
+        for (var m : messageMap.values()) {
+            if (parseURLs && m.handler.click.type == ClickType.OPEN_URL)
+                continue;
+
+            m.handler.setClick(new ClickAction(type, action));
+        }
+
+        return this;
+    }
+
+    public ChatMessageBuilder setClickToAll(String input) {
+        if (StringUtils.isEmpty(input))
+            return this;
+
+        String[] array = input.split(":\"", 2);
+        String c = array.length == 1 ? null : array[1];
+
+        var click = ClickType.fromString(array[0]);
+        var action = StringUtils.isNotBlank(c) ?
+                c.substring(0, c.length() - 1) : null;
+
+        return setClickToAll(click, action);
+    }
+
     public ChatMessageBuilder append(String string) {
         updateMessageMapping(string);
         return this;
@@ -205,12 +247,14 @@ public class ChatMessageBuilder implements Cloneable {
 
     @NotNull
     public BaseComponent[] build() {
-        if (index == -1)
-            throw new IllegalStateException("The builder does not contain any message.");
+        if (index < 0) {
+            var m = "The builder does not contain any message.";
+            throw new IllegalStateException(m);
+        }
 
         var components = new ArrayList<BaseComponent>();
         for (var message : messageMap.values())
-            components.addAll(Lists.newArrayList(message.asComponent()));
+            components.addAll(message.asComponents());
 
         return components.toArray(new BaseComponent[0]);
     }
@@ -229,6 +273,7 @@ public class ChatMessageBuilder implements Cloneable {
         if (index == -1) return "";
 
         StringBuilder builder = new StringBuilder();
+
         for (var message : messageMap.values()) {
             var handler = message.handler;
 
@@ -237,30 +282,32 @@ public class ChatMessageBuilder implements Cloneable {
                 continue;
             }
 
+            builder.append('<');
+
             var click = handler.click;
             var hover = handler.hover;
 
-            boolean clickNotSet = true;
+            boolean clickSet = false;
 
             if (click != null) {
                 builder.append(click.type.asBukkit()).
                         append(":\"").
-                        append(click.action).
-                        append("\"");
+                        append(click.input).
+                        append('"');
 
-                clickNotSet = false;
+                clickSet = true;
             }
 
             if (hover != null) {
-                if (clickNotSet) builder.append('|');
+                if (clickSet) builder.append('|');
 
                 String s = getLib().getLineSeparator();
                 builder.append("hover:\"").
                         append(String.join(s, hover.hover)).
-                        append("\"");
+                        append('"');
             }
 
-            builder.append(">").
+            builder.append('>').
                     append(message.message).
                     append("</text>");
         }
@@ -281,29 +328,27 @@ public class ChatMessageBuilder implements Cloneable {
         }
     }
 
-    @SuppressWarnings("all")
     class ClickAction {
 
         final ClickType type;
-        final String action;
+        final String input;
 
-        ClickAction(ClickType type, String action) {
+        ClickAction(ClickType type, String input) {
             this.type = type;
-            this.action = IridiumAPI.stripAll(action);
+            this.input = NeoPrismaticAPI.stripAll(input);
         }
 
         ClickEvent createEvent() {
-            String s = getLib().formatPlaceholders(parser, action);
+            String s = getLib().formatPlaceholders(parser, input);
             return new ClickEvent(type.asBukkit(), s);
         }
 
         @Override
         public String toString() {
-            return "{" + "type=" + type + ", action='" + action + '\'' + '}';
+            return "{type=" + type + ", input='" + input + "'}";
         }
     }
 
-    @SuppressWarnings("all")
     class HoverAction {
 
         final String[] hover;
@@ -390,30 +435,47 @@ public class ChatMessageBuilder implements Cloneable {
         ChatEventsHandler handler = new ChatEventsHandler();
         final String message;
 
+        ChatColor color = null;
+
         void setHandler(String click, String hover) {
             handler = new ChatEventsHandler(click, hover);
         }
 
-        BaseComponent[] asComponent() {
-            if (handler.isEmpty())
-                return TextComponent.fromLegacyText(message);
+        BaseComponent[] compile() {
+            var urlMatch = TextUtils.URL_PATTERN.matcher(message);
+            var comp = onlyComp(message);
 
-            var c = onlyComp(message);
+            var c = handler.click;
+            var h = handler.hover;
 
-            var click = handler.click;
-            var hover = handler.hover;
+            if (parseURLs && urlMatch.find()) {
+                var cl = new ClickAction(ClickType.OPEN_URL, message);
+                handler.setClick(cl);
+            }
 
-            if (click != null) c.setClickEvent(click.createEvent());
+            if (c != null) comp.setClickEvent(c.createEvent());
 
-            if (hover != null && !hover.isEmpty())
-                c.setHoverEvent(hover.createEvent());
+            if (h != null && !h.isEmpty())
+                comp.setHoverEvent(h.createEvent());
 
-            return new TextComponent[] {c};
+            var comps = new BaseComponent[] {comp};
+
+            color = comps[comps.length - 1].getColor();
+            return comps;
+        }
+
+        List<BaseComponent> asComponents() {
+            return Lists.newArrayList(compile());
+        }
+
+        ChatColor getLastColor() {
+            if (color == null) compile();
+            return color;
         }
 
         @Override
         public String toString() {
-            return "{" + "handler=" + handler + ", message='" + message + "§r'" + '}';
+            return "{handler=" + handler + ", message='" + message + "§r'}";
         }
     }
 }

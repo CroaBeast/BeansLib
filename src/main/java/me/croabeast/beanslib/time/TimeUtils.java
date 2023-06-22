@@ -1,5 +1,6 @@
 package me.croabeast.beanslib.time;
 
+import lombok.experimental.UtilityClass;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
@@ -12,12 +13,8 @@ import org.jetbrains.annotations.ApiStatus;
  */
 @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
 @Deprecated
+@UtilityClass
 public final class TimeUtils {
-
-    /**
-     * Initializing this class is blocked.
-     */
-    private TimeUtils() {}
 
     /**
      * Takes in a value in seconds and returns a very nicely formatted string
@@ -26,7 +23,7 @@ public final class TimeUtils {
      * @param seconds Amount of seconds to format
      * @return formatted string with seconds, minutes, hours and days
      */
-    public static String formatTime(long seconds) {
+    public String formatTime(long seconds) {
         return new TimeParser(seconds).formatTime();
     }
 }

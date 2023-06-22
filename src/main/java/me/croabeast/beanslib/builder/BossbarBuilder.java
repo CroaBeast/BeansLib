@@ -6,7 +6,6 @@ import lombok.experimental.Accessors;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.message.MessageKey;
 import me.croabeast.beanslib.utility.TextUtils;
-import me.croabeast.iridiumapi.IridiumAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;

@@ -76,8 +76,7 @@ public final class UpdateChecker {
     private final int pluginID;
     private final VersionScheme versionScheme;
 
-    @Getter(AccessLevel.PRIVATE)
-    private String currentVersion;
+    private String current;
 
     /**
      * Request an update check to Spigot. This request is asynchronous and may not
@@ -104,18 +103,18 @@ public final class UpdateChecker {
                 if (!json.isJsonObject())
                     return new UpdateResult(UpdateReason.INVALID_JSON);
 
-                currentVersion = json.getAsJsonObject().get("current_version").getAsString();
+                current = json.getAsJsonObject().get("current_version").getAsString();
                 var pluginVersion = plugin.getDescription().getVersion();
-                var latest = versionScheme.compareVersions(pluginVersion, currentVersion);
+                var latest = versionScheme.compareVersions(pluginVersion, current);
 
                 if (latest == null)
                     return new UpdateResult(UpdateReason.UNSUPPORTED_VERSION_SCHEME);
                 else if (latest.equals(pluginVersion))
-                    return new UpdateResult(pluginVersion.equals(currentVersion) ?
+                    return new UpdateResult(pluginVersion.equals(current) ?
                             UpdateReason.UP_TO_DATE :
                             UpdateReason.UNRELEASED_VERSION
                     );
-                else if (latest.equals(currentVersion))
+                else if (latest.equals(current))
                     return new UpdateResult(UpdateReason.NEW_UPDATE, latest);
             }
             catch (IOException e) {
@@ -282,7 +281,7 @@ public final class UpdateChecker {
          * @return current version
          */
         public String getSpigotVersion() {
-            return getCurrentVersion();
+            return current;
         }
     }
 }

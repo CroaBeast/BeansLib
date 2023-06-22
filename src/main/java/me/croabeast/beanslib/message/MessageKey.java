@@ -9,7 +9,7 @@ import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.builder.BossbarBuilder;
 import me.croabeast.beanslib.builder.ChatMessageBuilder;
 import me.croabeast.beanslib.discord.Webhook;
-import me.croabeast.iridiumapi.IridiumAPI;
+import me.croabeast.neoprismatic.NeoPrismaticAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -312,7 +312,7 @@ public abstract class MessageKey implements MessageAction, Cloneable {
         s = getLib().parsePlayerKeys(parser, s, false);
 
         return !color ?
-                IridiumAPI.stripAll(getLib().formatPlaceholders(parser, s)) :
+                NeoPrismaticAPI.stripAll(getLib().formatPlaceholders(parser, s)) :
                 getLib().colorize(target, parser, s);
     }
 
