@@ -6,7 +6,7 @@
 
     <groupId>io.github.croabeast</groupId>
     <artifactId>BeansLib</artifactId>
-    <version>1.4-SNAPSHOT-73</version>
+    <version>1.4-SNAPSHOT-74</version>
     <packaging>jar</packaging>
 
     <name>BeansLib</name>
@@ -201,7 +201,7 @@
         </repository>
         <repository>
             <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
+            <url>https://www.jitpack.io</url>
         </repository>
     </repositories>
 
@@ -257,7 +257,7 @@
         <dependency>
             <groupId>com.github.CroaBeast</groupId>
             <artifactId>NeoPrismaticAPI</artifactId>
-            <version>1.0</version>
+            <version>1.0.1</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
