@@ -13,6 +13,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.text.Normalizer;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
@@ -53,6 +54,9 @@ import java.util.function.UnaryOperator;
 @Accessors(chain = true)
 public class MessageSender implements Cloneable {
 
+    @NotNull
+    private static MessageSender loaded = new MessageSender();
+
     private static BeansLib getLib() {
         return BeansLib.getLoadedInstance();
     }
@@ -85,8 +89,7 @@ public class MessageSender implements Cloneable {
     /**
      * The array that contains all the available flags.
      */
-    public static final String[] ALL_FLAGS =
-            {ACTION_BAR, CHAT, BOSSBAR, JSON, WEBHOOK, TITLE};
+    public static final String[] ALL_FLAGS = {ACTION_BAR, CHAT, BOSSBAR, JSON, WEBHOOK, TITLE};
 
     private Collection<? extends CommandSender> targets = null;
     /**
@@ -99,7 +102,7 @@ public class MessageSender implements Cloneable {
     private Set<String> flags = new HashSet<>();
 
     private String[] keys = null, values = null;
-    private final List<BiFunction<Player, String, String>> functions = new ArrayList<>();
+    private List<BiFunction<Player, String, String>> functions = new ArrayList<>();
 
     /**
      * Sets if messages can be sent into the console or not.
@@ -452,10 +455,44 @@ public class MessageSender implements Cloneable {
     @NotNull
     public MessageSender clone() {
         try {
-            return (MessageSender) super.clone();
-        } catch (Exception e) {
+            var sender = (MessageSender) super.clone();
+
+            sender.targets = new ArrayList<>(targets);
+            sender.flags = new HashSet<>(flags);
+            sender.functions = new ArrayList<>(functions);
+
+            final String[] k = keys, v = values;
+
+            if (k != null)
+                sender.keys = Arrays.copyOf(k, k.length);
+            if (v != null)
+                sender.values = Arrays.copyOf(v, v.length);
+
+            return sender;
+        }
+        catch (Exception e) {
             // this shouldn't happen, since the sender is Cloneable
             return this;
         }
+    }
+
+    /**
+     * Sets the loaded static MessageSender instance with a new sender.
+     *
+     * @param sender a sender
+     * @throws NullPointerException if sender is null
+     */
+    public static void setLoaded(MessageSender sender) {
+        loaded = Objects.requireNonNull(sender);
+    }
+
+    /**
+     * Returns a clone of the loaded static MessageSender instance.
+     *
+     * @return a clone of the static instance
+     */
+    @NotNull
+    public static MessageSender fromLoaded() {
+        return loaded.clone();
     }
 }

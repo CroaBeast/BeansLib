@@ -55,8 +55,10 @@ class ReflectHandler {
         );
 
         var handler = p.getClass().getMethod("getHandle").invoke(p);
+        var co = VERSION >= 20.0 ? "c" : "b";
+
         var connect = handler.getClass().
-                getField(IS_LEGACY ? "playerConnection" : "b").
+                getField(IS_LEGACY ? "playerConnection" : co).
                 get(handler);
 
         connect.getClass().

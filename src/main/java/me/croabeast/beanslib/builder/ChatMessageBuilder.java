@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * A builder class for creating complex chat messages in Minecraft. Allows for
@@ -121,7 +120,12 @@ public class ChatMessageBuilder implements Cloneable {
 
     @SuppressWarnings("deprecation")
     private void updateMessageMapping(String string) {
-        if (StringUtils.isEmpty(string)) return;
+        if (string == null) return;
+
+        if (string.length() < 1) {
+            messageMap.put(++index, new ChatMessage(string));
+            return;
+        }
 
         var interactiveChat = TextUtils.PARSE_INTERACTIVE_CHAT;
         var line = interactiveChat.apply(parser, string);
