@@ -222,36 +222,6 @@ public class TextUtils {
     }
 
     /**
-     * Combines an array with one or more additional arrays into a new
-     * array of the same type.
-     *
-     * @author Kihsomray
-     * @since 1.3
-     *
-     * @param array First array
-     * @param extraArrays Any additional arrays
-     * @param <T> Type of array (must be same)
-     *
-     * @return New array of combined values
-     */
-    @SuppressWarnings("all")
-    public <T> T[] combineArrays(@NotNull T[] array, T[]... extraArrays) {
-        if (extraArrays == null || extraArrays.length < 1)
-            return array;
-
-        var resultList = new ArrayList<T>();
-        Collections.addAll(resultList, array);
-
-        for (var a : extraArrays)
-            if (a != null) Collections.addAll(resultList, a);
-
-        var clazz = array.getClass().getComponentType();
-        var resultArray = (T[]) Array.newInstance(clazz, 0);
-
-        return resultList.toArray(resultArray);
-    }
-
-    /**
      * Converts a {@link String} to a {@link List} from a configuration section if it's not a list.
      *
      * @param section a config file or section, can be null
