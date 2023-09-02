@@ -34,7 +34,7 @@ public final class Rounder<T extends Number> {
     }
 
     private String getRoundString() {
-        var s = "#." + StringUtils.repeat("#", decimalAmount);
+        String s = "#." + StringUtils.repeat("#", decimalAmount);
         if (decimalAmount == 0) s = "#";
 
         var d = DecimalFormatSymbols.getInstance(Locale.ENGLISH);

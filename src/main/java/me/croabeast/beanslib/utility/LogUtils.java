@@ -1,6 +1,7 @@
 package me.croabeast.beanslib.utility;
 
 import lombok.experimental.UtilityClass;
+import me.croabeast.beanslib.Beans;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.misc.BeansLogger;
 import org.bukkit.Bukkit;
@@ -20,7 +21,7 @@ import org.jetbrains.annotations.ApiStatus;
 @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
 @Deprecated
 @UtilityClass
-public final class LogUtils {
+public class LogUtils {
 
     /**
      * Sends requested information for a {@link Player}.
@@ -29,7 +30,7 @@ public final class LogUtils {
      * @param lines the information to send
      */
     public void playerLog(Player player, String... lines) {
-        BeansLib.getLoadedInstance().playerLog(player, lines);
+        Beans.playerLog(player, lines);
     }
 
     /**
@@ -38,7 +39,7 @@ public final class LogUtils {
      * @param lines the information to send
      */
     public void rawLog(String... lines) {
-        BeansLib.getLoadedInstance().rawLog(lines);
+        Beans.rawLog(lines);
     }
 
     /**
@@ -48,7 +49,7 @@ public final class LogUtils {
      * @param lines the information to send
      */
     public void doLog(CommandSender sender, String... lines) {
-        BeansLib.getLoadedInstance().doLog(sender, lines);
+        Beans.doLog(sender, lines);
     }
 
     /**
@@ -57,6 +58,6 @@ public final class LogUtils {
      * @param lines the information to send
      */
     public void doLog(String... lines) {
-        BeansLib.getLoadedInstance().doLog(lines);
+        Beans.doLog(lines);
     }
 }

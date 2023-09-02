@@ -4,10 +4,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import lombok.var;
 import me.clip.placeholderapi.PlaceholderAPI;
-import me.croabeast.beanslib.character.CharHandler;
 import me.croabeast.beanslib.key.KeyManager;
+import me.croabeast.beanslib.message.CenteredMessage;
 import me.croabeast.beanslib.message.MessageSender;
 import me.croabeast.beanslib.misc.BeansLogger;
 import me.croabeast.beanslib.utility.TextUtils;
@@ -25,6 +24,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -37,16 +38,6 @@ import java.util.regex.Pattern;
 @Accessors(chain = true)
 @Getter @Setter
 public class BeansLib {
-
-    /**
-     * The static instance of the lib that doesn't have a plugin's implementation.
-     *
-     * <p> Methods that use a plugin instance like logging with a plugin prefix,
-     * sending bossbar messages and others plugin-related will throw a {@link NullPointerException}.
-     */
-    private static final BeansLib NO_PLUGIN_INSTANCE = new BeansLib(null);
-
-    private static BeansLib loadedInstance = null;
 
     @Getter(AccessLevel.NONE)
     @Nullable
@@ -164,6 +155,20 @@ public class BeansLib {
     @Setter(AccessLevel.NONE)
     private String @NotNull [] keysDelimiters = {"[", "]"};
 
+    BeansLib(@Nullable Plugin plugin, boolean load) {
+        this.plugin = plugin;
+
+        keyManager = new KeyManager();
+        logger = new BeansLogger(this);
+
+        langPrefix = "&e " + (this.plugin != null ?
+                this.plugin.getName() :
+                "JavaPlugin") + " &8»&7";
+
+        if (Beans.lib == null && load)
+            Beans.setLib(this);
+    }
+
     /**
      * Creates a new instance of the lib using a {@link Plugin} implementation.
      *
@@ -174,17 +179,17 @@ public class BeansLib {
      * @param plugin plugin's instance
      */
     public BeansLib(@Nullable Plugin plugin) {
-        this.plugin = plugin;
+        this(plugin, true);
+    }
 
-        keyManager = new KeyManager();
-        logger = new BeansLogger(this);
-
-        langPrefix = "&e " + (this.plugin != null ?
-                this.plugin.getName() : 
-                "JavaPlugin") + " &8»&7";
-
-        if (loadedInstance == null)
-            loadedInstance = this;
+    public BeansLib() {
+        this(((Function<Class<?>, Plugin>) c -> {
+            try {
+                return JavaPlugin.getProvidingPlugin(c);
+            } catch (Exception e) {
+                return null;
+            }
+        }).apply(BeansLib.class));
     }
 
     /**
@@ -238,7 +243,7 @@ public class BeansLib {
     @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
     public boolean fixColorLogger() {
-        return !coloredConsole;
+        return !isColoredConsole();
     }
 
     /**
@@ -251,7 +256,7 @@ public class BeansLib {
      */
     public String replacePrefixKey(String string, boolean remove) {
         return StringUtils.isBlank(string) ? string :
-                string.replace(langPrefixKey, remove ? "" : langPrefix);
+                string.replace(getLangPrefixKey(), remove ? "" : getLangPrefix());
     }
 
     /**
@@ -266,7 +271,7 @@ public class BeansLib {
      * @return the requested array
      */
     public String[] splitLine(String s, int limit) {
-        return s.split(lineSeparator, limit);
+        return s.split(getLineSeparator(), limit);
     }
 
     /**
@@ -320,18 +325,18 @@ public class BeansLib {
     public String parseChars(String string) {
         if (StringUtils.isBlank(string)) return string;
 
-        var m = getCharPattern().matcher(string);
+        Matcher m = getCharPattern().matcher(string);
 
         while (m.find()) {
-            var s = (char) Integer.parseInt(m.group(1), 16);
-            string = string.replace(m.group(), s + "");
+            char c = (char) Integer.parseInt(m.group(1), 16);
+            string = string.replace(m.group(), c + "");
         }
 
         return string;
     }
 
-    public String formatPlaceholders(Player parser, String string) {
-        string = keyManager.parseKeys(parser, string, false);
+    public String formatPlaceholders(@Nullable Player parser, String string) {
+        string = getKeyManager().parseKeys(parser, string, false);
         return TextUtils.PARSE_PLACEHOLDERAPI.apply(parser, parseChars(string));
     }
 
@@ -351,6 +356,30 @@ public class BeansLib {
     }
 
     /**
+     * Formats an input string parsing first {@link PlaceholderAPI} placeholders,
+     * replaced chars and then applying the respective colors.
+     *
+     * @param player a player, can be null
+     * @param string the input message
+     *
+     * @return the formatted message
+     */
+    public String colorize(Player player, String string) {
+        return colorize(player, player, string);
+    }
+
+    /**
+     * Formats an input string parsing first {@link PlaceholderAPI} placeholders,
+     * replaced chars and then applying the respective colors.
+     *
+     * @param string the input message
+     * @return the formatted message
+     */
+    public String colorize(String string) {
+        return colorize(null, string);
+    }
+
+    /**
      * Formats a string to a centered string, that has a perfect amount of spaces
      * before the actual string to be display in the chat as a centered message.
      *
@@ -361,52 +390,34 @@ public class BeansLib {
      * @return the centered chat message.
      */
     public String createCenteredChatMessage(Player target, Player parser, String string) {
-        if (StringUtils.isBlank(string)) return string;
-        final var prefix = getCenterPrefix();
-
-        final var output = colorize(target, parser, string);
-        if (!string.startsWith(prefix)) return output;
-
-        string = string.substring(prefix.length());
-
-        var initial = parseChars(TextUtils.STRIP_JSON.apply(string));
-        initial = colorize(target, parser, initial);
-
-        int messagePxSize = 0;
-        var previousCode = false;
-        var isBold = false;
-
-        for (var c : initial.toCharArray()) {
-            if (c == '§') {
-                previousCode = true;
-                continue;
-            }
-
-            else if (previousCode) {
-                previousCode = false;
-                isBold = c == 'l' || c == 'L';
-                continue;
-            }
-
-            var dFI = CharHandler.getInfo(c);
-            messagePxSize += isBold ?
-                    dFI.getBoldLength() : dFI.getLength();
-            messagePxSize++;
-        }
-
-        int halvedMessageSize = messagePxSize / 2;
-        int toCompensate = 154 - halvedMessageSize;
-        int compensated = 0;
-
-        var sb = new StringBuilder();
-        while (compensated < toCompensate) {
-            sb.append(" ");
-            compensated += 4; // 4 is the SPACE char length (3) + 1
-        }
-
-        return sb + output.substring(prefix.length());
+        return new CenteredMessage(target, parser).center(string);
     }
 
+    /**
+     * Formats a string to a centered string, that has a perfect amount of spaces
+     * before the actual string to be display in the chat as a centered message.
+     *
+     * @param player a player to parse placeholders.
+     * @param string the input message
+     *
+     * @return the centered chat message.
+     */
+    public String createCenteredChatMessage(Player player, String string) {
+        return createCenteredChatMessage(player, player, string);
+    }
+
+    /**
+     * Formats a string to a centered string, that has a perfect amount of spaces
+     * before the actual string to be display in the chat as a centered message.
+     *
+     * @param string the input message
+     * @return the centered chat message.
+     */
+    public String createCenteredChatMessage(String string) {
+        return createCenteredChatMessage(null, string);
+    }
+
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
     public String centerMessage(Player target, Player parser, String string) {
         return createCenteredChatMessage(target, parser, string);
@@ -423,7 +434,7 @@ public class BeansLib {
      * @return the requested string
      */
     public final String parsePlayerKeys(Player parser, String string, boolean c) {
-        return keyManager.parseKeys(parser, string, c);
+        return getKeyManager().parseKeys(parser, string, c);
     }
 
     /**
@@ -507,6 +518,14 @@ public class BeansLib {
      */
     public final void mixLog(CommandSender sender, String... lines) {
         logger.mixLog(sender, lines);
+    }
+
+    public boolean equals(Object o) {
+        if (o == null) return false;
+        if (!(o instanceof BeansLib)) return false;
+
+        BeansLib lib = (BeansLib) o;
+        return Objects.equals(lib.plugin, plugin);
     }
 
     /**
@@ -596,29 +615,5 @@ public class BeansLib {
     @Deprecated
     public void sendMessageList(CommandSender sender, ConfigurationSection section, String path) {
         sendMessageList(sender, TextUtils.toList(section, path));
-    }
-
-    /**
-     * Returns the static instance of the lib that is loaded by a plugin using this lib.
-     * If there is no loaded instance, will return the {@link #NO_PLUGIN_INSTANCE}.
-     *
-     * <p> To avoid the no-plugin result, a lib instance should be initialized in the
-     * main class of the project, on {@link JavaPlugin#onLoad()} or {@link JavaPlugin#onEnable()}.
-     *
-     * <pre> {@code
-     * "Initialization example of the lib"
-     * public void onEnable() {
-     *     lib = new BeansLib(this);
-     * }} </pre>
-     *
-     * Methods that depends on the plugin's instance, such as {@link #doLog(String...)},
-     * will throw an {@link NullPointerException} if the {@link #NO_PLUGIN_INSTANCE} is
-     * returned or if the instance has no plugin implementation.
-     *
-     * @return loaded instance
-     */
-    @NotNull
-    public static BeansLib getLoadedInstance() {
-        return loadedInstance == null ? NO_PLUGIN_INSTANCE : loadedInstance;
     }
 }

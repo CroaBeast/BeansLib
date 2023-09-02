@@ -3,7 +3,7 @@ package me.croabeast.beanslib.builder;
 import com.google.common.collect.Lists;
 import lombok.*;
 import lombok.experimental.Accessors;
-import me.croabeast.beanslib.BeansLib;
+import me.croabeast.beanslib.Beans;
 import me.croabeast.beanslib.message.MessageKey;
 import me.croabeast.beanslib.utility.TextUtils;
 import org.apache.commons.lang.StringUtils;
@@ -225,10 +225,9 @@ public class BossbarBuilder {
     List<String> toList(List<String> list, int interval) {
         list.replaceAll(s -> {
             if (StringUtils.isBlank(s)) return "";
-            return BeansLib.getLoadedInstance().colorize(null,
-                    player,
-                    TextUtils.STRIP_FIRST_SPACES.apply(s)
-            );
+
+            return Beans.colorize(player,
+                    TextUtils.STRIP_FIRST_SPACES.apply(s));
         });
 
         return ifList(list, interval, null);

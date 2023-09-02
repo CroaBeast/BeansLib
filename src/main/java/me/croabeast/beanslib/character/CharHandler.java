@@ -1,5 +1,6 @@
 package me.croabeast.beanslib.character;
 
+import me.croabeast.beanslib.utility.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -53,7 +54,6 @@ public final class CharHandler {
      */
     @Nullable
     public static Character toChar(String input) {
-        if (input == null || input.length() <= 0) return null;
         if (StringUtils.isBlank(input)) return null;
 
         char[] array = input.toCharArray();
@@ -89,8 +89,7 @@ public final class CharHandler {
      * @param array a character array
      */
     public static void removeChar(char... array) {
-        if (array == null || array.length == 0) return;
-        for (char c : array) VALUES.remove(c);
+        if (!ArrayUtils.isArrayEmpty(array)) for (char c : array) VALUES.remove(c);
     }
 
     /**
@@ -110,7 +109,7 @@ public final class CharHandler {
      * @param array an string array
      */
     public static void removeChar(String... array) {
-        if (array == null || array.length == 0) return;
+        if (ArrayUtils.isArrayEmpty(array)) return;
 
         for (String input : array) {
             Character character = toChar(input);

@@ -4,7 +4,9 @@ import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.var;
+import me.croabeast.beanslib.Beans;
 import me.croabeast.beanslib.BeansLib;
+import me.croabeast.beanslib.utility.ArrayUtils;
 import me.croabeast.beanslib.utility.Exceptions;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.neoprismatic.NeoPrismaticAPI;
@@ -27,15 +29,11 @@ import java.util.regex.Pattern;
  * A builder class for creating complex chat messages in Minecraft. Allows for
  * setting hover and click actions on individual parts of the message.
  *
- * <p> Every string that is appended can be colorized if Bukkit color codes,
- * {@link NeoPrismaticAPI} color formatting, and placeholders can be replaced if
- * the {@link Player} parser variable is defined.
+ * <p> Every string that is appended is being colorized using {@link NeoPrismaticAPI}
+ * color formatting, and placeholders are being replaced if a {@link Player} parser
+ * variable is defined.
  */
 public class ChatMessageBuilder implements Cloneable {
-
-    private static BeansLib getLib() {
-        return BeansLib.getLoadedInstance();
-    }
 
     private final Player target, parser;
     private boolean parseURLs = true;
@@ -118,7 +116,6 @@ public class ChatMessageBuilder implements Cloneable {
         messageMap.put(index, new ChatMessage(st));
     }
 
-    @SuppressWarnings("deprecation")
     private void updateMessageMapping(String string) {
         if (string == null) return;
 
@@ -131,7 +128,7 @@ public class ChatMessageBuilder implements Cloneable {
         var line = interactiveChat.apply(parser, string);
 
         line = TextUtils.CONVERT_OLD_JSON.apply(line);
-        line = getLib().centerMessage(target, parser, line);
+        line = Beans.createCenteredChatMessage(target, parser, line);
 
         var match = TextUtils.FORMAT_CHAT_PATTERN.matcher(line);
         int last = 0;
@@ -176,8 +173,9 @@ public class ChatMessageBuilder implements Cloneable {
 
     public ChatMessageBuilder setHover(String... hover) {
         return setHover(
-                (hover == null || hover.length == 0) ?
-                null : Lists.newArrayList(hover)
+                ArrayUtils.isArrayEmpty(hover) ?
+                        null :
+                        Lists.newArrayList(hover)
         );
     }
 
@@ -305,7 +303,7 @@ public class ChatMessageBuilder implements Cloneable {
             if (hover != null) {
                 if (clickSet) builder.append('|');
 
-                String s = getLib().getLineSeparator();
+                String s = Beans.getLineSeparator();
                 builder.append("hover:\"").
                         append(String.join(s, hover.hover)).
                         append('"');
@@ -343,7 +341,7 @@ public class ChatMessageBuilder implements Cloneable {
         }
 
         ClickEvent createEvent() {
-            String s = getLib().formatPlaceholders(parser, input);
+            String s = Beans.formatPlaceholders(parser, input);
             return new ClickEvent(type.asBukkit(), s);
         }
 
@@ -375,7 +373,7 @@ public class ChatMessageBuilder implements Cloneable {
 
             for (int i = 0; i < hover.length; i++)
                 array[i] = onlyComp(
-                        getLib().colorize(target, parser, hover[i]) +
+                        Beans.colorize(target, parser, hover[i]) +
                         (i == hover.length - 1 ? "" : "\n")
                 );
 
@@ -419,7 +417,7 @@ public class ChatMessageBuilder implements Cloneable {
             String h = hover.split(":\"", 2)[1];
             h = h.substring(0, h.length() - 1);
 
-            this.hover = new HoverAction(getLib().splitLine(h));
+            this.hover = new HoverAction(Beans.splitLine(h));
         }
 
         boolean isEmpty() {

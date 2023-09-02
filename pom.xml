@@ -6,7 +6,7 @@
 
     <groupId>io.github.croabeast</groupId>
     <artifactId>BeansLib</artifactId>
-    <version>1.4-SNAPSHOT-75</version>
+    <version>1.4-SNAPSHOT-82</version>
     <packaging>jar</packaging>
 
     <name>BeansLib</name>
@@ -206,6 +206,11 @@
     </repositories>
 
     <dependencies>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>24.0.1</version>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

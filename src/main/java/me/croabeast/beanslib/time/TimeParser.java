@@ -1,7 +1,7 @@
 package me.croabeast.beanslib.time;
 
 import lombok.var;
-import me.croabeast.beanslib.BeansLib;
+import me.croabeast.beanslib.Beans;
 import org.bukkit.entity.Player;
 
 /**
@@ -95,10 +95,7 @@ public class TimeParser {
         long result = this.seconds;
 
         if (result <= 0)
-            return BeansLib.getLoadedInstance().colorize(
-                    null, parser,
-                    isPlural(0, keys.getSecondFormat())
-            );
+            return Beans.colorize(parser, isPlural(0, keys.getSecondFormat()));
 
         var formattedTime = new StringBuilder();
         long years, months, weeks, days, hours, mins;
@@ -148,10 +145,8 @@ public class TimeParser {
         if (result > 0) formattedTime.
                 append(isPlural(result, keys.getSecondFormat() + split));
 
-        return BeansLib.getLoadedInstance().colorize(null, parser,
-                formattedTime.substring(0,
-                formattedTime.length() - split.length())
-        );
+        int time = formattedTime.length(), s = split.length();
+        return Beans.colorize(parser, formattedTime.substring(0, time - s));
     }
 
     /**

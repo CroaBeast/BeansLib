@@ -5,6 +5,7 @@ import lombok.var;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.message.MessageKey;
 import me.croabeast.beanslib.message.MessageSender;
+import me.croabeast.beanslib.utility.ArrayUtils;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.neoprismatic.NeoPrismaticAPI;
 import org.apache.commons.lang.StringUtils;
@@ -14,6 +15,7 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 
 /**
  * This class can manages how strings can be logged/sent to a player and/or console.
@@ -27,13 +29,13 @@ public class BeansLogger {
     private final BeansLib lib;
 
     private List<String> toLogLines(Player p, boolean isLog, String... lines) {
-        if (lines == null || lines.length == 0)
+        if (ArrayUtils.isArrayEmpty(lines))
             return new ArrayList<>();
 
-        final var split = lib.getLineSeparator();
-        final var list = new ArrayList<String>();
+        final String split = lib.getLineSeparator();
+        final List<String> list = new ArrayList<>();
 
-        for (var line : lines) {
+        for (String line : lines) {
             if (line == null) continue;
 
             line = lib.replacePrefixKey(line, isLog);
@@ -43,7 +45,7 @@ public class BeansLogger {
             var key = MessageKey.identifyKey(line);
 
             if (isLog && key != MessageKey.CHAT_KEY) {
-                var match = key.getPattern().matcher(line);
+                Matcher match = key.getPattern().matcher(line);
 
                 if (match.find())
                     line = line.replace(match.group(), "");
@@ -145,12 +147,12 @@ public class BeansLogger {
      * @param lines the information to send
      */
     public void mixLog(CommandSender sender, String... lines) {
-        if (lines == null || lines.length == 0)
+        if (ArrayUtils.isArrayEmpty(lines))
             return;
 
         var mSender = new MessageSender(sender).setLogger(false);
 
-        for (var line : lines) {
+        for (String line : lines) {
             if (StringUtils.isBlank(line)) {
                 if (sender != null) mSender.singleSend(line);
 
@@ -158,7 +160,7 @@ public class BeansLogger {
                 continue;
             }
 
-            var array = line.split("::", 2);
+            String[] array = line.split("::", 2);
 
             if (array.length != 2) {
                 if (sender != null) mSender.singleSend(line);

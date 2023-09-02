@@ -31,14 +31,14 @@ public class ArrayUtils {
         if (extraArrays == null || extraArrays.length < 1)
             return array;
 
-        var resultList = new ArrayList<T>();
+        List<T> resultList = new ArrayList<>();
         Collections.addAll(resultList, array);
 
-        for (var a : extraArrays)
+        for (T[] a : extraArrays)
             if (a != null) Collections.addAll(resultList, a);
 
         var clazz = array.getClass().getComponentType();
-        var resultArray = (T[]) Array.newInstance(clazz, 0);
+        T[] resultArray = (T[]) Array.newInstance(clazz, 0);
 
         return resultList.toArray(resultArray);
     }
@@ -55,8 +55,16 @@ public class ArrayUtils {
             throw new IllegalArgumentException("Array should be declared.");
 
         List<T> list = new ArrayList<>();
-        for (T element : array) list.add(operator.apply(element));
+
+        for (T element : array)
+            list.add(operator != null ? operator.apply(element) : element);
 
         return list;
+    }
+
+    @SafeVarargs
+    @NotNull
+    public <T> List<T> fromArray(T... array) {
+        return fromArray(null, array);
     }
 }

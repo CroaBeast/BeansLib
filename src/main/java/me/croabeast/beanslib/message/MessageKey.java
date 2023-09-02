@@ -5,10 +5,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.var;
+import me.croabeast.beanslib.Beans;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.builder.BossbarBuilder;
 import me.croabeast.beanslib.builder.ChatMessageBuilder;
 import me.croabeast.beanslib.discord.Webhook;
+import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.neoprismatic.NeoPrismaticAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
@@ -20,8 +22,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-import static me.croabeast.beanslib.utility.TextUtils.*;
-
 /**
  * The {@code MessageKey} class manages how to identify a message type if it has
  * a respective registered prefix and an optional additional regex parameter to
@@ -31,7 +31,7 @@ import static me.croabeast.beanslib.utility.TextUtils.*;
  * regex, if It's necessary to change those values.
  *
  * <p> The default key and regex of each  instance depends mostly on the
- * {@link BeansLib#getLoadedInstance()}.
+ * {@link Beans#getLoaded()}.
  *
  * <p> This class can not have more instances or child classes to avoid errors with
  * the existing keys.
@@ -44,11 +44,7 @@ import static me.croabeast.beanslib.utility.TextUtils.*;
  */
 @Accessors(chain = true)
 @Setter
-public abstract class MessageKey implements MessageAction, Cloneable {
-
-    private static BeansLib getLib() {
-        return BeansLib.getLoadedInstance();
-    }
+public abstract class MessageKey implements Cloneable {
 
     private static final HashMap<Integer, MessageKey>
             MESSAGE_KEY_MAP = new HashMap<>(), DEFAULT_KEY_MAP = new HashMap<>();
@@ -56,11 +52,11 @@ public abstract class MessageKey implements MessageAction, Cloneable {
     /**
      * The {@link MessageKey} instance to identify action-bar messages.
      */
-    public static final MessageKey ACTION_BAR_KEY = new MessageKey("action-bar") {
+    public static final MessageKey ACTION_BAR_KEY = new MessageKey(MessageFlag.ACTION_BAR) {
         @Override
-        public boolean execute(Player t, Player parser, String s) {
+        public boolean execute(Player t, Player p, String s) {
             try {
-                sendActionBar(t, formatString(t, parser, s));
+                TextUtils.sendActionBar(t, formatString(t, p, s));
                 return true;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -74,9 +70,9 @@ public abstract class MessageKey implements MessageAction, Cloneable {
      *
      * <p> By default has a regex string to catch how many seconds the title will be displayed.
      */
-    public static final MessageKey TITLE_KEY = new MessageKey("title", "(:\\d+)?") {
+    public static final MessageKey TITLE_KEY = new MessageKey(MessageFlag.TITLE, "(:\\d+)?") {
         @Override
-        public boolean execute(Player t, Player parser, String s) {
+        public boolean execute(Player t, Player p, String s) {
             var m1 = getPattern().matcher(s);
             String tm = null;
 
@@ -84,7 +80,7 @@ public abstract class MessageKey implements MessageAction, Cloneable {
                 if (m1.find()) tm = m1.group(1).substring(1);
             } catch (Exception ignored) {}
 
-            int[] a = getLib().getDefaultTitleTicks();
+            int[] a = Beans.getDefaultTitleTicks();
             int time = a[1];
 
             try {
@@ -92,10 +88,10 @@ public abstract class MessageKey implements MessageAction, Cloneable {
                     time = Integer.parseInt(tm) * 20;
             } catch (Exception ignored) {}
 
-            var t1 = formatString(t, parser, s);
+            var t1 = formatString(t, p, s);
 
             try {
-                sendTitle(t, getLib().splitLine(t1), a[0], time, a[2]);
+                TextUtils.sendTitle(t, Beans.splitLine(t1), a[0], time, a[2]);
                 return true;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -109,10 +105,10 @@ public abstract class MessageKey implements MessageAction, Cloneable {
      *
      * <p> By default has a regex string to catch the configuration path of the webhook.
      */
-    public static final MessageKey WEBHOOK_KEY = new MessageKey("webhook", "(:.+)?") {
+    public static final MessageKey WEBHOOK_KEY = new MessageKey(MessageFlag.WEBHOOK, "(:.+)?") {
         @Override
         public boolean execute(Player t, Player parser, String s) {
-            var id = getLib().getWebhookSection();
+            var id = Beans.getWebhookSection();
             if (id == null) return false;
 
             var list = new ArrayList<>(id.getKeys(false));
@@ -125,8 +121,8 @@ public abstract class MessageKey implements MessageAction, Cloneable {
 
             if (m3.find()) {
                 var split = m3.group().
-                        replace(getLib().getKeysDelimiters()[0], "").
-                        replace(getLib().getKeysDelimiters()[1], "").
+                        replace(Beans.getKeysDelimiters()[0], "").
+                        replace(Beans.getKeysDelimiters()[1], "").
                         split(":", 2);
 
                 var temp = split.length == 2 ? split[1] : null;
@@ -144,7 +140,7 @@ public abstract class MessageKey implements MessageAction, Cloneable {
     /**
      * The {@link MessageKey} instance to identify vanilla json messages.
      */
-    public static final MessageKey JSON_KEY = new MessageKey("json") {
+    public static final MessageKey JSON_KEY = new MessageKey(MessageFlag.JSON) {
         @Override
         public boolean execute(Player t, Player parser, String s) {
             try {
@@ -166,14 +162,14 @@ public abstract class MessageKey implements MessageAction, Cloneable {
      * <p> By default has a regex string to catch the configuration path of the custom bossbar,
      * or to catch the arguments of the bossbar message.
      */
-    public static final MessageKey BOSSBAR_KEY = new MessageKey("bossbar", "(:.+)?") {
+    public static final MessageKey BOSSBAR_KEY = new MessageKey(MessageFlag.BOSSBAR, "(:.+)?") {
         @Override
         public boolean execute(Player t, Player parser, String s) {
-            var plugin = getLib().getPlugin();
-            var m2 = getLib().getBossbarPattern().matcher(s);
+            var plugin = Beans.getPlugin();
+            var m2 = Beans.getBossbarPattern().matcher(s);
 
             if (m2.find()) {
-                var c = getLib().getBossbarSection();
+                var c = Beans.getBossbarSection();
                 if (c == null) return false;
 
                 c = c.getConfigurationSection(m2.group(1));
@@ -196,11 +192,11 @@ public abstract class MessageKey implements MessageAction, Cloneable {
      *
      * <p> The setters of this instance will throw an {@link UnsupportedOperationException}.
      */
-    public static final MessageKey CHAT_KEY = new MessageKey("chat") {
+    public static final MessageKey CHAT_KEY = new MessageKey(MessageFlag.CHAT) {
         private static final String MSG_EX = "Setter is not supported on this instance";
 
         @Override
-        public MessageKey setKey(String key) {
+        public MessageKey setFlag(MessageFlag flag) {
             throw new UnsupportedOperationException(MSG_EX);
         }
 
@@ -226,7 +222,7 @@ public abstract class MessageKey implements MessageAction, Cloneable {
      * The main key of this object to identify it.
      */
     @Getter
-    private String key;
+    private MessageFlag flag;
     private final int index;
     /**
      * The optional regex string to catch more arguments.
@@ -236,8 +232,8 @@ public abstract class MessageKey implements MessageAction, Cloneable {
     @Setter(AccessLevel.NONE)
     private boolean color = false;
 
-    private MessageKey(String key, String regex) {
-        this.key = key;
+    private MessageKey(MessageFlag flag, String regex) {
+        this.flag = flag;
         this.regex = regex;
         index = ordinal;
 
@@ -247,8 +243,8 @@ public abstract class MessageKey implements MessageAction, Cloneable {
         ordinal++;
     }
 
-    private MessageKey(String key) {
-        this(key, null);
+    private MessageKey(MessageFlag flag) {
+        this(flag, null);
     }
 
     MessageKey doColor() {
@@ -274,20 +270,38 @@ public abstract class MessageKey implements MessageAction, Cloneable {
     }
 
     /**
-     * The main key of this object to identify it, but in upper-case.
+     * Executes the defined action of this representation.
      *
-     * @return the key but in upper-case
+     * @param target a target player
+     * @param parser a player to parse arguments
+     * @param string an input string
+     *
+     * @return true if was executed, false otherwise
      */
-    public String getUpperKey() {
-        return getKey().toUpperCase(Locale.ENGLISH);
+    public abstract boolean execute(Player target, Player parser, String string);
+
+    /**
+     * Executes the defined action of this representation.
+     *
+     * @param parser a player to parse arguments
+     * @param string an input string
+     *
+     * @return true if was executed, false otherwise
+     */
+    public boolean execute(Player parser, String string) {
+        return execute(parser, parser, string);
     }
 
     private String getRegex() {
-        var s = key + (StringUtils.isBlank(regex) ? "" : regex);
+        String flag = this.flag.toString().replace('_', '-');
+        flag = flag.toLowerCase(Locale.ENGLISH) +
+                (StringUtils.isBlank(regex) ? "" : regex);
+
+        String[] delimiters = Beans.getKeysDelimiters();
 
         return "(?i)^" +
-                Pattern.quote(getLib().getKeysDelimiters()[0]) + s +
-                Pattern.quote(getLib().getKeysDelimiters()[1]);
+                Pattern.quote(delimiters[0]) + flag +
+                Pattern.quote(delimiters[1]);
     }
 
     /**
@@ -308,12 +322,12 @@ public abstract class MessageKey implements MessageAction, Cloneable {
 
         while (m.find()) s = s.replace(m.group(), "");
 
-        s = STRIP_FIRST_SPACES.apply(STRIP_JSON.apply(s));
-        s = getLib().parsePlayerKeys(parser, s, false);
+        s = TextUtils.STRIP_FIRST_SPACES.apply(TextUtils.STRIP_JSON.apply(s));
+        s = Beans.parsePlayerKeys(parser, s, false);
 
         return !color ?
-                NeoPrismaticAPI.stripAll(getLib().formatPlaceholders(parser, s)) :
-                getLib().colorize(target, parser, s);
+                NeoPrismaticAPI.stripAll(Beans.formatPlaceholders(parser, s)) :
+                Beans.colorize(target, parser, s);
     }
 
     /**
@@ -330,7 +344,7 @@ public abstract class MessageKey implements MessageAction, Cloneable {
         for (var key : MESSAGE_KEY_MAP.values())
             if (key.getPattern().matcher(s).find()) return key;
 
-        if (getLib().getBossbarPattern().
+        if (Beans.getBossbarPattern().
                 matcher(s).find()) return BOSSBAR_KEY;
 
         return CHAT_KEY;
@@ -348,7 +362,7 @@ public abstract class MessageKey implements MessageAction, Cloneable {
         if (StringUtils.isBlank(k)) return CHAT_KEY;
 
         for (var key : MESSAGE_KEY_MAP.values())
-            if (k.matches("(?i)" + key.getKey())) return key;
+            if (k.matches("(?i)" + key.getFlag())) return key;
 
         return CHAT_KEY;
     }

@@ -1,7 +1,7 @@
 package me.croabeast.beanslib.builder;
 
-import com.google.common.collect.Lists;
 import lombok.var;
+import me.croabeast.beanslib.utility.ArrayUtils;
 import net.md_5.bungee.api.chat.ClickEvent;
 import org.apache.commons.lang.StringUtils;
 
@@ -55,8 +55,8 @@ public enum ClickType {
         this.bukkit = bukkit;
         names.add(name().toLowerCase(Locale.ENGLISH));
 
-        if (extras != null && extras.length > 0)
-            names.addAll(Lists.newArrayList(extras));
+        if (!ArrayUtils.isArrayEmpty(extras))
+            names.addAll(ArrayUtils.fromArray(extras));
     }
 
     /**

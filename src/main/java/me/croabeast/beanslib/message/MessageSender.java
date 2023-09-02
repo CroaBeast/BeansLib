@@ -1,19 +1,18 @@
 package me.croabeast.beanslib.message;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.var;
-import me.croabeast.beanslib.BeansLib;
+import me.croabeast.beanslib.Beans;
 import me.croabeast.beanslib.key.ValueReplacer;
+import me.croabeast.beanslib.utility.ArrayUtils;
 import me.croabeast.beanslib.utility.TextUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.text.Normalizer;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
@@ -27,12 +26,12 @@ import java.util.function.UnaryOperator;
  * // Creating an instance
  * MessageSender sender = new MessageSender(
  *       Bukkit.getOnlinePlayers(), // can be single or null
- *       Bukkit.getPlayer("Markiplier"),
+ *       Bukkit.getPlayer("Markiplier")
  * );
  *
  * // only chat and bossbar messages are allowed with
  * // these flags, this is optional
- * sender.setFlags(MessageSender.CHAT, MessageSender.BOSSBAR);
+ * sender.setFlags(MessageFlag.CHAT, MessageFlag.BOSSBAR);
  *
  * // send multiple lists and arrays using the same instance
  * sender.send(false, plugin.getConfig().getStringList("path"));
@@ -52,44 +51,10 @@ import java.util.function.UnaryOperator;
  * @since 1.3
  */
 @Accessors(chain = true)
-public class MessageSender implements Cloneable {
+public final class MessageSender implements Cloneable {
 
     @NotNull
     private static MessageSender loaded = new MessageSender();
-
-    private static BeansLib getLib() {
-        return BeansLib.getLoadedInstance();
-    }
-
-    /**
-     * This flag allows to display action bar messages.
-     */
-    public static final String ACTION_BAR = "ACTION-BAR";
-    /**
-     * This flag allows to send chat messages.
-     */
-    public static final String CHAT = "CHAT";
-    /**
-     * This flag allows to display bossbar messages.
-     */
-    public static final String BOSSBAR = "BOSSBAR";
-    /**
-     * This flag allows to send vanilla JSON messages.
-     */
-    public static final String JSON = "JSON";
-    /**
-     * This flag allows to send webhooks.
-     */
-    public static final String WEBHOOK = "WEBHOOK";
-    /**
-     * This flag allows to display title messages.
-     */
-    public static final String TITLE = "TITLE";
-
-    /**
-     * The array that contains all the available flags.
-     */
-    public static final String[] ALL_FLAGS = {ACTION_BAR, CHAT, BOSSBAR, JSON, WEBHOOK, TITLE};
 
     private Collection<? extends CommandSender> targets = null;
     /**
@@ -99,10 +64,10 @@ public class MessageSender implements Cloneable {
     @Setter
     private Player parser = null;
 
-    private Set<String> flags = new HashSet<>();
+    private Set<MessageFlag> flags = new HashSet<>();
 
     private String[] keys = null, values = null;
-    private List<BiFunction<Player, String, String>> functions = new ArrayList<>();
+    private final List<BiFunction<Player, String, String>> functions = new ArrayList<>();
 
     /**
      * Sets if messages can be sent into the console or not.
@@ -142,7 +107,10 @@ public class MessageSender implements Cloneable {
      * @param sender a sender
      */
     public MessageSender(CommandSender sender) {
-        this.targets = sender != null ? Lists.newArrayList(sender) : null;
+        this(
+                sender != null ? Lists.newArrayList(sender) : null,
+                sender instanceof Player ? (Player) sender : null
+        );
     }
 
     /**
@@ -151,6 +119,29 @@ public class MessageSender implements Cloneable {
      * sending a list or array.
      */
     public MessageSender() {}
+
+    public MessageSender(MessageSender sender) {
+        Objects.requireNonNull(sender);
+
+        this.parser = sender.parser;
+
+        if (sender.targets != null)
+            targets = new ArrayList<>(sender.targets);
+
+        if (sender.flags != null)
+            this.flags = new HashSet<>(sender.flags);
+
+        final String[] k = sender.keys, v = sender.values;
+
+        if (k != null)
+            keys = Arrays.copyOf(k, k.length);
+        if (v != null)
+            values = Arrays.copyOf(v, v.length);
+
+        this.caseSensitive = sender.caseSensitive;
+        this.isLogger = sender.isLogger;
+        this.noFirstSpaces = sender.noFirstSpaces;
+    }
 
     /**
      * The collection or array of targets that messages will be sent.
@@ -171,8 +162,12 @@ public class MessageSender implements Cloneable {
      * @param targets an array of targets
      * @return a reference of this object
      */
-    public final MessageSender setTargets(CommandSender... targets) {
-        return setTargets(targets == null ? null : Lists.newArrayList(targets));
+    public MessageSender setTargets(CommandSender... targets) {
+        return setTargets(
+                ArrayUtils.isArrayEmpty(targets) ?
+                        null :
+                        Lists.newArrayList(targets)
+        );
     }
 
     /**
@@ -212,15 +207,8 @@ public class MessageSender implements Cloneable {
      * @param flags an array of flags
      * @return a reference of this object
      */
-    public MessageSender setFlags(String... flags) {
-        var set = Sets.newHashSet(flags);
-
-        set.removeIf(
-                s -> StringUtils.isBlank(s) ||
-                !Arrays.asList(ALL_FLAGS).contains(s)
-        );
-
-        this.flags = set;
+    public MessageSender setFlags(MessageFlag... flags) {
+        this.flags = new HashSet<>(ArrayUtils.fromArray(flags));
         return this;
     }
 
@@ -230,7 +218,7 @@ public class MessageSender implements Cloneable {
      * @param keys an array of keys
      * @return a reference of this object
      */
-    public final MessageSender setKeys(String... keys) {
+    public MessageSender setKeys(String... keys) {
         this.keys = keys;
         return this;
     }
@@ -278,11 +266,11 @@ public class MessageSender implements Cloneable {
         final boolean c = caseSensitive;
         for (var f : functions) string = f.apply(parser, string);
 
-        string = getLib().parsePlayerKeys(parser, string, c);
+        string = Beans.parsePlayerKeys(parser, string, c);
         return ValueReplacer.forEach(keys, values, string, c);
     }
 
-    private boolean notFlag(String flag) {
+    private boolean notFlag(MessageFlag flag) {
         return !flags.isEmpty() && !flags.contains(flag);
     }
 
@@ -290,9 +278,9 @@ public class MessageSender implements Cloneable {
         final var key = MessageKey.identifyKey(s);
 
         if (key == MessageKey.WEBHOOK_KEY &&
-                !notFlag(WEBHOOK)) key.execute(parser, s);
+                !notFlag(MessageFlag.WEBHOOK)) key.execute(parser, s);
 
-        getLib().rawLog(formatString(parser, s));
+        Beans.rawLog(formatString(parser, s));
         return output;
     }
 
@@ -310,7 +298,7 @@ public class MessageSender implements Cloneable {
     public boolean singleSend(String string) {
         if (string == null) return false;
 
-        string = getLib().replacePrefixKey(string, false);
+        string = Beans.replacePrefixKey(string, false);
 
         if (targets == null || targets.isEmpty())
             return sendWebhook(string, true);
@@ -322,7 +310,7 @@ public class MessageSender implements Cloneable {
 
         if (targets.isEmpty()) return sendWebhook(string, false);
 
-        var m = getLib().getBlankPattern().matcher(string);
+        var m = Beans.getBlankPattern().matcher(string);
 
         var isMatching = m.find();
         var count = isMatching ? Integer.parseInt(m.group(1)) : 0;
@@ -330,7 +318,7 @@ public class MessageSender implements Cloneable {
         isMatching = isMatching && count > 0;
 
         var key = MessageKey.identifyKey(string);
-        if (notFlag(key.getUpperKey())) return false;
+        if (notFlag(key.getFlag())) return false;
 
         boolean notSend = true;
 
@@ -354,7 +342,7 @@ public class MessageSender implements Cloneable {
         if (notSend) return false;
 
         if (isLogger)
-            getLib().rawLog(formatString(
+            Beans.rawLog(formatString(
                     parser == null && targets.size() == 1 ?
                     targets.get(0) : parser, string
             ));
@@ -374,7 +362,7 @@ public class MessageSender implements Cloneable {
         final var list = new ArrayList<String>();
 
         for (var s : stringList)
-            if (s != null) list.add(getLib().replacePrefixKey(s, false));
+            if (s != null) list.add(Beans.replacePrefixKey(s, false));
 
         if (list.isEmpty()) return false;
         if (list.size() == 1 &&
@@ -393,7 +381,7 @@ public class MessageSender implements Cloneable {
         var logList = new ArrayList<String>();
 
         for (var s : list) {
-            var m = getLib().getBlankPattern().matcher(s);
+            var m = Beans.getBlankPattern().matcher(s);
 
             var isMatching = m.find();
             int count = isMatching ?
@@ -402,7 +390,7 @@ public class MessageSender implements Cloneable {
             isMatching = isMatching && count > 0;
 
             var key = MessageKey.identifyKey(s);
-            if (notFlag(key.getUpperKey())) continue;
+            if (notFlag(key.getFlag())) continue;
 
             List<Boolean> executed = new ArrayList<>();
 
@@ -430,7 +418,7 @@ public class MessageSender implements Cloneable {
         }
 
         if (isLogger && logList.size() > 0)
-            getLib().rawLog(logList.toArray(new String[0]));
+            Beans.rawLog(logList.toArray(new String[0]));
         return true;
     }
 
@@ -457,9 +445,13 @@ public class MessageSender implements Cloneable {
         try {
             var sender = (MessageSender) super.clone();
 
-            sender.targets = new ArrayList<>(targets);
+            if (targets != null)
+                sender.targets = new ArrayList<>(targets);
+
             sender.flags = new HashSet<>(flags);
-            sender.functions = new ArrayList<>(functions);
+
+            sender.functions.clear();
+            sender.functions.addAll(new ArrayList<>(functions));
 
             final String[] k = keys, v = values;
 
@@ -472,7 +464,7 @@ public class MessageSender implements Cloneable {
         }
         catch (Exception e) {
             // this shouldn't happen, since the sender is Cloneable
-            return this;
+            return new MessageSender(this);
         }
     }
 

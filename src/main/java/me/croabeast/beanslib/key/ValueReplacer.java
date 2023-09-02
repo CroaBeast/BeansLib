@@ -4,9 +4,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import lombok.var;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -35,13 +35,13 @@ public class ValueReplacer {
         if (StringUtils.isBlank(string)) return string;
         if (StringUtils.isBlank(key)) return string;
 
-        var temp = sensitive ? "" : "(?i)";
+        String temp = sensitive ? "" : "(?i)";
         temp = temp + Pattern.quote(key);
 
-        var m = Pattern.compile(temp).matcher(string);
+        Matcher m = Pattern.compile(temp).matcher(string);
 
         if (m.find()) {
-            var v = StringUtils.isBlank(value) ? "" : value;
+            String v = StringUtils.isBlank(value) ? "" : value;
             string = string.replace(m.group(), v);
         }
 
