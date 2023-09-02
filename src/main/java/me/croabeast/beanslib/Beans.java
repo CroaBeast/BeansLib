@@ -191,7 +191,7 @@ public class Beans {
     }
 
     /**
-     * Creates a new string array from an input string using the {@link BeansLib#getLineSeparator}
+     * Creates a new string array from an input string using the {@link #getLineSeparator}
      * as a split for the array.
      *
      * <p> You can define the limit of the array.
@@ -206,7 +206,7 @@ public class Beans {
     }
 
     /**
-     * Creates a new string array from an input string using the {@link BeansLib#getLineSeparator}
+     * Creates a new string array from an input string using the {@link #getLineSeparator}
      * as a split for the array.
      *
      * @param s an input string
@@ -309,7 +309,7 @@ public class Beans {
     }
 
     /**
-     * Parses the players keys defined in your {@link BeansLib#getKeyManager} object
+     * Parses the players keys defined in your {@link #getKeyManager} object
      * to its respective player variables.
      *
      * @param parser a player
@@ -323,7 +323,7 @@ public class Beans {
     }
 
     /**
-     * Parses the players keys defined in your {@link BeansLib#getKeyManager} object
+     * Parses the players keys defined in your {@link #getKeyManager} object
      * to its respective player variables. Keys are case-insensitive.
      *
      * @param parser a player
@@ -435,14 +435,14 @@ public class Beans {
      *
      * <pre> {@code
      * "Initialization example of the lib in the main plugin class"
-     * @Override
+     *
      * public void onEnable() {
      *     BeansLib lib = new BeansLib(this);
      *     // or this
      *     BeansLib lib = new BeansLib();
      * }} </pre>
      *
-     * Methods that depends on the plugin's instance, such as {@link BeansLib#doLog(String...)},
+     * Methods that depends on the plugin's instance, such as {@link #doLog(String...)},
      * will throw an {@link NullPointerException} if the {@link #NO_PLUGIN_INSTANCE} is
      * returned or if the instance has no plugin implementation.
      *
