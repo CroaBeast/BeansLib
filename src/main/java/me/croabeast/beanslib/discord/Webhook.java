@@ -21,8 +21,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * <p> {@link #sendAsync()} can be used to send asynchronously using {@link CompletableFuture}.
  *
- * @author Kihsomray
- * @fork CroaBeast
+ * @author Kihsomray (forked by CroaBeast)
  * @since 1.1
  */
 public class Webhook {

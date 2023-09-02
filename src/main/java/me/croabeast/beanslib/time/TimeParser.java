@@ -17,8 +17,7 @@ import org.bukkit.entity.Player;
  * TimeParser parser = new TimeParser(keys, 2132);
  * } </pre>
  *
- * @author Kihsomray
- * @fork CroaBeast
+ * @author Kihsomray (forked by CroaBeast)
  * @version 1.3
  */
 public class TimeParser {

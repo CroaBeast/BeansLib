@@ -35,8 +35,7 @@ import java.util.List;
  *
  * <p> Note: This class requires the Apache Commons Lang and JSON libraries, as well as Java 11 or higher.
  *
- * @author Kihsomray
- * @fork CroaBeast
+ * @author Kihsomray (forked by CroaBeast)
  * @since 1.1
  */
 public class RawWebhook {

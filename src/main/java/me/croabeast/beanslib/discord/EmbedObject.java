@@ -14,8 +14,7 @@ import java.util.List;
 /**
  * An object that represents embed messages.
  *
- * @author Kihsomray
- * @fork CroaBeast
+ * @author Kihsomray (forked by CroaBeast)
  * @since 1.1
  */
 @Getter
