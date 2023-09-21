@@ -17,14 +17,14 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * A class that stores static methods for text, string, configurations,
@@ -233,11 +233,18 @@ public class TextUtils {
     public List<String> toList(ConfigurationSection section, String path, List<String> def) {
         if (section == null) return def;
 
-        if (section.isList(path))
-            return (List<String>) section.getList(path, def);
+        if (section.isList(path)) {
+            final List<?> raw = section.getList(path, def);
+            if (raw == null || raw.isEmpty()) return def;
 
-        var temp = section.getString(path);
-        return temp == null ? def : Lists.newArrayList(temp);
+            List<String> list = new ArrayList<>();
+            for (Object o : raw) list.add(o.toString());
+
+            return list;
+        }
+
+        Object temp = section.get(path);
+        return temp == null ? def : Lists.newArrayList(temp.toString());
     }
 
     /**

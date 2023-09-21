@@ -3,6 +3,7 @@ package me.croabeast.beanslib.message;
 import me.croabeast.beanslib.Beans;
 import me.croabeast.beanslib.character.CharHandler;
 import me.croabeast.beanslib.character.CharacterInfo;
+import me.croabeast.beanslib.misc.StringApplier;
 import me.croabeast.beanslib.utility.TextUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
@@ -36,16 +37,16 @@ public final class CenteredMessage {
     public String center(String string) {
         if (StringUtils.isBlank(string)) return string;
 
-        final String prefix = Beans.getCenterPrefix(),
+        String prefix = Beans.getCenterPrefix(),
                 output = Beans.colorize(target, parser, string);
 
         if (!string.startsWith(prefix)) return output;
 
-        string = string.substring(prefix.length());
-        String initial = TextUtils.STRIP_JSON.apply(string);
-
-        initial = Beans.parseChars(initial);
-        initial = Beans.colorize(target, parser, initial);
+        String initial = StringApplier.of(string.substring(prefix.length())).
+                apply(TextUtils.STRIP_JSON).
+                apply(Beans::parseChars).
+                apply(s -> Beans.colorize(target, parser, s)).
+                toString();
 
         int messagePxSize = 0;
         boolean previousCode = false;

@@ -1,11 +1,10 @@
 package me.croabeast.beanslib.character;
 
-import lombok.Getter;
+import java.util.Locale;
 
 /**
  * The enum class to manage the length of every char.
  */
-@Getter
 enum DefaultChars {
     A('A', 5),
     a('a', 5),
@@ -107,11 +106,19 @@ enum DefaultChars {
     COMMA(',', 1),
     SPACE(' ', 3);
 
-    private final char character;
-    private final int length;
+    final String name;
+    final char character;
+    final int length;
 
     DefaultChars(char character, int length) {
         this.character = character;
         this.length = length;
+
+        name = name().toLowerCase(Locale.ENGLISH);
+    }
+
+    @Override
+    public String toString() {
+        return "DefaultChars{name='" + name + "', character='" + character + "', length=" + length + '}';
     }
 }

@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 /**
  * The handler class for managing characters and determines its size in a centered chat message.
@@ -15,7 +16,7 @@ public final class CharHandler {
     /**
      * The HashMap that stores all the characters.
      */
-    private static final HashMap<Character, CharacterInfo> VALUES = new HashMap<>();
+    private static final HashMap<Character, CharacterInfo> VALUES = new LinkedHashMap<>();
 
     /**
      * The default information if a char doesn't exist in the {@link #VALUES} map.
@@ -27,8 +28,12 @@ public final class CharHandler {
      */
     static {
         for (DefaultChars d : DefaultChars.values()) {
-            char c = d.getCharacter();
-            VALUES.put(c, new CharacterInfo(c, d.getLength()));
+            char c = d.character;
+            VALUES.put(c, new CharacterInfo(c, d.length));
+        }
+        for (SmallCaps s : SmallCaps.values()) {
+            char c = s.character;
+            VALUES.put(c, new CharacterInfo(c, s.length));
         }
     }
 

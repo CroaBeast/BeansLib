@@ -3,7 +3,7 @@ package me.croabeast.beanslib.misc;
 import lombok.RequiredArgsConstructor;
 import lombok.var;
 import me.croabeast.beanslib.BeansLib;
-import me.croabeast.beanslib.message.MessageKey;
+import me.croabeast.beanslib.message.MessageExecutor;
 import me.croabeast.beanslib.message.MessageSender;
 import me.croabeast.beanslib.utility.ArrayUtils;
 import me.croabeast.beanslib.utility.TextUtils;
@@ -42,9 +42,9 @@ public class BeansLogger {
             line = line.replace(split, "&f" + split);
 
             isLog = isLog && lib.isStripPrefix();
-            var key = MessageKey.identifyKey(line);
+            var key = MessageExecutor.identifyKey(line);
 
-            if (isLog && key != MessageKey.CHAT_KEY) {
+            if (isLog && key != MessageExecutor.CHAT_EXECUTOR) {
                 Matcher match = key.getPattern().matcher(line);
 
                 if (match.find())

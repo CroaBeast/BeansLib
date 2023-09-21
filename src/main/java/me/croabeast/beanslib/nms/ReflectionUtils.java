@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 import java.util.function.Function;
 
 @UtilityClass
-class ReflectHandler {
+class ReflectionUtils {
 
     final double VERSION = LibUtils.getMainVersion();
     final boolean IS_LEGACY = VERSION < 17.0;

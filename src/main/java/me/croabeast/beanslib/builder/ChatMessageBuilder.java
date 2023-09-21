@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.var;
 import me.croabeast.beanslib.Beans;
 import me.croabeast.beanslib.BeansLib;
+import me.croabeast.beanslib.misc.StringApplier;
 import me.croabeast.beanslib.utility.ArrayUtils;
 import me.croabeast.beanslib.utility.Exceptions;
 import me.croabeast.beanslib.utility.TextUtils;
@@ -124,11 +125,12 @@ public class ChatMessageBuilder implements Cloneable {
             return;
         }
 
-        var interactiveChat = TextUtils.PARSE_INTERACTIVE_CHAT;
-        var line = interactiveChat.apply(parser, string);
-
-        line = TextUtils.CONVERT_OLD_JSON.apply(line);
-        line = Beans.createCenteredChatMessage(target, parser, line);
+        String line = StringApplier.of(string).
+                apply(s -> TextUtils.PARSE_INTERACTIVE_CHAT.apply(parser, s)).
+                apply(TextUtils.CONVERT_OLD_JSON).
+                apply(Beans::convertToSmallCaps).
+                apply(s -> Beans.createCenteredChatMessage(target, parser, s)).
+                toString();
 
         var match = TextUtils.FORMAT_CHAT_PATTERN.matcher(line);
         int last = 0;
@@ -271,7 +273,7 @@ public class ChatMessageBuilder implements Cloneable {
         }
     }
 
-    public String toString() {
+    public String toPatternString() {
         if (index == -1) return "";
 
         StringBuilder builder = new StringBuilder();
@@ -317,8 +319,13 @@ public class ChatMessageBuilder implements Cloneable {
         return builder.toString();
     }
 
-    static TextComponent onlyComp(String message) {
-        return new TextComponent(TextComponent.fromLegacyText(message));
+    @Override
+    public String toString() {
+        try {
+            return TextComponent.toPlainText(build());
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     @Override
@@ -328,6 +335,10 @@ public class ChatMessageBuilder implements Cloneable {
         } catch (Exception e) {
             return this;
         }
+    }
+
+    static TextComponent onlyComp(String message) {
+        return new TextComponent(TextComponent.fromLegacyText(message));
     }
 
     class ClickAction {

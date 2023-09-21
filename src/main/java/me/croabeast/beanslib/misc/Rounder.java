@@ -19,13 +19,13 @@ import java.util.Locale;
 public final class Rounder<T extends Number> {
 
     private final T number;
-    private final Class<? extends Number> clazz;
+    private final Class<T> clazz;
 
     private int decimalAmount = 2;
 
     private Rounder(T t) {
         number = t;
-        clazz = number.getClass();
+        clazz = (Class<T>) t.getClass();
     }
 
     private Rounder<T> setAmount(int i) {
@@ -57,7 +57,7 @@ public final class Rounder<T extends Number> {
         if (clazz == Short.class)
             n = Short.parseShort(getRoundString());
 
-        return (T) n;
+        return clazz.cast(n);
     }
 
     /**

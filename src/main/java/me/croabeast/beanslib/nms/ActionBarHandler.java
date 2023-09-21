@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
-import static me.croabeast.beanslib.nms.ReflectHandler.*;
+import static me.croabeast.beanslib.nms.ReflectionUtils.*;
 
 /**
  * This utility class provides methods to send ActionBar messages to players

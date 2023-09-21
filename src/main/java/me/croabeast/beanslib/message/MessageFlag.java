@@ -1,5 +1,7 @@
 package me.croabeast.beanslib.message;
 
+import java.util.Locale;
+
 /**
  * Represents a flag that can be allowed to be sent to a player.
  */
@@ -27,5 +29,9 @@ public enum MessageFlag {
     /**
      * This flag allows to display title messages.
      */
-    TITLE
+    TITLE;
+
+    public String getName() {
+        return name().toLowerCase(Locale.ENGLISH).replace('_', '-');
+    }
 }

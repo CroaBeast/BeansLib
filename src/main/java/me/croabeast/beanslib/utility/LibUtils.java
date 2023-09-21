@@ -37,20 +37,6 @@ public class LibUtils {
     }
 
     /**
-     * Returns the major version of the active server.
-     * If version is <code>1.16.5</code>, will return <code>16</code>.
-     *
-     * @return server's major version, <code>0</code> if an error occurs.
-     * @deprecated See {@link #getMainVersion()} to get the double value using the minor
-     *             and patch version of the active server.
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
-    @Deprecated
-    public int majorVersion() {
-        return (int) getMainVersion();
-    }
-
-    /**
      * Returns the main version of the server in a double/decimal format.
      * If version is <code>1.16.5</code>, will return <code>16.5</code>.
      *
@@ -68,6 +54,20 @@ public class LibUtils {
         } catch (Exception e) {
             return 0.0;
         }
+    }
+
+    /**
+     * Returns the major version of the active server.
+     * If version is <code>1.16.5</code>, will return <code>16</code>.
+     *
+     * @return server's major version, <code>0</code> if an error occurs.
+     * @deprecated See {@link #getMainVersion()} to get the double value using the minor
+     *             and patch version of the active server.
+     */
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
+    @Deprecated
+    public int majorVersion() {
+        return (int) getMainVersion();
     }
 
     /**

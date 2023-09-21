@@ -1,10 +1,13 @@
 package me.croabeast.beanslib.character;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * The class to store a character's information.
  */
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @Getter
 public class CharacterInfo {
 
@@ -18,11 +21,6 @@ public class CharacterInfo {
      * @return the length
      */
     private final int length;
-
-    CharacterInfo(char character, int length) {
-        this.character = character;
-        this.length = length;
-    }
 
     /**
      * The char's length when is bold.

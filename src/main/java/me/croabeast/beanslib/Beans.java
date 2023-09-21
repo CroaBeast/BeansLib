@@ -1,9 +1,12 @@
 package me.croabeast.beanslib;
 
 import lombok.experimental.UtilityClass;
+import lombok.var;
 import me.clip.placeholderapi.PlaceholderAPI;
+import me.croabeast.beanslib.character.SmallCaps;
 import me.croabeast.beanslib.key.KeyManager;
 import me.croabeast.beanslib.message.MessageSender;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -168,6 +171,16 @@ public class Beans {
     }
 
     /**
+     * Creates a new {@link Pattern} instance using the defined SmallCaps
+     * internal placeholder.
+     *
+     * @return the requested pattern
+     */
+    public Pattern getSmallCapsPattern() {
+        return lib.getSmallCapsPattern();
+    }
+
+    /**
      * The {@link Plugin} instance of your project.
      *
      * @throws NullPointerException if the plugin is null
@@ -226,6 +239,10 @@ public class Beans {
      */
     public String parseChars(String string) {
         return lib.parseChars(string);
+    }
+
+    public String convertToSmallCaps(String string) {
+        return lib.convertToSmallCaps(string);
     }
 
     public String formatPlaceholders(@Nullable Player parser, String string) {

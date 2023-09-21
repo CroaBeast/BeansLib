@@ -6,7 +6,7 @@ import org.bukkit.entity.Player;
 
 import java.util.function.BiFunction;
 
-import static me.croabeast.beanslib.nms.ReflectHandler.*;
+import static me.croabeast.beanslib.nms.ReflectionUtils.*;
 
 @UtilityClass
 public class TitleHandler {

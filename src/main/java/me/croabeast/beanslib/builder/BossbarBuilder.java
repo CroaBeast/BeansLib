@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import lombok.*;
 import lombok.experimental.Accessors;
 import me.croabeast.beanslib.Beans;
-import me.croabeast.beanslib.message.MessageKey;
+import me.croabeast.beanslib.message.MessageExecutor;
 import me.croabeast.beanslib.utility.TextUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-import static me.croabeast.beanslib.message.MessageKey.BOSSBAR_KEY;
+import static me.croabeast.beanslib.message.MessageExecutor.BOSSBAR_EXECUTOR;
 import static me.croabeast.beanslib.misc.Rounder.round;
 
 /**
@@ -51,7 +51,7 @@ public class BossbarBuilder {
     /**
      * The map to get all the players that have a bossbar message displayed.
      */
-    private static final Map<Player, BossbarBuilder> BOSSBAR_MAP = new HashMap<>();
+    private static final Map<Player, Set<BossbarBuilder>> BOSSBAR_MAP = new HashMap<>();
 
     private static final Random RANDOM = new Random();
 
@@ -145,7 +145,7 @@ public class BossbarBuilder {
 
     /**
      * Creates a new builder using a single line to parse all the necessary arguments.
-     * The line should be using the {@link MessageKey#BOSSBAR_KEY} pattern.
+     * The line should be using the {@link MessageExecutor#BOSSBAR_EXECUTOR} pattern.
      *
      * @param plugin plugin's instance of your project
      * @param player a player, can not be null
@@ -160,7 +160,7 @@ public class BossbarBuilder {
             return;
         }
 
-        var matcher = BOSSBAR_KEY.getPattern().matcher(string);
+        var matcher = BOSSBAR_EXECUTOR.getPattern().matcher(string);
         if (!matcher.find()) {
             messages = toList(Lists.newArrayList(string), 0);
             return;
@@ -288,7 +288,12 @@ public class BossbarBuilder {
 
         bar.addPlayer(player);
         bar.setVisible(true);
-        BOSSBAR_MAP.put(player, this);
+
+        var builders = BOSSBAR_MAP.get(player);
+        if (builders == null) builders = new HashSet<>();
+
+        builders.add(this);
+        BOSSBAR_MAP.put(player, builders);
 
         createAnimation();
     }
@@ -363,7 +368,7 @@ public class BossbarBuilder {
         BOSSBAR_MAP.remove(player);
     }
 
-    @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     @Getter
     static class DoubleValue {
         private final BarColor color;
@@ -382,7 +387,7 @@ public class BossbarBuilder {
      * @return the bossbar, if the player exists or has a bossbar displayed; null otherwise
      */
     @Nullable
-    public static BossbarBuilder getBuilder(Player player) {
+    public static Set<BossbarBuilder> getBuilder(Player player) {
         return player == null ? null : BOSSBAR_MAP.getOrDefault(player, null);
     }
 }

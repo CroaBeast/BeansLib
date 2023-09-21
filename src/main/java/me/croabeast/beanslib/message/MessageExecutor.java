@@ -10,6 +10,7 @@ import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.builder.BossbarBuilder;
 import me.croabeast.beanslib.builder.ChatMessageBuilder;
 import me.croabeast.beanslib.discord.Webhook;
+import me.croabeast.beanslib.misc.StringApplier;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.neoprismatic.NeoPrismaticAPI;
 import org.apache.commons.lang.StringUtils;
@@ -19,44 +20,43 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Locale;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static me.croabeast.beanslib.utility.TextUtils.*;
+
 /**
- * The {@code MessageKey} class manages how to identify a message type if it has
- * a respective registered prefix and an optional additional regex parameter to
- * check if more arguments will be needed to identify the message type.
+ * The {@code MessageExecutor} class manages how to identify a message type if it has
+ * a respective registered prefix and an optional additional regex parameter to check
+ * if more arguments will be needed to identify the message type.
  *
- * <p> Each default instance of this class have a setter for the main key and the
- * regex, if It's necessary to change those values.
+ * <p> Each default instance of this class have a setter for the main key and the regex,
+ * if It's necessary to change those values.
+ * The default key and regex of each instance depends mostly on the {@link Beans#getLoaded()}.
  *
- * <p> The default key and regex of each  instance depends mostly on the
- * {@link Beans#getLoaded()}.
+ * <p> This class can not have more instances or child classes to avoid errors with the
+ * existing keys.
  *
- * <p> This class can not have more instances or child classes to avoid errors with
- * the existing keys.
- *
- * <p> See {@link MessageSender}, it uses the default instances to parse, format, and send
- * messages to players.
+ * <p> See {@link MessageSender}, it uses the default instances to parse, format, and
+ * send messages to players.
  *
  * @author CroaBeast
  * @since 1.4
  */
 @Accessors(chain = true)
-@Setter
-public abstract class MessageKey implements Cloneable {
+public abstract class MessageExecutor implements Cloneable {
 
-    private static final HashMap<Integer, MessageKey>
-            MESSAGE_KEY_MAP = new HashMap<>(), DEFAULT_KEY_MAP = new HashMap<>();
+    private static final HashMap<Integer, MessageExecutor>
+            MESSAGE_EXECUTOR_MAP = new HashMap<>(), DEFAULT_EXECUTOR_MAP = new HashMap<>();
 
     /**
-     * The {@link MessageKey} instance to identify action-bar messages.
+     * The {@link MessageExecutor} instance to identify action-bar messages.
      */
-    public static final MessageKey ACTION_BAR_KEY = new MessageKey(MessageFlag.ACTION_BAR) {
+    public static final MessageExecutor ACTION_BAR_EXECUTOR = new MessageExecutor(MessageFlag.ACTION_BAR) {
         @Override
         public boolean execute(Player t, Player p, String s) {
             try {
-                TextUtils.sendActionBar(t, formatString(t, p, s));
+                sendActionBar(t, formatString(t, p, s));
                 return true;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -66,11 +66,11 @@ public abstract class MessageKey implements Cloneable {
     }.doColor();
 
     /**
-     * The {@link MessageKey} instance to identify title and subtitle messages.
+     * The {@link MessageExecutor} instance to identify title and subtitle messages.
      *
      * <p> By default has a regex string to catch how many seconds the title will be displayed.
      */
-    public static final MessageKey TITLE_KEY = new MessageKey(MessageFlag.TITLE, "(:\\d+)?") {
+    public static final MessageExecutor TITLE_EXECUTOR = new MessageExecutor(MessageFlag.TITLE, "(:\\d+)?") {
         @Override
         public boolean execute(Player t, Player p, String s) {
             var m1 = getPattern().matcher(s);
@@ -91,7 +91,7 @@ public abstract class MessageKey implements Cloneable {
             var t1 = formatString(t, p, s);
 
             try {
-                TextUtils.sendTitle(t, Beans.splitLine(t1), a[0], time, a[2]);
+                sendTitle(t, Beans.splitLine(t1), a[0], time, a[2]);
                 return true;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -101,11 +101,11 @@ public abstract class MessageKey implements Cloneable {
     }.doColor();
 
     /**
-     * The {@link MessageKey} instance to identify discord webhook messages.
+     * The {@link MessageExecutor} instance to identify discord webhook messages.
      *
      * <p> By default has a regex string to catch the configuration path of the webhook.
      */
-    public static final MessageKey WEBHOOK_KEY = new MessageKey(MessageFlag.WEBHOOK, "(:.+)?") {
+    public static final MessageExecutor WEBHOOK_EXECUTOR = new MessageExecutor(MessageFlag.WEBHOOK, "(:.+)?") {
         @Override
         public boolean execute(Player t, Player parser, String s) {
             var id = Beans.getWebhookSection();
@@ -138,9 +138,9 @@ public abstract class MessageKey implements Cloneable {
     };
 
     /**
-     * The {@link MessageKey} instance to identify vanilla json messages.
+     * The {@link MessageExecutor} instance to identify vanilla json messages.
      */
-    public static final MessageKey JSON_KEY = new MessageKey(MessageFlag.JSON) {
+    public static final MessageExecutor JSON_EXECUTOR = new MessageExecutor(MessageFlag.JSON) {
         @Override
         public boolean execute(Player t, Player parser, String s) {
             try {
@@ -157,12 +157,12 @@ public abstract class MessageKey implements Cloneable {
     };
 
     /**
-     * The {@link MessageKey} instance to identify minecraft bossbar messages.
+     * The {@link MessageExecutor} instance to identify minecraft bossbar messages.
      *
      * <p> By default has a regex string to catch the configuration path of the custom bossbar,
      * or to catch the arguments of the bossbar message.
      */
-    public static final MessageKey BOSSBAR_KEY = new MessageKey(MessageFlag.BOSSBAR, "(:.+)?") {
+    public static final MessageExecutor BOSSBAR_EXECUTOR = new MessageExecutor(MessageFlag.BOSSBAR, "(:.+)?") {
         @Override
         public boolean execute(Player t, Player parser, String s) {
             var plugin = Beans.getPlugin();
@@ -185,23 +185,18 @@ public abstract class MessageKey implements Cloneable {
     };
 
     /**
-     * The {@link MessageKey} instance to identify default chat messages.
+     * The {@link MessageExecutor} instance to identify default chat messages.
      *
      * <p> It's not necessary to identify a string with this prefix; because
      * if a string doesn't have a prefix, it will by default a chat message.
      *
      * <p> The setters of this instance will throw an {@link UnsupportedOperationException}.
      */
-    public static final MessageKey CHAT_KEY = new MessageKey(MessageFlag.CHAT) {
+    public static final MessageExecutor CHAT_EXECUTOR = new MessageExecutor(MessageFlag.CHAT) {
         private static final String MSG_EX = "Setter is not supported on this instance";
 
         @Override
-        public MessageKey setFlag(MessageFlag flag) {
-            throw new UnsupportedOperationException(MSG_EX);
-        }
-
-        @Override
-        public MessageKey setRegex(String regex) {
+        public MessageExecutor setRegex(String regex) {
             throw new UnsupportedOperationException(MSG_EX);
         }
 
@@ -219,38 +214,38 @@ public abstract class MessageKey implements Cloneable {
     private static int ordinal = 0;
 
     /**
-     * The main key of this object to identify it.
+     * The flag of this object to identify the message and check if it's allowed.
      */
     @Getter
-    private MessageFlag flag;
+    private final MessageFlag flag;
     private final int index;
     /**
      * The optional regex string to catch more arguments.
      */
+    @Setter
     private String regex;
 
-    @Setter(AccessLevel.NONE)
     private boolean color = false;
 
-    private MessageKey(MessageFlag flag, String regex) {
+    private MessageExecutor(MessageFlag flag, String regex) {
         this.flag = flag;
         this.regex = regex;
         index = ordinal;
 
-        MESSAGE_KEY_MAP.put(ordinal, this);
-        DEFAULT_KEY_MAP.put(ordinal, clone());
+        MESSAGE_EXECUTOR_MAP.put(ordinal, this);
+        DEFAULT_EXECUTOR_MAP.put(ordinal, clone());
 
         ordinal++;
     }
 
-    private MessageKey(MessageFlag flag) {
+    private MessageExecutor(MessageFlag flag) {
         this(flag, null);
     }
 
-    MessageKey doColor() {
+    MessageExecutor doColor() {
         this.color = true;
 
-        DEFAULT_KEY_MAP.put(index, clone());
+        DEFAULT_EXECUTOR_MAP.put(index, clone());
         return this;
     }
 
@@ -260,9 +255,9 @@ public abstract class MessageKey implements Cloneable {
      * @return a clone of this instance
      */
     @NotNull
-    protected MessageKey clone() {
+    protected MessageExecutor clone() {
         try {
-            return (MessageKey) super.clone();
+            return (MessageExecutor) super.clone();
         } catch (Exception e) {
             // this shouldn't happen, since keys are Cloneable
             return this;
@@ -293,15 +288,9 @@ public abstract class MessageKey implements Cloneable {
     }
 
     private String getRegex() {
-        String flag = this.flag.toString().replace('_', '-');
-        flag = flag.toLowerCase(Locale.ENGLISH) +
-                (StringUtils.isBlank(regex) ? "" : regex);
-
-        String[] delimiters = Beans.getKeysDelimiters();
-
-        return "(?i)^" +
-                Pattern.quote(delimiters[0]) + flag +
-                Pattern.quote(delimiters[1]);
+        String f = flag.getName() + (StringUtils.isBlank(regex) ? "" : regex);
+        String[] del = Beans.getKeysDelimiters();
+        return "(?i)^" + Pattern.quote(del[0]) + f + Pattern.quote(del[1]);
     }
 
     /**
@@ -317,54 +306,61 @@ public abstract class MessageKey implements Cloneable {
         return Pattern.compile(getRegex());
     }
 
-    String formatString(Player target, Player parser, String s) {
-        var m = getPattern().matcher(s);
+    String formatString(Player target, Player parser, String string) {
+        StringApplier applier = StringApplier.of(string);
+        Matcher matcher = getPattern().matcher(string);
 
-        while (m.find()) s = s.replace(m.group(), "");
+        while (matcher.find())
+            applier.apply(s -> s.replace(matcher.group(), ""));
 
-        s = TextUtils.STRIP_FIRST_SPACES.apply(TextUtils.STRIP_JSON.apply(s));
-        s = Beans.parsePlayerKeys(parser, s, false);
+        applier.apply(STRIP_JSON).apply(STRIP_FIRST_SPACES).
+                apply(s -> Beans.parsePlayerKeys(parser, s)).
+                apply(Beans::convertToSmallCaps);
 
-        return !color ?
-                NeoPrismaticAPI.stripAll(Beans.formatPlaceholders(parser, s)) :
-                Beans.colorize(target, parser, s);
+        if (!color)
+            applier.apply(s -> Beans.formatPlaceholders(parser, s)).
+                    apply(NeoPrismaticAPI::stripAll);
+        else
+            applier.apply(s -> Beans.colorize(target, parser, s));
+
+        return applier.toString();
     }
 
     /**
      * Returns the key instance of an input string to check what message type
-     * is the string. If there is no defined type, will return the {@link #CHAT_KEY}.
+     * is the string. If there is no defined type, will return the {@link #CHAT_EXECUTOR}.
      *
      * @param s an input string
      * @return the requested message key
      */
     @NotNull
-    public static MessageKey identifyKey(String s) {
-        if (StringUtils.isBlank(s)) return CHAT_KEY;
+    public static MessageExecutor identifyKey(String s) {
+        if (StringUtils.isBlank(s)) return CHAT_EXECUTOR;
 
-        for (var key : MESSAGE_KEY_MAP.values())
+        for (var key : MESSAGE_EXECUTOR_MAP.values())
             if (key.getPattern().matcher(s).find()) return key;
 
         if (Beans.getBossbarPattern().
-                matcher(s).find()) return BOSSBAR_KEY;
+                matcher(s).find()) return BOSSBAR_EXECUTOR;
 
-        return CHAT_KEY;
+        return CHAT_EXECUTOR;
     }
 
     /**
      * Returns the key instance of an input key that could match with any existing
-     * defined key. If there is no match, will return the {@link #CHAT_KEY}.
+     * defined key. If there is no match, will return the {@link #CHAT_EXECUTOR}.
      *
      * @param k an input string
      * @return the requested message key
      */
     @NotNull
-    public static MessageKey matchKey(String k) {
-        if (StringUtils.isBlank(k)) return CHAT_KEY;
+    public static MessageExecutor matchKey(String k) {
+        if (StringUtils.isBlank(k)) return CHAT_EXECUTOR;
 
-        for (var key : MESSAGE_KEY_MAP.values())
+        for (var key : MESSAGE_EXECUTOR_MAP.values())
             if (k.matches("(?i)" + key.getFlag())) return key;
 
-        return CHAT_KEY;
+        return CHAT_EXECUTOR;
     }
 
     /**
@@ -372,7 +368,7 @@ public abstract class MessageKey implements Cloneable {
      * <p> Usefully for reload methods that depend on cache.
      */
     public static void setDefaults() {
-        MESSAGE_KEY_MAP.clear();
-        MESSAGE_KEY_MAP.putAll(DEFAULT_KEY_MAP);
+        MESSAGE_EXECUTOR_MAP.clear();
+        MESSAGE_EXECUTOR_MAP.putAll(DEFAULT_EXECUTOR_MAP);
     }
 }

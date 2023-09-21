@@ -19,7 +19,7 @@ import java.util.function.UnaryOperator;
 
 /**
  * <p> The {@code MessageSender} class represents the action to display a
- * list of messages to a player using {@link MessageKey} instances for parse
+ * list of messages to a player using {@link MessageExecutor} instances for parse
  * different message types and format every message type respectively.
  *
  * <pre> {@code
@@ -275,9 +275,9 @@ public final class MessageSender implements Cloneable {
     }
 
     private boolean sendWebhook(String s, boolean output) {
-        final var key = MessageKey.identifyKey(s);
+        final var key = MessageExecutor.identifyKey(s);
 
-        if (key == MessageKey.WEBHOOK_KEY &&
+        if (key == MessageExecutor.WEBHOOK_EXECUTOR &&
                 !notFlag(MessageFlag.WEBHOOK)) key.execute(parser, s);
 
         Beans.rawLog(formatString(parser, s));
@@ -317,7 +317,7 @@ public final class MessageSender implements Cloneable {
 
         isMatching = isMatching && count > 0;
 
-        var key = MessageKey.identifyKey(string);
+        var key = MessageExecutor.identifyKey(string);
         if (notFlag(key.getFlag())) return false;
 
         boolean notSend = true;
@@ -332,7 +332,7 @@ public final class MessageSender implements Cloneable {
             var p = formatString(temp, string);
 
             boolean b = key.execute(t, temp,
-                    noFirstSpaces && key == MessageKey.CHAT_KEY ?
+                    noFirstSpaces && key == MessageExecutor.CHAT_EXECUTOR ?
                     TextUtils.STRIP_FIRST_SPACES.apply(p) : p
             );
 
@@ -389,7 +389,7 @@ public final class MessageSender implements Cloneable {
 
             isMatching = isMatching && count > 0;
 
-            var key = MessageKey.identifyKey(s);
+            var key = MessageExecutor.identifyKey(s);
             if (notFlag(key.getFlag())) continue;
 
             List<Boolean> executed = new ArrayList<>();
@@ -404,7 +404,7 @@ public final class MessageSender implements Cloneable {
                 var p = formatString(temp, s);
 
                 executed.add(key.execute(t, temp,
-                        noFirstSpaces && key == MessageKey.CHAT_KEY ?
+                        noFirstSpaces && key == MessageExecutor.CHAT_EXECUTOR ?
                         TextUtils.STRIP_FIRST_SPACES.apply(p) : p
                 ));
             }

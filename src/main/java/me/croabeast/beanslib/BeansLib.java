@@ -4,7 +4,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import lombok.var;
 import me.clip.placeholderapi.PlaceholderAPI;
+import me.croabeast.beanslib.character.SmallCaps;
 import me.croabeast.beanslib.key.KeyManager;
 import me.croabeast.beanslib.message.CenteredMessage;
 import me.croabeast.beanslib.message.MessageSender;
@@ -112,7 +114,16 @@ public class BeansLib {
      * <p> Ignores the spaces before and after the placeholder group.
      */
     @Getter(AccessLevel.NONE)
-    private String blankSpaceRegex = "<ADD_SPACE:(\\d+)>";
+    private String blankSpaceRegex = "<add_space:(\\d+)>";
+
+    /**
+     * The regex pattern that identifies if an input line should convert all its
+     * characters to {@link SmallCaps} characters.
+     *
+     * <p> Ignores the spaces before and after the placeholder group.
+     */
+    @Getter(AccessLevel.NONE)
+    private String smallCapsPattern = "<(small_caps|sc)>(.+?)</(small_caps|sc)>";
 
     /**
      * If the console can use colors or not. Some consoles don't have color support.
@@ -315,6 +326,16 @@ public class BeansLib {
     }
 
     /**
+     * Creates a new {@link Pattern} instance using the defined SmallCaps
+     * internal placeholder.
+     *
+     * @return the requested pattern
+     */
+    public Pattern getSmallCapsPattern() {
+        return Pattern.compile("(?i)^ *?" + smallCapsPattern + " *?$");
+    }
+
+    /**
      * Use a char pattern to find unicode values and replace them with
      * its respective characters.
      *
@@ -330,6 +351,24 @@ public class BeansLib {
         while (m.find()) {
             char c = (char) Integer.parseInt(m.group(1), 16);
             string = string.replace(m.group(), c + "");
+        }
+
+        return string;
+    }
+
+    public String convertToSmallCaps(String string) {
+        if (StringUtils.isBlank(string))
+            return string;
+
+        var matcher = getSmallCapsPattern().matcher(string);
+
+        while (matcher.find()) {
+            String text = matcher.group(2);
+
+            string = string.replace(
+                    matcher.group(),
+                    SmallCaps.toSmallCaps(text)
+            );
         }
 
         return string;
@@ -390,7 +429,7 @@ public class BeansLib {
      * @return the centered chat message.
      */
     public String createCenteredChatMessage(Player target, Player parser, String string) {
-        return new CenteredMessage(target, parser).center(string);
+        return CenteredMessage.toChat(parser, target, string);
     }
 
     /**
