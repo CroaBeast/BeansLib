@@ -119,8 +119,6 @@ public class BeansLib {
     /**
      * The regex pattern that identifies if an input line should convert all its
      * characters to {@link SmallCaps} characters.
-     *
-     * <p> Ignores the spaces before and after the placeholder group.
      */
     @Getter(AccessLevel.NONE)
     private String smallCapsPattern = "<(small_caps|sc)>(.+?)</(small_caps|sc)>";
@@ -332,7 +330,7 @@ public class BeansLib {
      * @return the requested pattern
      */
     public Pattern getSmallCapsPattern() {
-        return Pattern.compile("(?i)^ *?" + smallCapsPattern + " *?$");
+        return Pattern.compile("(?i)" + smallCapsPattern);
     }
 
     /**

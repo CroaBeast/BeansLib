@@ -242,7 +242,7 @@
         <dependency>
             <groupId>com.loohp</groupId>
             <artifactId>InteractiveChat</artifactId>
-            <version>4.2.6.0</version>
+            <version>4.2.7.2</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
@@ -254,7 +254,7 @@
         <dependency>
             <groupId>com.viaversion</groupId>
             <artifactId>viaversion-api</artifactId>
-            <version>4.6.2</version>
+            <version>4.7.0</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
