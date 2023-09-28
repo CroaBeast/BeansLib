@@ -35,7 +35,12 @@ public class BeansLogger {
 
     public BeansLogger(BeansLib lib) {
         this.lib = Objects.requireNonNull(lib);
-        Plugin plugin = lib.getPlugin();
+
+        Plugin plugin = null;
+
+        try {
+            plugin = lib.getPlugin();
+        } catch (Exception ignored) {}
 
         pluginLogger = new BukkitLogger(plugin);
         rawLogger = new BukkitLogger(null);
@@ -44,8 +49,8 @@ public class BeansLogger {
             return;
 
         try {
-            pluginLogger = new PaperLogger(plugin.getName());
-            rawLogger = new PaperLogger("");
+            pluginLogger = new PaperLogger(plugin);
+            rawLogger = new PaperLogger(null);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -261,8 +266,10 @@ public class BeansLogger {
         private final Object logger;
 
         @SneakyThrows
-        private PaperLogger(String name) {
+        private PaperLogger(Plugin plugin) {
             if (LibUtils.isPaper()) {
+                String name = plugin != null ? plugin.getName() : "";
+
                 logger = Class
                         .forName(KYORI_PREFIX + "logger.slf4j.ComponentLogger")
                         .getMethod("logger", String.class)
