@@ -9,7 +9,7 @@ public final class StringApplier {
     private String string;
 
     private StringApplier(String string) {
-        if (StringUtils.isEmpty(string))
+        if (string == null)
             throw new NullPointerException();
 
         this.string = string;
