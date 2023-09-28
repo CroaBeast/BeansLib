@@ -160,7 +160,7 @@ public class BossbarBuilder {
             return;
         }
 
-        var matcher = BOSSBAR_EXECUTOR.getPattern().matcher(string);
+        var matcher = Beans.getBossbarPattern().matcher(string);
         if (!matcher.find()) {
             messages = toList(Lists.newArrayList(string), 0);
             return;

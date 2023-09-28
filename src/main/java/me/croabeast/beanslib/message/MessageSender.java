@@ -3,9 +3,9 @@ package me.croabeast.beanslib.message;
 import com.google.common.collect.Lists;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import lombok.var;
 import me.croabeast.beanslib.Beans;
 import me.croabeast.beanslib.key.ValueReplacer;
+import me.croabeast.beanslib.misc.StringApplier;
 import me.croabeast.beanslib.utility.ArrayUtils;
 import me.croabeast.beanslib.utility.TextUtils;
 import org.apache.commons.lang.StringUtils;
@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
+import java.util.regex.Matcher;
 
 /**
  * <p> The {@code MessageSender} class represents the action to display a
@@ -192,8 +193,11 @@ public final class MessageSender implements Cloneable {
      */
     @SafeVarargs
     public final MessageSender addFunctions(UnaryOperator<String>... ops) {
-        for (var u : Lists.newArrayList(ops))
-            if (u != null) functions.add((p, s) -> u.apply(s));
+        try {
+            for (UnaryOperator<String> u : ArrayUtils.fromArray(ops))
+                if (u != null)
+                    functions.add((p, s) -> u.apply(s));
+        } catch (Exception ignored) {}
 
         return this;
     }
@@ -208,7 +212,9 @@ public final class MessageSender implements Cloneable {
      * @return a reference of this object
      */
     public MessageSender setFlags(MessageFlag... flags) {
-        this.flags = new HashSet<>(ArrayUtils.fromArray(flags));
+        try {
+            this.flags = new HashSet<>(ArrayUtils.fromArray(flags));
+        } catch (Exception ignored) {}
         return this;
     }
 
@@ -219,7 +225,9 @@ public final class MessageSender implements Cloneable {
      * @return a reference of this object
      */
     public MessageSender setKeys(String... keys) {
-        this.keys = keys;
+        try {
+            this.keys = ArrayUtils.checkArray(keys);
+        } catch (Exception ignored) {}
         return this;
     }
 
@@ -230,9 +238,9 @@ public final class MessageSender implements Cloneable {
             return Lists.newArrayList(((CommandSender) o).getName());
 
         if (o.getClass().isArray()) {
-            var result = new ArrayList<String>();
+            List<String> result = new ArrayList<>();
 
-            for (var element : (Object[]) o)
+            for (Object element : (Object[]) o)
                 result.addAll(listFromObject(element));
 
             return result;
@@ -255,7 +263,7 @@ public final class MessageSender implements Cloneable {
         if (values == null || values.length == 0)
             return this;
 
-        var list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         for (T o : values) list.addAll(listFromObject(o));
 
         this.values = list.toArray(new String[0]);
@@ -263,11 +271,15 @@ public final class MessageSender implements Cloneable {
     }
 
     private String formatString(Player parser, String string) {
+        StringApplier applier = StringApplier.of(string);
         final boolean c = caseSensitive;
-        for (var f : functions) string = f.apply(parser, string);
 
-        string = Beans.parsePlayerKeys(parser, string, c);
-        return ValueReplacer.forEach(keys, values, string, c);
+        for (BiFunction<Player, String, String> f : functions)
+            applier.apply(s -> f.apply(parser, s));
+
+        return applier.apply(s -> Beans.parsePlayerKeys(parser, s, c)).
+                apply(s -> ValueReplacer.forEach(keys, values, s, c)).
+                toString();
     }
 
     private boolean notFlag(MessageFlag flag) {
@@ -275,7 +287,7 @@ public final class MessageSender implements Cloneable {
     }
 
     private boolean sendWebhook(String s, boolean output) {
-        final var key = MessageExecutor.identifyKey(s);
+        MessageExecutor key = MessageExecutor.identifyKey(s);
 
         if (key == MessageExecutor.WEBHOOK_EXECUTOR &&
                 !notFlag(MessageFlag.WEBHOOK)) key.execute(parser, s);
@@ -298,54 +310,57 @@ public final class MessageSender implements Cloneable {
     public boolean singleSend(String string) {
         if (string == null) return false;
 
-        string = Beans.replacePrefixKey(string, false);
+        StringApplier applier = StringApplier.of(string);
+        applier.apply(s -> Beans.replacePrefixKey(s, false));
 
         if (targets == null || targets.isEmpty())
-            return sendWebhook(string, true);
+            return sendWebhook(applier.toString(), true);
 
-        var targets = new ArrayList<Player>();
+        List<Player> targets = new ArrayList<>();
 
-        for (var t : this.targets)
+        for (CommandSender t : this.targets)
             if (t instanceof Player) targets.add((Player) t);
 
         if (targets.isEmpty()) return sendWebhook(string, false);
 
-        var m = Beans.getBlankPattern().matcher(string);
-
-        var isMatching = m.find();
-        var count = isMatching ? Integer.parseInt(m.group(1)) : 0;
+        Matcher m = Beans.getBlankPattern().matcher(string);
+        boolean isMatching = m.find();
+        int count = isMatching ? Integer.parseInt(m.group(1)) : 0;
 
         isMatching = isMatching && count > 0;
 
-        var key = MessageExecutor.identifyKey(string);
+        MessageExecutor key = MessageExecutor.identifyKey(string);
         if (notFlag(key.getFlag())) return false;
 
         boolean notSend = true;
 
-        for (var t : targets) {
+        for (Player t : targets) {
             if (isMatching) {
                 for (int i = 0; i < count; i++) t.sendMessage("");
                 continue;
             }
 
-            var temp = parser == null ? t : parser;
-            var p = formatString(temp, string);
+            Player parser = this.parser == null ? t : this.parser;
 
-            boolean b = key.execute(t, temp,
-                    noFirstSpaces && key == MessageExecutor.CHAT_EXECUTOR ?
-                    TextUtils.STRIP_FIRST_SPACES.apply(p) : p
-            );
+            StringApplier temp = StringApplier.of(applier);
+            temp.apply(s -> formatString(parser, s));
 
+            if (noFirstSpaces && key == MessageExecutor.CHAT_EXECUTOR)
+                temp.apply(TextUtils.STRIP_FIRST_SPACES);
+
+            boolean b = key.execute(t, parser, temp.toString());
             if (notSend && b) notSend = false;
         }
 
         if (notSend) return false;
 
-        if (isLogger)
-            Beans.rawLog(formatString(
-                    parser == null && targets.size() == 1 ?
-                    targets.get(0) : parser, string
-            ));
+        if (isLogger) {
+            applier.apply(s -> {
+                boolean is = parser == null && targets.size() == 1;
+                return formatString(is ? targets.get(0) : parser, s);
+            });
+            Beans.rawLog(applier.toString());
+        }
         return true;
     }
 
@@ -359,9 +374,9 @@ public final class MessageSender implements Cloneable {
      * @return true if the list was sent, false otherwise
      */
     public boolean send(List<String> stringList) {
-        final var list = new ArrayList<String>();
+        final List<String> list = new ArrayList<>();
 
-        for (var s : stringList)
+        for (String s : stringList)
             if (s != null) list.add(Beans.replacePrefixKey(s, false));
 
         if (list.isEmpty()) return false;
@@ -371,37 +386,37 @@ public final class MessageSender implements Cloneable {
         if (targets == null || targets.isEmpty())
             return sendWebhooks(list, true);
 
-        var targets = new HashSet<Player>();
+        Set<Player> targets = new HashSet<>();
 
-        for (var t : this.targets)
+        for (CommandSender t : this.targets)
             if (t instanceof Player) targets.add((Player) t);
 
         if (targets.isEmpty()) return sendWebhooks(list, false);
 
-        var logList = new ArrayList<String>();
+        List<String> logList = new ArrayList<>();
 
-        for (var s : list) {
-            var m = Beans.getBlankPattern().matcher(s);
+        for (String s : list) {
+            Matcher m = Beans.getBlankPattern().matcher(s);
 
-            var isMatching = m.find();
+            boolean isMatching = m.find();
             int count = isMatching ?
                     Integer.parseInt(m.group(1)) : 0;
 
             isMatching = isMatching && count > 0;
 
-            var key = MessageExecutor.identifyKey(s);
+            MessageExecutor key = MessageExecutor.identifyKey(s);
             if (notFlag(key.getFlag())) continue;
 
             List<Boolean> executed = new ArrayList<>();
 
-            for (var t : targets) {
+            for (Player t : targets) {
                 if (isMatching) {
                     for (int i = 0; i < count; i++) t.sendMessage("");
                     continue;
                 }
 
-                var temp = parser == null ? t : parser;
-                var p = formatString(temp, s);
+                Player temp = parser == null ? t : parser;
+                String  p = formatString(temp, s);
 
                 executed.add(key.execute(t, temp,
                         noFirstSpaces && key == MessageExecutor.CHAT_EXECUTOR ?
@@ -443,7 +458,7 @@ public final class MessageSender implements Cloneable {
     @NotNull
     public MessageSender clone() {
         try {
-            var sender = (MessageSender) super.clone();
+            MessageSender sender = (MessageSender) super.clone();
 
             if (targets != null)
                 sender.targets = new ArrayList<>(targets);

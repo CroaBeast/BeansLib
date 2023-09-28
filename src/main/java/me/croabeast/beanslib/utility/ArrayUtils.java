@@ -5,9 +5,7 @@ import lombok.var;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.UnaryOperator;
 
 @UtilityClass
@@ -49,14 +47,19 @@ public class ArrayUtils {
     }
 
     @SafeVarargs
-    @NotNull
-    public <T> List<T> fromArray(UnaryOperator<T> operator, T... array) {
+    public <T> T[] checkArray(T... array) {
         if (isArrayEmpty(array))
             throw new IllegalArgumentException("Array should be declared.");
 
+        return array;
+    }
+
+    @SafeVarargs
+    @NotNull
+    public <T> List<T> fromArray(UnaryOperator<T> operator, T... array) {
         List<T> list = new ArrayList<>();
 
-        for (T element : array)
+        for (T element : checkArray(array))
             list.add(operator != null ? operator.apply(element) : element);
 
         return list;
@@ -66,5 +69,17 @@ public class ArrayUtils {
     @NotNull
     public <T> List<T> fromArray(T... array) {
         return fromArray(null, array);
+    }
+
+    public <T> T[] toArray(Iterable<T> iterable) {
+        Objects.requireNonNull(iterable);
+
+        Iterator<T> iterator = iterable.iterator();
+        List<T> list = new ArrayList<>();
+
+        while (iterator.hasNext())
+            list.add(iterator.next());
+
+        return list.toArray((T[]) new Object[0]);
     }
 }

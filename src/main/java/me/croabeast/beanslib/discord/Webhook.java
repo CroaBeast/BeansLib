@@ -95,9 +95,9 @@ public class Webhook {
         }
 
         hook.setContent(sec.getString("content")).
+                setTts(sec.getBoolean("tts")).
                 setAvatarUrl(sec.getString("avatar-url")).
-                setUsername(sec.getString("username")).
-                setTts(sec.getBoolean("tts"));
+                setUsername(sec.getString("username"));
 
         var s = sec.getConfigurationSection("embeds");
         if (s == null) {

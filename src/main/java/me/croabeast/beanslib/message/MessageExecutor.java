@@ -143,6 +143,8 @@ public abstract class MessageExecutor implements Cloneable {
     public static final MessageExecutor JSON_EXECUTOR = new MessageExecutor(MessageFlag.JSON) {
         @Override
         public boolean execute(Player t, Player parser, String s) {
+            if (StringUtils.isBlank(s)) return false;
+
             try {
                 Bukkit.dispatchCommand(
                         Bukkit.getConsoleSender(), "minecraft:tellraw " +
@@ -168,19 +170,23 @@ public abstract class MessageExecutor implements Cloneable {
             var plugin = Beans.getPlugin();
             var m2 = Beans.getBossbarPattern().matcher(s);
 
-            if (m2.find()) {
-                var c = Beans.getBossbarSection();
-                if (c == null) return false;
+            try {
+                if (m2.find()) {
+                    var c = Beans.getBossbarSection();
+                    if (c == null) return false;
 
-                c = c.getConfigurationSection(m2.group(1));
-                if (c == null) return false;
+                    c = c.getConfigurationSection(m2.group(1));
+                    if (c == null) return false;
 
-                new BossbarBuilder(plugin, t, c).display();
+                    new BossbarBuilder(plugin, t, c).display();
+                    return true;
+                }
+
+                new BossbarBuilder(plugin, t, s).display();
                 return true;
+            } catch (Exception e) {
+                return false;
             }
-
-            new BossbarBuilder(plugin, t, s).display();
-            return true;
         }
     };
 

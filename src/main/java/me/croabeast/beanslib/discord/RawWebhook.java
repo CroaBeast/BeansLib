@@ -82,12 +82,13 @@ public class RawWebhook {
 
     @NotNull
     private String replace(String string) {
-        if (StringUtils.isBlank(string)) return "";
+        if (StringUtils.isBlank(string))
+            return string;
 
-        if (getMessage() == null) return string;
-        if (getToken() == null) return string;
+        if (token == null || message == null)
+            return string;
 
-        return string.replace(getToken(), getMessage());
+        return string.replace(token, message);
     }
 
     /**
@@ -120,15 +121,19 @@ public class RawWebhook {
         return this;
     }
 
+    static JSONObject of() {
+        return new JSONObject();
+    }
+
     private JSONObject registerContent(JSONObject json) {
         if (embeds.isEmpty()) return json;
         var embedObjects = new ArrayList<JSONObject>();
 
         for (var embed : embeds) {
-            var jsonEmbed = new JSONObject().
-                    put("title", embed.getTitle()).
+            var jsonEmbed = of().
                     put("description", embed.getDescription()).
-                    put("url", embed.getUrl());
+                    put("url", embed.getUrl()).
+                    put("title", embed.getTitle());
 
             if (embed.getColor() != null) {
                 var color = embed.getColor();
@@ -155,13 +160,13 @@ public class RawWebhook {
             }
 
             if (image != null)
-                jsonEmbed.put("image", new JSONObject().put("url", image));
+                jsonEmbed.put("image", of().put("url", image));
 
             if (thumbnail != null)
-                jsonEmbed.put("thumbnail", new JSONObject().put("url", thumbnail));
+                jsonEmbed.put("thumbnail", of().put("url", thumbnail));
 
             if (author != null) {
-                jsonEmbed.put("author", new JSONObject().
+                jsonEmbed.put("author", of().
                         put("name", author.getName()).
                         put("url", author.getUrl()).
                         put("icon_url", author.getIconUrl())
@@ -170,10 +175,10 @@ public class RawWebhook {
 
             if (!fields.isEmpty()) {
                 jsonEmbed.put("fields", fields.stream().map(f ->
-                        new JSONObject().
+                        of().
+                                put("inline", f.isInLine()).
                                 put("name", f.getName()).
-                                put("value", f.getValue()).
-                                put("inline", f.isInLine())
+                                put("value", f.getValue())
                 ).toArray());
             }
 
@@ -201,11 +206,10 @@ public class RawWebhook {
 
         json = registerContent(json);
 
-        var url = new URL(getUrl());
+        var url = new URL(this.url);
         var c = (HttpsURLConnection) url.openConnection();
 
         c.addRequestProperty("Content-Type", "application/json");
-
         c.addRequestProperty("User-Agent",
                 "Java-DiscordWebhook-BY-Gelox_");
 
@@ -237,15 +241,15 @@ public class RawWebhook {
 
         @Override
         public String toString() {
-            var builder = new StringBuilder();
+            StringBuilder builder = new StringBuilder();
             var entrySet = map.entrySet();
 
             builder.append("{");
             int i = 0;
 
             for (var entry : entrySet) {
-                var val = entry.getValue();
                 builder.append(quote(entry.getKey())).append(":");
+                Object val = entry.getValue();
 
                 if (val instanceof Boolean || val instanceof JSONObject)
                     builder.append(val);
@@ -267,7 +271,7 @@ public class RawWebhook {
                 builder.append(++i == entrySet.size() ? "}" : ",");
             }
 
-            return builder + "";
+            return builder.toString();
         }
     }
 }

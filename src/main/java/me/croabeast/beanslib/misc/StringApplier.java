@@ -28,4 +28,8 @@ public final class StringApplier {
     public static StringApplier of(String string) {
         return new StringApplier(string);
     }
+
+    public static StringApplier of(StringApplier applier) {
+        return new StringApplier(applier.toString());
+    }
 }

@@ -52,19 +52,15 @@ public class EmbedObject {
         this.message = message;
     }
 
-    /**
-     * Replace the {@link #getToken()} with the {@link #getMessage()}.
-     * @param string an input string to replace
-     * @return the replaced string
-     */
     @NotNull
     private String replace(String string) {
-        if (StringUtils.isBlank(string)) return "";
+        if (StringUtils.isBlank(string))
+            return string;
 
-        if (getMessage() == null) return string;
-        if (getToken() == null) return string;
+        if (token == null || message == null)
+            return string;
 
-        return string.replace(getToken(), getMessage());
+        return string.replace(token, message);
     }
 
     /**
@@ -141,7 +137,7 @@ public class EmbedObject {
                 c = Color.decode(color);
             } catch (Exception e) {
                 var clazz = Class.forName("java.awt.Color");
-                c = ((Color) clazz.getField(color).get(null));
+                c = (Color) clazz.getField(color).get(null);
             }
         } catch (Exception ignored) {}
 

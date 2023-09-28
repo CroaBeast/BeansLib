@@ -1,20 +1,24 @@
-package me.croabeast.beanslib.misc;
+package me.croabeast.beanslib.logger;
 
-import lombok.RequiredArgsConstructor;
-import lombok.var;
+import lombok.SneakyThrows;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.message.MessageExecutor;
 import me.croabeast.beanslib.message.MessageSender;
+import me.croabeast.beanslib.misc.StringApplier;
 import me.croabeast.beanslib.utility.ArrayUtils;
+import me.croabeast.beanslib.utility.LibUtils;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.neoprismatic.NeoPrismaticAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 
 /**
@@ -23,42 +27,67 @@ import java.util.regex.Matcher;
  * @author CroaBeast
  * @since 1.4
  */
-@RequiredArgsConstructor
+
 public class BeansLogger {
 
+    private RawLogger rawLogger, pluginLogger;
     private final BeansLib lib;
 
-    private List<String> toLogLines(Player p, boolean isLog, String... lines) {
-        if (ArrayUtils.isArrayEmpty(lines))
-            return new ArrayList<>();
+    public BeansLogger(BeansLib lib) {
+        this.lib = Objects.requireNonNull(lib);
+        Plugin plugin = lib.getPlugin();
 
-        final String split = lib.getLineSeparator();
-        final List<String> list = new ArrayList<>();
+        pluginLogger = new BukkitLogger(plugin);
+        rawLogger = new BukkitLogger(null);
 
-        for (String line : lines) {
-            if (line == null) continue;
+        if (!LibUtils.isPaper() || LibUtils.getMainVersion() < 18.2)
+            return;
 
-            line = lib.replacePrefixKey(line, isLog);
-            line = line.replace(split, "&f" + split);
+        try {
+            pluginLogger = new PaperLogger(plugin.getName());
+            rawLogger = new PaperLogger("");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-            isLog = isLog && lib.isStripPrefix();
-            var key = MessageExecutor.identifyKey(line);
+    private List<String> toLoggerStrings(Player player, boolean useLogger, String... strings) {
+        if (ArrayUtils.isArrayEmpty(strings)) return new ArrayList<>();
 
-            if (isLog && key != MessageExecutor.CHAT_EXECUTOR) {
-                Matcher match = key.getPattern().matcher(line);
+        final String sp = lib.getLineSeparator();
+        List<String> list = new ArrayList<>();
 
-                if (match.find())
-                    line = line.replace(match.group(), "");
+        boolean isLog = useLogger && lib.isStripPrefix();
+
+        for (String string : strings) {
+            if (string == null) continue;
+
+            StringApplier applier = StringApplier.of(string)
+                    .apply(s -> lib.replacePrefixKey(s, isLog))
+                    .apply(s -> s.replace(sp, "&f" + sp));
+
+            String temp = applier.toString();
+
+            StringApplier result = StringApplier.of(temp);
+            MessageExecutor e = MessageExecutor.identifyKey(temp);
+
+            if (isLog && e != MessageExecutor.CHAT_EXECUTOR) {
+                Matcher m = e.getPattern().matcher(temp);
+
+                if (m.find())
+                    result.apply(s -> s.replace(m.group(), ""));
             }
 
-            list.add(lib.createCenteredChatMessage(p, p, line));
+            result.apply(s -> lib
+                    .createCenteredChatMessage(player, s));
+            list.add(result.toString());
         }
 
         return list;
     }
 
-    private List<String> toLogLines(String... lines) {
-        return toLogLines(null, true, lines);
+    private List<String> toLoggerStrings(String... lines) {
+        return toLoggerStrings(null, true, lines);
     }
 
     /**
@@ -68,7 +97,7 @@ public class BeansLogger {
      * @param lines the information to send
      */
     public void playerLog(Player player, String... lines) {
-        new MessageSender(player).setLogger(false).send(toLogLines(player, false, lines));
+        new MessageSender(player).setLogger(false).send(toLoggerStrings(player, false, lines));
     }
 
     private String colorLogger(String string) {
@@ -79,7 +108,7 @@ public class BeansLogger {
     }
 
     private void raw(String line) {
-        Bukkit.getLogger().info(colorLogger(line));
+        rawLogger.info(colorLogger(line));
     }
 
     /**
@@ -89,11 +118,11 @@ public class BeansLogger {
      * @param lines the information to send
      */
     public void rawLog(String... lines) {
-        toLogLines(lines).forEach(this::raw);
+        toLoggerStrings(lines).forEach(this::raw);
     }
 
     private void log(String line) {
-        lib.getPlugin().getLogger().info(colorLogger(line));
+        pluginLogger.info(colorLogger(line));
     }
 
     /**
@@ -110,7 +139,7 @@ public class BeansLogger {
      */
     public void doLog(CommandSender sender, String... lines) {
         if (sender instanceof Player) playerLog((Player) sender, lines);
-        toLogLines(lines).forEach(this::log);
+        toLoggerStrings(lines).forEach(this::log);
     }
 
     /**
@@ -150,7 +179,8 @@ public class BeansLogger {
         if (ArrayUtils.isArrayEmpty(lines))
             return;
 
-        var mSender = new MessageSender(sender).setLogger(false);
+        MessageSender mSender = new MessageSender(sender)
+                .setLogger(false);
 
         for (String line : lines) {
             if (StringUtils.isBlank(line)) {
@@ -198,5 +228,82 @@ public class BeansLogger {
      */
     public void mixLog(String... lines) {
         mixLog(null, lines);
+    }
+
+    interface RawLogger {
+        void info(String string);
+    }
+
+    static class BukkitLogger implements RawLogger {
+
+        final Plugin plugin;
+
+        BukkitLogger(Plugin plugin) {
+            this.plugin = plugin;
+        }
+
+        @Override
+        public void info(String string) {
+            if (plugin == null) {
+                Bukkit.getLogger().info(string);
+                return;
+            }
+
+            plugin.getLogger().info(string);
+        }
+    }
+
+    static class PaperLogger implements RawLogger {
+
+        static final String KYORI_PREFIX = "net.kyori.adventure.text.";
+
+        private final Class<?> clazz;
+        private final Object logger;
+
+        @SneakyThrows
+        private PaperLogger(String name) {
+            if (LibUtils.isPaper()) {
+                logger = Class
+                        .forName(KYORI_PREFIX + "logger.slf4j.ComponentLogger")
+                        .getMethod("logger", String.class)
+                        .invoke(null, name);
+
+                clazz = logger.getClass();
+                return;
+            }
+
+            throw new IllegalAccessException("Paper is not being used");
+        }
+
+        @SneakyThrows
+        static Class<?> from(String name) {
+            return Class.forName(KYORI_PREFIX + name);
+        }
+
+        @Override
+        public void info(String string) {
+            try {
+                Class<?> legacy = from("serializer.legacy.LegacyComponentSerializer");
+
+                Method method = clazz.getMethod("info", from("Component"));
+                method.setAccessible(true);
+
+                Method section = legacy.getMethod("legacySection");
+                section.setAccessible(true);
+
+                method.invoke(logger,
+                        legacy
+                                .getMethod("deserialize", String.class)
+                                .invoke(
+                                        section.invoke(null),
+                                        string
+                                ));
+
+                section.setAccessible(false); method.setAccessible(false);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

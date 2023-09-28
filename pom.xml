@@ -6,7 +6,7 @@
 
     <groupId>io.github.croabeast</groupId>
     <artifactId>BeansLib</artifactId>
-    <version>1.4-SNAPSHOT-89</version>
+    <version>1.4-SNAPSHOT-92</version>
     <packaging>jar</packaging>
 
     <name>BeansLib</name>
@@ -218,7 +218,7 @@
         <dependency>
             <groupId>com.github.CroaBeast</groupId>
             <artifactId>NeoPrismaticAPI</artifactId>
-            <version>1.0.5</version>
+            <version>1.0.7</version>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>

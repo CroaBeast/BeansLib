@@ -3,7 +3,7 @@ package me.croabeast.beanslib.utility;
 import lombok.experimental.UtilityClass;
 import me.croabeast.beanslib.Beans;
 import me.croabeast.beanslib.BeansLib;
-import me.croabeast.beanslib.misc.BeansLogger;
+import me.croabeast.beanslib.logger.BeansLogger;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
