@@ -19,12 +19,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * A class that stores static methods for text, string, configurations,
@@ -267,8 +265,8 @@ public class TextUtils {
      * @param player a player
      * @param message the message
      */
-    public void sendActionBar(Player player, String message) {
-        ActionBarHandler.send(player, message);
+    public boolean sendActionBar(Player player, String message) {
+        return ActionBarHandler.send(player, message);
     }
 
     /**
@@ -282,8 +280,22 @@ public class TextUtils {
      * @param stay the stay number in ticks
      * @param out the fadeOut number in ticks
      */
-    public void sendTitle(Player player, String title, String subtitle, int in, int stay, int out) {
-        TitleHandler.send(player, title, subtitle, in, stay, out);
+    public boolean sendTitle(Player player, String title, String subtitle, int in, int stay, int out) {
+        return TitleHandler.send(player, title, subtitle, in, stay, out);
+    }
+
+    /**
+     * Sends a title message to a player.
+     * <p> Doesn't format the message. Use {@link BeansLib#colorize(Player, Player, String)}.
+     *
+     * @param player a player
+     * @param title a title
+     * @param in the fadeIn number in ticks
+     * @param stay the stay number in ticks
+     * @param out the fadeOut number in ticks
+     */
+    public boolean sendTitle(Player player, String title, int in, int stay, int out) {
+        return sendTitle(player, title, "", in, stay, out);
     }
 
     /**
@@ -296,10 +308,9 @@ public class TextUtils {
      * @param stay the stay number in ticks
      * @param out the fadeOut number in ticks
      */
-    public void sendTitle(Player player, @NotNull String[] message, int in, int stay, int out) {
-        if (message.length <= 0 || message.length > 2) return;
-
-        sendTitle(player, message[0], message.length == 1 ? "" : message[1], in, stay, out);
+    public boolean sendTitle(Player player, @NotNull String[] message, int in, int stay, int out) {
+        if (message.length <= 0 || message.length > 2) return false;
+        return sendTitle(player, message[0], message.length == 1 ? "" : message[1], in, stay, out);
     }
 
     /**

@@ -7,10 +7,10 @@ import lombok.experimental.Accessors;
 import lombok.var;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.croabeast.beanslib.character.SmallCaps;
-import me.croabeast.beanslib.key.KeyManager;
+import me.croabeast.beanslib.key.PlayerKey;
+import me.croabeast.beanslib.logger.BeansLogger;
 import me.croabeast.beanslib.message.CenteredMessage;
 import me.croabeast.beanslib.message.MessageSender;
-import me.croabeast.beanslib.logger.BeansLogger;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.neoprismatic.NeoPrismaticAPI;
 import org.apache.commons.lang.StringUtils;
@@ -37,8 +37,7 @@ import java.util.regex.Pattern;
  * @author CroaBeast
  * @since 1.0
  */
-@Accessors(chain = true)
-@Getter @Setter
+@Accessors(chain = true) @Getter @Setter
 public class BeansLib {
 
     @Getter(AccessLevel.NONE)
@@ -47,12 +46,6 @@ public class BeansLib {
 
     @Getter(AccessLevel.NONE)
     private final BeansLogger logger;
-
-    /**
-     * The {@link KeyManager} instance to parse the respective player
-     * values in strings.
-     */
-    private KeyManager keyManager;
 
     /**
      * The plugin's prefix that will replace the prefix key: {@link #getLangPrefixKey()}.
@@ -166,16 +159,13 @@ public class BeansLib {
 
     BeansLib(@Nullable Plugin plugin, boolean load) {
         this.plugin = plugin;
-
-        keyManager = new KeyManager();
         logger = new BeansLogger(this);
 
-        langPrefix = "&e " + (this.plugin != null ?
-                this.plugin.getName() :
-                "JavaPlugin") + " &8»&7";
+        langPrefix = "&e " +
+                (plugin != null ? plugin.getName() : "JavaPlugin") +
+                " &8»&7";
 
-        if (Beans.lib == null && load)
-            Beans.setLib(this);
+        if (Beans.lib == null && load) Beans.setLib(this);
     }
 
     /**
@@ -373,7 +363,7 @@ public class BeansLib {
     }
 
     public String formatPlaceholders(@Nullable Player parser, String string) {
-        string = getKeyManager().parseKeys(parser, string, false);
+        string = PlayerKey.replaceKeys(parser, string);
         return TextUtils.PARSE_PLACEHOLDERAPI.apply(parser, parseChars(string));
     }
 
@@ -461,28 +451,34 @@ public class BeansLib {
     }
 
     /**
-     * Parses the players keys defined in your {@link #keyManager} object
-     * to its respective player variables.
+     * Parses the players keys defined in your keyManager object to its
+     * respective player variables.
      *
      * @param parser a player
      * @param string an input string
      * @param c if keys are case-sensitive
      *
      * @return the requested string
+     * @deprecated See {@link PlayerKey#replaceKeys(Player, String, boolean)}
      */
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
+    @Deprecated
     public final String parsePlayerKeys(Player parser, String string, boolean c) {
-        return getKeyManager().parseKeys(parser, string, c);
+        return PlayerKey.replaceKeys(parser, string, c);
     }
 
     /**
-     * Parses the players keys defined in your {@link #keyManager} object
-     * to its respective player variables. Keys are case-insensitive.
+     * Parses the players keys defined in your keyManager object to its
+     * respective player variables. Keys are case-insensitive.
      *
      * @param parser a player
      * @param string an input string
      *
      * @return the requested string
+     * @deprecated See {@link PlayerKey#replaceKeys(Player, String)}
      */
+    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
+    @Deprecated
     public final String parsePlayerKeys(Player parser, String string) {
         return parsePlayerKeys(parser, string, false);
     }

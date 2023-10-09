@@ -1,5 +1,6 @@
 package me.croabeast.beanslib.utility;
 
+import com.google.common.collect.Lists;
 import lombok.experimental.UtilityClass;
 import lombok.var;
 import org.jetbrains.annotations.NotNull;
@@ -8,6 +9,10 @@ import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.UnaryOperator;
 
+/**
+ * A utility class that provides some methods for working with arrays.
+ * This class uses generics to handle different types of arrays.
+ */
 @UtilityClass
 public class ArrayUtils {
 
@@ -15,19 +20,18 @@ public class ArrayUtils {
      * Combines an array with one or more additional arrays into a new
      * array of the same type.
      *
+     * @param array the first array to be combined
+     * @param extraArrays the other arrays to be combined
+     * @param <T> the type of the elements in the arrays
+     *
      * @author Kihsomray
      * @since 1.3
      *
-     * @param array First array
-     * @param extraArrays Any additional arrays
-     * @param <T> Type of array (must be same)
-     *
-     * @return New array of combined values
+     * @return a new array that contains all the elements from the given arrays
      */
     @SafeVarargs
     public <T> T[] combineArrays(@NotNull T[] array, T[]... extraArrays) {
-        if (extraArrays == null || extraArrays.length < 1)
-            return array;
+        if (isArrayEmpty(extraArrays)) return array;
 
         List<T> resultList = new ArrayList<>();
         Collections.addAll(resultList, array);
@@ -41,19 +45,46 @@ public class ArrayUtils {
         return resultList.toArray(resultArray);
     }
 
+    /**
+     * Checks if an array is empty or null.
+     *
+     * @param array the array to be checked
+     * @param <T> the type of the elements in the array
+     *
+     * @return true if the array is empty or null, false otherwise
+     */
     @SafeVarargs
     public <T> boolean isArrayEmpty(T... array) {
         return array == null || array.length < 1;
     }
 
+    /**
+     * Checks if an array is declared and throws an exception if not.
+     *
+     * @param array the array to be checked
+     * @param <T> the type of the elements in the array
+     *
+     * @return the same array if it is declared
+     * @throws IllegalArgumentException if the array is null or has zero length
+     */
     @SafeVarargs
     public <T> T[] checkArray(T... array) {
         if (isArrayEmpty(array))
-            throw new IllegalArgumentException("Array should be declared.");
+            throw new IllegalArgumentException("Array should be declared");
 
         return array;
     }
 
+    /**
+     * Converts an array to a list and applies an optional operator to each element.
+     *
+     * @param operator the operator to be applied to each element, can be null
+     * @param array the array to be converted
+     * @param <T> the type of the elements in the array and the list
+     *
+     * @return a new list that contains the elements from the array after applying the operator
+     * @throws IllegalArgumentException if the array is null or has zero length
+     */
     @SafeVarargs
     @NotNull
     public <T> List<T> fromArray(UnaryOperator<T> operator, T... array) {
@@ -65,21 +96,31 @@ public class ArrayUtils {
         return list;
     }
 
+    /**
+     * Converts an array to a list without applying any operator.
+     *
+     * @param array the array to be converted
+     * @param <T> the type of the elements in the array and the list
+     *
+     * @return a new list that contains the same elements as the array
+     * @throws IllegalArgumentException if the array is null or has zero length
+     */
     @SafeVarargs
     @NotNull
     public <T> List<T> fromArray(T... array) {
         return fromArray(null, array);
     }
 
+    /**
+     * Converts an iterable to an array.
+     *
+     * @param iterable the iterable to be converted
+     * @param <T> the type of the elements in the iterable and the array
+     *
+     * @return a new array that contains the elements from the iterable
+     * @throws NullPointerException if the iterable is null
+     */
     public <T> T[] toArray(Iterable<T> iterable) {
-        Objects.requireNonNull(iterable);
-
-        Iterator<T> iterator = iterable.iterator();
-        List<T> list = new ArrayList<>();
-
-        while (iterator.hasNext())
-            list.add(iterator.next());
-
-        return list.toArray((T[]) new Object[0]);
+        return (T[]) Lists.newArrayList(iterable).toArray();
     }
 }

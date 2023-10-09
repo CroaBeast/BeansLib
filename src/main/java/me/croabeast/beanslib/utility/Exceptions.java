@@ -1,10 +1,14 @@
 package me.croabeast.beanslib.utility;
 
 import com.google.common.collect.Lists;
+import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import lombok.var;
+import me.croabeast.beanslib.Beans;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -125,5 +129,33 @@ public class Exceptions {
     @NotNull
     public Class<?> getCallerClass(int index) throws ClassNotFoundException {
         return Class.forName(Thread.currentThread().getStackTrace()[index].getClassName());
+    }
+
+    @SneakyThrows
+    public void hasPluginAccess(Class<?> clazz, Throwable throwable) {
+        Objects.requireNonNull(clazz);
+        Plugin plugin = null;
+
+        try {
+            plugin = JavaPlugin.getProvidingPlugin(clazz);
+        } catch (Exception ignored) {}
+
+        if (Objects.equals(plugin, Beans.getPlugin()))
+            return;
+
+        throw throwable;
+    }
+
+    public void hasPluginAccess(Class<?> clazz, String message) {
+        hasPluginAccess(clazz, new IllegalAccessException(message));
+    }
+
+    public void hasPluginAccess(Class<?> clazz) {
+        hasPluginAccess(
+                clazz,
+                clazz.getSimpleName() +
+                        " is only accessible using " +
+                        Beans.getPlugin().getName()
+        );
     }
 }

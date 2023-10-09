@@ -20,6 +20,7 @@ import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -249,18 +250,32 @@ public class ChatMessageBuilder implements Cloneable {
         return this;
     }
 
+    public <T> ChatMessageBuilder append(T object) {
+        String initial = object.toString();
+
+        try {
+            Class<?> clazz = object.getClass();
+            Method method = String.class.getMethod("valueOf", clazz);
+
+            initial = (String) method.invoke(null, object);
+        } catch (Exception ignored) {}
+
+        return append(initial);
+    }
+
     @NotNull
     public BaseComponent[] build() {
         if (index < 0) {
-            var m = "The builder does not contain any message.";
+            var m = "The builder does not contain any message";
             throw new IllegalStateException(m);
         }
 
-        var components = new ArrayList<BaseComponent>();
-        for (var message : messageMap.values())
-            components.addAll(message.asComponents());
+        List<BaseComponent> comps = new ArrayList<>();
 
-        return components.toArray(new BaseComponent[0]);
+        for (ChatMessage message : messageMap.values())
+            comps.addAll(message.asComponents());
+
+        return ArrayUtils.toArray(comps);
     }
 
     public boolean send() {
@@ -375,7 +390,7 @@ public class ChatMessageBuilder implements Cloneable {
         }
 
         boolean isEmpty() {
-            return hover == null || hover.length == 0;
+            return ArrayUtils.isArrayEmpty(hover);
         }
 
         @SuppressWarnings("deprecation")
@@ -393,10 +408,11 @@ public class ChatMessageBuilder implements Cloneable {
 
         @Override
         public String toString() {
-            if (hover == null || hover.length == 0) return "{}";
+            if (isEmpty()) return "{}";
 
-            var array = Arrays.copyOf(hover, hover.length);
-            array[array.length - 1] = array[array.length - 1] + "§r";
+            String[] array = Arrays.copyOf(hover, hover.length);
+            array[array.length - 1] =
+                    array[array.length - 1] + "§r";
 
             return '{' + Arrays.toString(array) + '}';
         }

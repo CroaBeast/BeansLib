@@ -1,12 +1,8 @@
 package me.croabeast.beanslib;
 
 import lombok.experimental.UtilityClass;
-import lombok.var;
 import me.clip.placeholderapi.PlaceholderAPI;
-import me.croabeast.beanslib.character.SmallCaps;
-import me.croabeast.beanslib.key.KeyManager;
 import me.croabeast.beanslib.message.MessageSender;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -37,16 +33,6 @@ public class Beans {
 
     public void setLib(BeansLib lib) {
         Beans.lib = Objects.requireNonNull(lib);
-    }
-
-    /**
-     * The {@link KeyManager} instance to parse the respective player
-     * values in strings.
-     *
-     * @return the key manager instance
-     */
-    public KeyManager getKeyManager() {
-        return lib.getKeyManager();
     }
 
     /**
@@ -323,33 +309,6 @@ public class Beans {
      */
     public String createCenteredChatMessage(String string) {
         return lib.createCenteredChatMessage(string);
-    }
-
-    /**
-     * Parses the players keys defined in your {@link #getKeyManager} object
-     * to its respective player variables.
-     *
-     * @param parser a player
-     * @param string an input string
-     * @param c if keys are case-sensitive
-     *
-     * @return the requested string
-     */
-    public String parsePlayerKeys(Player parser, String string, boolean c) {
-        return lib.parsePlayerKeys(parser, string, c);
-    }
-
-    /**
-     * Parses the players keys defined in your {@link #getKeyManager} object
-     * to its respective player variables. Keys are case-insensitive.
-     *
-     * @param parser a player
-     * @param string an input string
-     *
-     * @return the requested string
-     */
-    public String parsePlayerKeys(Player parser, String string) {
-        return lib.parsePlayerKeys(parser, string);
     }
 
     /**

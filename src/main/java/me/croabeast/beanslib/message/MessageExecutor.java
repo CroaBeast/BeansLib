@@ -1,25 +1,27 @@
 package me.croabeast.beanslib.message;
 
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import lombok.var;
 import me.croabeast.beanslib.Beans;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.builder.BossbarBuilder;
 import me.croabeast.beanslib.builder.ChatMessageBuilder;
 import me.croabeast.beanslib.discord.Webhook;
+import me.croabeast.beanslib.key.PlayerKey;
 import me.croabeast.beanslib.misc.StringApplier;
-import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.neoprismatic.NeoPrismaticAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
+import org.intellij.lang.annotations.RegExp;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,7 +45,6 @@ import static me.croabeast.beanslib.utility.TextUtils.*;
  * @author CroaBeast
  * @since 1.4
  */
-@Accessors(chain = true)
 public abstract class MessageExecutor implements Cloneable {
 
     private static final HashMap<Integer, MessageExecutor>
@@ -73,7 +74,7 @@ public abstract class MessageExecutor implements Cloneable {
     public static final MessageExecutor TITLE_EXECUTOR = new MessageExecutor(MessageFlag.TITLE, "(:\\d+)?") {
         @Override
         public boolean execute(Player t, Player p, String s) {
-            var m1 = getPattern().matcher(s);
+            Matcher m1 = getPattern().matcher(s);
             String tm = null;
 
             try {
@@ -88,11 +89,10 @@ public abstract class MessageExecutor implements Cloneable {
                     time = Integer.parseInt(tm) * 20;
             } catch (Exception ignored) {}
 
-            var t1 = formatString(t, p, s);
+            String t1 = formatString(t, p, s);
 
             try {
-                sendTitle(t, Beans.splitLine(t1), a[0], time, a[2]);
-                return true;
+                return sendTitle(t, Beans.splitLine(t1), a[0], time, a[2]);
             } catch (Exception e) {
                 e.printStackTrace();
                 return false;
@@ -108,24 +108,24 @@ public abstract class MessageExecutor implements Cloneable {
     public static final MessageExecutor WEBHOOK_EXECUTOR = new MessageExecutor(MessageFlag.WEBHOOK, "(:.+)?") {
         @Override
         public boolean execute(Player t, Player parser, String s) {
-            var id = Beans.getWebhookSection();
+            ConfigurationSection id = Beans.getWebhookSection();
             if (id == null) return false;
 
-            var list = new ArrayList<>(id.getKeys(false));
+            List<String> list = new ArrayList<>(id.getKeys(false));
             if (list.isEmpty()) return false;
 
-            var m3 = getPattern().matcher(s);
-            var line = formatString(t, parser, s);
+            Matcher m3 = getPattern().matcher(s);
+            String line = formatString(t, parser, s);
 
-            var path = list.get(0);
+            String path = list.get(0);
 
             if (m3.find()) {
-                var split = m3.group().
+                String[] split = m3.group().
                         replace(Beans.getKeysDelimiters()[0], "").
                         replace(Beans.getKeysDelimiters()[1], "").
                         split(":", 2);
 
-                var temp = split.length == 2 ? split[1] : null;
+                String temp = split.length == 2 ? split[1] : null;
                 if (temp != null) path = temp;
             }
 
@@ -167,12 +167,12 @@ public abstract class MessageExecutor implements Cloneable {
     public static final MessageExecutor BOSSBAR_EXECUTOR = new MessageExecutor(MessageFlag.BOSSBAR, "(:.+)?") {
         @Override
         public boolean execute(Player t, Player parser, String s) {
-            var plugin = Beans.getPlugin();
-            var m2 = Beans.getBossbarPattern().matcher(s);
+            Plugin plugin = Beans.getPlugin();
+            Matcher m2 = Beans.getBossbarPattern().matcher(s);
 
             try {
                 if (m2.find()) {
-                    var c = Beans.getBossbarSection();
+                    ConfigurationSection c = Beans.getBossbarSection();
                     if (c == null) return false;
 
                     c = c.getConfigurationSection(m2.group(1));
@@ -199,11 +199,10 @@ public abstract class MessageExecutor implements Cloneable {
      * <p> The setters of this instance will throw an {@link UnsupportedOperationException}.
      */
     public static final MessageExecutor CHAT_EXECUTOR = new MessageExecutor(MessageFlag.CHAT) {
-        private static final String MSG_EX = "Setter is not supported on this instance";
 
         @Override
         public MessageExecutor setRegex(String regex) {
-            throw new UnsupportedOperationException(MSG_EX);
+            throw new UnsupportedOperationException("Setter is not supported on this instance");
         }
 
         @Override
@@ -228,12 +227,13 @@ public abstract class MessageExecutor implements Cloneable {
     /**
      * The optional regex string to catch more arguments.
      */
-    @Setter
+    @Accessors(chain = true)
+    @Setter @RegExp
     private String regex;
 
     private boolean color = false;
 
-    private MessageExecutor(MessageFlag flag, String regex) {
+    private MessageExecutor(MessageFlag flag, @RegExp String regex) {
         this.flag = flag;
         this.regex = regex;
         index = ordinal;
@@ -320,7 +320,7 @@ public abstract class MessageExecutor implements Cloneable {
             applier.apply(s -> s.replace(matcher.group(), ""));
 
         applier.apply(STRIP_JSON).apply(STRIP_FIRST_SPACES).
-                apply(s -> Beans.parsePlayerKeys(parser, s)).
+                apply(s -> PlayerKey.replaceKeys(parser, s)).
                 apply(Beans::convertToSmallCaps);
 
         if (!color)
@@ -343,8 +343,8 @@ public abstract class MessageExecutor implements Cloneable {
     public static MessageExecutor identifyKey(String s) {
         if (StringUtils.isBlank(s)) return CHAT_EXECUTOR;
 
-        for (var key : MESSAGE_EXECUTOR_MAP.values())
-            if (key.getPattern().matcher(s).find()) return key;
+        for (MessageExecutor e : MESSAGE_EXECUTOR_MAP.values())
+            if (e.getPattern().matcher(s).find()) return e;
 
         if (Beans.getBossbarPattern().
                 matcher(s).find()) return BOSSBAR_EXECUTOR;
@@ -363,8 +363,8 @@ public abstract class MessageExecutor implements Cloneable {
     public static MessageExecutor matchKey(String k) {
         if (StringUtils.isBlank(k)) return CHAT_EXECUTOR;
 
-        for (var key : MESSAGE_EXECUTOR_MAP.values())
-            if (k.matches("(?i)" + key.getFlag())) return key;
+        for (MessageExecutor e : MESSAGE_EXECUTOR_MAP.values())
+            if (k.matches("(?i)" + e.getFlag())) return e;
 
         return CHAT_EXECUTOR;
     }

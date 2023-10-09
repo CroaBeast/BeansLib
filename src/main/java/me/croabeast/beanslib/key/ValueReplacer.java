@@ -2,36 +2,22 @@ package me.croabeast.beanslib.key;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.Accessors;
+import me.croabeast.beanslib.utility.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The {@code ValueReplacer} class manages the replacement of a key with
- * a given value in an input string, using the {@link #replace(String)} method.
+ * A utility class that replaces a given key with a given value in a given string.
  */
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class ValueReplacer {
+public final class ValueReplacer {
 
     private final String key, value;
-
-    /**
-     * If the key is case-sensitive or not, {@code false} by default.
-     */
-    @Accessors(chain = true)
-    @Setter
     private boolean sensitive = false;
 
-    /**
-     * Replaces the key with the defined value on an input string.
-     *
-     * @param string an input string
-     * @return the formatted string
-     */
-    String replace(String string) {
+    private String replace(String string) {
         if (StringUtils.isBlank(string)) return string;
         if (StringUtils.isBlank(key)) return string;
 
@@ -48,31 +34,57 @@ public class ValueReplacer {
         return string;
     }
 
+    /**
+     * Replaces the key with the value in the given input string.
+     *
+     * @param key the key to be replaced
+     * @param value the value to replace the key with
+     * @param input the input string to be replaced
+     * @param b the flag indicating whether the replacement is case-sensitive or not
+     *
+     * @return the replaced string
+     */
     public static String of(String key, String value, String input, boolean b) {
-        return new ValueReplacer(key, value).setSensitive(b).replace(input);
+        ValueReplacer replacer = new ValueReplacer(key, value);
+        if (b) replacer.sensitive = true;
+
+        return replacer.replace(input);
     }
 
+    /**
+     * Replaces the key with the value in the given input string. The replacement is
+     * case-insensitive by default.
+     *
+     * @param key the key to be replaced
+     * @param value the value to replace the key with
+     * @param input the input string to be replaced
+     *
+     * @return the replaced string
+     */
     public static String of(String key, String value, String input) {
         return new ValueReplacer(key, value).replace(input);
     }
 
+    @SuppressWarnings("all")
+    public static <A, B> boolean isApplicable(A[] as, B[] bs) {
+        return (!ArrayUtils.isArrayEmpty(as) && !ArrayUtils.isArrayEmpty(bs)) && (as.length <= bs.length);
+    }
+
     /**
-     * Replace an array of string keys with an array of string values in a string.
+     * Replaces each key in the keys array with the corresponding value in the values array
+     * in the given string. If the keys array or values array is null, or if their lengths are
+     * not equal, returns the original string.
      *
-     * <p> All the keys are quoted to avoid replacing errors in the string.
+     * @param keys an array of keys to be replaced
+     * @param values an array of values to replace the keys with
+     * @param string the input string to be replaced
+     * @param b the flag indicating whether the replacement is case-sensitive or not
      *
-     * @param string an input string
-     * @param keys an array of keys
-     * @param values an array of values
-     * @param b if keys are case-sensitive
-     *
-     * @return the string with the parsed values
+     * @return the replaced string
      */
     public static String forEach(String[] keys, String[] values, String string, boolean b) {
         if (StringUtils.isBlank(string)) return string;
-
-        if (keys == null || values == null) return string;
-        if (keys.length > values.length) return string;
+        if (!isApplicable(keys, values)) return string;
 
         for (int i = 0; i < keys.length; i++)
             string = ValueReplacer.of(keys[i], values[i], string, b);
@@ -81,16 +93,15 @@ public class ValueReplacer {
     }
 
     /**
-     * Replace an array of string keys that are case-insensitive with an
-     * array of string values in a string.
+     * Replaces each key in the keys array with the corresponding value in the values array
+     * in the given string. If the keys array or values array is null, or if their lengths are
+     * not equal, returns the original string. The replacement is case-insensitive by default.
      *
-     * <p> All the keys are quoted to avoid replacing errors in the string.
+     * @param keys an array of keys to be replaced
+     * @param values an array of values to replace the keys with
+     * @param string the input string to be replaced
      *
-     * @param keys an array of keys
-     * @param values an array of values
-     * @param string an input string
-     *
-     * @return the string with the parsed values
+     * @return the replaced string
      */
     public static String forEach(String[] keys, String[] values, String string) {
         return forEach(keys, values, string, false);

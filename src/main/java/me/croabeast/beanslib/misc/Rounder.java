@@ -42,20 +42,21 @@ public final class Rounder<T extends Number> {
     }
 
     private T result() {
+        String round = getRoundString();
         Number n = null;
 
         if (clazz == Double.class)
-            n = Double.parseDouble(getRoundString());
+            n = Double.parseDouble(round);
         if (clazz == Long.class)
-            n = Long.parseLong(getRoundString());
+            n = Long.parseLong(round);
         if (clazz == Float.class)
-            n = Float.parseFloat(getRoundString());
+            n = Float.parseFloat(round);
         if (clazz == Byte.class)
-            n = Byte.parseByte(getRoundString());
+            n = Byte.parseByte(round);
         if (clazz == Integer.class)
-            n = Integer.parseInt(getRoundString());
+            n = Integer.parseInt(round);
         if (clazz == Short.class)
-            n = Short.parseShort(getRoundString());
+            n = Short.parseShort(round);
 
         return clazz.cast(n);
     }
