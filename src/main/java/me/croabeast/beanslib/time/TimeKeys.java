@@ -17,14 +17,14 @@ public class TimeKeys {
     /**
      * A static variable using the correct spanish translation of the formats.
      */
-    public static final TimeKeys SPANISH_KEYS = new TimeKeys().
-            setSecondFormat("Segundo(s)").
-            setMinuteFormat("Minuto(s)").
-            setHourFormat("Hora(s)").
-            setDayFormat("Día(s)").
-            setWeekFormat("Semana(s)").
-            setMonthFormat("Mes(es)").
-            setYearFormat("Año(s)");
+    public static final TimeKeys SPANISH_KEYS = new TimeKeys()
+            .setSecondFormat("Segundo(s)")
+            .setMinuteFormat("Minuto(s)")
+            .setHourFormat("Hora(s)")
+            .setDayFormat("Día(s)")
+            .setWeekFormat("Semana(s)")
+            .setMonthFormat("Mes(es)")
+            .setYearFormat("Año(s)");
 
     private String splitter = ", ";
 

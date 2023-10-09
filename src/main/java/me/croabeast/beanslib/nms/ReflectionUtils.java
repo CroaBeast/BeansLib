@@ -20,9 +20,9 @@ class ReflectionUtils {
         var builder = new StringBuilder("net.minecraft.");
 
         if (IS_LEGACY)
-            builder.append("server.").
-                    append(LibUtils.getBukkitVersion()).
-                    append(".");
+            builder.append("server.")
+                    .append(LibUtils.getBukkitVersion())
+                    .append(".");
 
         if (prefix != null) builder.append(prefix);
 
@@ -39,8 +39,8 @@ class ReflectionUtils {
                     IS_LEGACY ? null : ("network.chat.IChatBaseComponent$"),
                     "ChatSerializer");
 
-            return serializer.getDeclaredMethod("a", String.class).
-                    invoke(null, "{\"text\":\"" + message + "\"}");
+            return serializer.getDeclaredMethod("a", String.class)
+                    .invoke(null, "{\"text\":\"" + message + "\"}");
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -57,12 +57,12 @@ class ReflectionUtils {
         var handler = p.getClass().getMethod("getHandle").invoke(p);
         var co = VERSION >= 20.0 ? "c" : "b";
 
-        var connect = handler.getClass().
-                getField(IS_LEGACY ? "playerConnection" : co).
-                get(handler);
+        var connect = handler.getClass()
+                .getField(IS_LEGACY ? "playerConnection" : co)
+                .get(handler);
 
-        connect.getClass().
-                getMethod(VERSION < 18.0 ? "sendPacket" : "a", clazz).
-                invoke(connect, o);
+        connect.getClass()
+                .getMethod(VERSION < 18.0 ? "sendPacket" : "a", clazz)
+                .invoke(connect, o);
     }
 }

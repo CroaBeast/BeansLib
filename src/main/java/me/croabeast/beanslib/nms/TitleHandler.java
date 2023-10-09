@@ -25,9 +25,9 @@ public class TitleHandler {
 
     final TimesInitialize TIMES_PACKET_INSTANCE = (in, stay, out) -> {
         try {
-            return from(null, "PacketPlayOutTitle").
-                    getDeclaredConstructor(int.class, int.class, int.class).
-                    newInstance(round(in), round(stay), round(out));
+            return from(null, "PacketPlayOutTitle")
+                    .getDeclaredConstructor(int.class, int.class, int.class)
+                    .newInstance(round(in), round(stay), round(out));
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -45,9 +45,9 @@ public class TitleHandler {
                     "EnumTitleAction"
             );
 
-            return from(null, "PacketPlayOutTitle").
-                    getDeclaredConstructor(oldEnum, BASE_COMP_CLASS).
-                    newInstance(
+            return from(null, "PacketPlayOutTitle")
+                    .getDeclaredConstructor(oldEnum, BASE_COMP_CLASS)
+                    .newInstance(
                             oldEnum.getField(type + "").get(null),
                             component
                     );

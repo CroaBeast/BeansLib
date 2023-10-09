@@ -34,9 +34,9 @@ public class ActionBarHandler {
     final Function<Class<?>, Object> MESSAGE_TYPE = clazz -> {
         if (clazz == null) return null;
         try {
-            return clazz.
-                    getDeclaredMethod("a", byte.class).
-                    invoke(null, (byte) 2);
+            return clazz
+                    .getDeclaredMethod("a", byte.class)
+                    .invoke(null, (byte) 2);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -75,9 +75,9 @@ public class ActionBarHandler {
                 }
             }
 
-            var packet = CHAT_PACKET_CLASS.
-                    getDeclaredConstructor(classes.toArray(new Class<?>[0])).
-                    newInstance(objects.toArray(new Object[0]));
+            var packet = CHAT_PACKET_CLASS
+                    .getDeclaredConstructor(classes.toArray(new Class<?>[0]))
+                    .newInstance(objects.toArray(new Object[0]));
 
             if (VERSION < 19.0) {
                 var field = packet.getClass().getDeclaredField("components");

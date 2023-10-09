@@ -595,13 +595,10 @@ public class BeansLib {
     @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
     @Deprecated
     public void sendMessageList(CommandSender sender, List<String> list, String[] keys, String[] values) {
-        new MessageSender().
-                setTargets(sender).
-                setKeys(keys).
-                setValues(values).
-                setLogger(false).
-                setCaseSensitive(false).
-                send(list);
+        new MessageSender().setTargets(sender)
+                .addKeysValues(keys, values)
+                .setLogger(false).setCaseSensitive(false)
+                .send(list);
     }
 
     /**
