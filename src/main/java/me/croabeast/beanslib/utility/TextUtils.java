@@ -264,6 +264,8 @@ public class TextUtils {
      *
      * @param player a player
      * @param message the message
+     *
+     * @return true is the message was sent, false otherwise
      */
     public boolean sendActionBar(Player player, String message) {
         return ActionBarHandler.send(player, message);
@@ -279,6 +281,8 @@ public class TextUtils {
      * @param in the fadeIn number in ticks
      * @param stay the stay number in ticks
      * @param out the fadeOut number in ticks
+     *
+     * @return true is the message was sent, false otherwise
      */
     public boolean sendTitle(Player player, String title, String subtitle, int in, int stay, int out) {
         return TitleHandler.send(player, title, subtitle, in, stay, out);
@@ -293,6 +297,8 @@ public class TextUtils {
      * @param in the fadeIn number in ticks
      * @param stay the stay number in ticks
      * @param out the fadeOut number in ticks
+     *
+     * @return true is the message was sent, false otherwise
      */
     public boolean sendTitle(Player player, String title, int in, int stay, int out) {
         return sendTitle(player, title, "", in, stay, out);
@@ -307,6 +313,8 @@ public class TextUtils {
      * @param in the fadeIn number in ticks
      * @param stay the stay number in ticks
      * @param out the fadeOut number in ticks
+     *
+     * @return true is the message was sent, false otherwise
      */
     public boolean sendTitle(Player player, @NotNull String[] message, int in, int stay, int out) {
         if (message.length <= 0 || message.length > 2) return false;

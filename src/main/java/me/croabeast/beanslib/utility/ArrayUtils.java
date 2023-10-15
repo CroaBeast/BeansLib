@@ -1,12 +1,13 @@
 package me.croabeast.beanslib.utility;
 
-import com.google.common.collect.Lists;
 import lombok.experimental.UtilityClass;
 import lombok.var;
 import org.jetbrains.annotations.NotNull;
+import org.omg.CORBA.Object;
 
 import java.lang.reflect.Array;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 /**
@@ -111,6 +112,17 @@ public class ArrayUtils {
         return fromArray(null, array);
     }
 
+    @SafeVarargs
+    @NotNull
+    public <T, R> List<R> fromArray(Function<T, ? extends R> function, T... array) {
+        List<R> list = new ArrayList<>();
+
+        for (T element : checkArray(array))
+            list.add(Objects.requireNonNull(function).apply(element));
+
+        return list;
+    }
+
     /**
      * Converts an iterable to an array.
      *
@@ -121,6 +133,8 @@ public class ArrayUtils {
      * @throws NullPointerException if the iterable is null
      */
     public <T> T[] toArray(Iterable<T> iterable) {
-        return (T[]) Lists.newArrayList(iterable).toArray();
+        List<T> list = new ArrayList<>();
+        iterable.forEach(list::add);
+        return list.toArray((T[]) new Object[0]);
     }
 }

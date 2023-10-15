@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 
@@ -217,13 +218,21 @@ public final class MessageSender implements Cloneable {
         return this;
     }
 
+    public <T> MessageSender addKeyValue(KeyValue<T> keyValue) {
+        keyValues.add(keyValue);
+        return this;
+    }
+
+    public <T> MessageSender addKeyValue(Supplier<KeyValue<T>> supplier) {
+        return addKeyValue(supplier.get());
+    }
+
     public <T> MessageSender addKeyValue(String key, T value) {
         if (StringUtils.isBlank(key))
             throw new NullPointerException();
 
         Objects.requireNonNull(value);
-        keyValues.add(new KeyValue<>(key, value));
-        return this;
+        return addKeyValue(new KeyValue<>(key, value));
     }
 
     @SafeVarargs
@@ -328,7 +337,8 @@ public final class MessageSender implements Cloneable {
             applier.apply(s -> f.apply(p, s));
 
         applier.apply(s -> PlayerKey.replaceKeys(p, s, c));
-        for (KeyValue<?> k : keyValues) applier.apply(k::replace);
+        for (KeyValue<?> k : keyValues)
+            applier.apply(s -> k.replace(s, caseSensitive));
 
         return applier.toString();
     }
@@ -556,18 +566,18 @@ public final class MessageSender implements Cloneable {
         return loaded.clone();
     }
 
-    private class KeyValue<T> {
+    public static class KeyValue<T> {
 
         private final String key;
         private final T value;
 
-        private KeyValue(String key, T value) {
+        public KeyValue(String key, T value) {
             this.key = key;
             this.value = value;
         }
 
-        String replace(String string) {
-            return ValueReplacer.of(key, value.toString(), string, caseSensitive);
+        private String replace(String string, boolean caseSensitive) {
+            return ValueReplacer.of(key, String.valueOf(value), string, caseSensitive);
         }
     }
 }

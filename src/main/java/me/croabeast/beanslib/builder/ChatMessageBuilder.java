@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.var;
 import me.croabeast.beanslib.Beans;
-import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.misc.StringApplier;
 import me.croabeast.beanslib.utility.ArrayUtils;
 import me.croabeast.beanslib.utility.Exceptions;
@@ -275,7 +274,11 @@ public class ChatMessageBuilder implements Cloneable {
         for (ChatMessage message : messageMap.values())
             comps.addAll(message.asComponents());
 
-        return ArrayUtils.toArray(comps);
+        try {
+            return ArrayUtils.toArray(comps);
+        } catch (Exception e) {
+            return comps.toArray(new BaseComponent[0]);
+        }
     }
 
     public boolean send() {

@@ -1,7 +1,6 @@
 package me.croabeast.beanslib.key;
 
 import me.croabeast.beanslib.misc.Rounder;
-import me.croabeast.beanslib.misc.StringApplier;
 import me.croabeast.beanslib.utility.Exceptions;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Location;
@@ -88,6 +87,7 @@ public final class PlayerKey<T> {
      *
      * @param key The key string
      * @param function The function that returns a value of type T for a given player
+     * @param <T> The result of the function.
      *
      * @return true if the key was successfully loaded, false otherwise
      */
@@ -101,7 +101,7 @@ public final class PlayerKey<T> {
      * @param key The key string
      * @return True if the key was successfully removed, false otherwise
      */
-    public static <T> boolean removeKey(String key) {
+    public static boolean removeKey(String key) {
         return KEY_MAP.remove(key) != null;
     }
 
@@ -133,19 +133,9 @@ public final class PlayerKey<T> {
      * @return The modified string after replacing the keys with their values
      */
     public static String replaceKeys(Player player, String string, boolean isSensitive) {
-        if (player == null) return string;
-
-        StringApplier applier = StringApplier.of(string);
-        final boolean is = isSensitive;
-
-        for (PlayerKey<?> key : KEY_MAP.values()) {
-            String v = key.function.apply(player).toString();
-            String k = key.key;
-
-            applier.apply(s -> ValueReplacer.of(k, v, s, is));
-        }
-
-        return applier.toString();
+        return player != null ?
+                ValueReplacer.forEach(KEY_MAP, k -> k.function.apply(player), string, isSensitive) :
+                string;
     }
 
     /**
