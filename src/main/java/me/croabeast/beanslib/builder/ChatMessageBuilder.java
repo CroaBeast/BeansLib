@@ -274,11 +274,7 @@ public class ChatMessageBuilder implements Cloneable {
         for (ChatMessage message : messageMap.values())
             comps.addAll(message.asComponents());
 
-        try {
-            return ArrayUtils.toArray(comps);
-        } catch (Exception e) {
-            return comps.toArray(new BaseComponent[0]);
-        }
+        return comps.toArray(new BaseComponent[0]);
     }
 
     public boolean send() {

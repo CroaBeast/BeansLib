@@ -113,7 +113,8 @@ public class ValueReplacer {
     }
 
     public <T, R> String forEach(Map<String, ? extends T> map,
-                                 Function<T, ? extends R> function, String string, boolean b)
+                                 Function<T, ? extends R> function,
+                                 String string, boolean b)
     {
         if (StringUtils.isBlank(string)) return string;
         if (map.isEmpty()) return string;

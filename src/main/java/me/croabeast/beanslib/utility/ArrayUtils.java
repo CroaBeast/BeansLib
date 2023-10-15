@@ -3,7 +3,6 @@ package me.croabeast.beanslib.utility;
 import lombok.experimental.UtilityClass;
 import lombok.var;
 import org.jetbrains.annotations.NotNull;
-import org.omg.CORBA.Object;
 
 import java.lang.reflect.Array;
 import java.util.*;
