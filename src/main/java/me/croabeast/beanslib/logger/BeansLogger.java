@@ -27,7 +27,6 @@ import java.util.regex.Matcher;
  * @author CroaBeast
  * @since 1.4
  */
-
 public class BeansLogger {
 
     private RawLogger rawLogger, pluginLogger;
@@ -69,7 +68,7 @@ public class BeansLogger {
 
             StringApplier applier = StringApplier.of(string)
                     .apply(s -> lib.replacePrefixKey(s, isLog))
-                    .apply(s -> s.replace(sp, "&f" + sp));
+                    .apply(s -> s.replaceAll(sp, "&f" + sp));
 
             String temp = applier.toString();
 

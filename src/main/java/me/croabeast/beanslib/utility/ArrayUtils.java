@@ -131,7 +131,7 @@ public class ArrayUtils {
      * @return a new array that contains the elements from the iterable
      * @throws NullPointerException if the iterable is null
      */
-    public <T> T[] toArray(Iterable<T> iterable) {
+    public <T> T[] toArray(Iterable<? extends T> iterable) {
         List<T> list = new ArrayList<>();
         iterable.forEach(list::add);
         return list.toArray((T[]) new Object[0]);

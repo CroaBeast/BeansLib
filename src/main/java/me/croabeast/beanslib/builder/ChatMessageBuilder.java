@@ -12,8 +12,6 @@ import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.neoprismatic.NeoPrismaticAPI;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
@@ -101,7 +99,7 @@ public class ChatMessageBuilder implements Cloneable {
             if (parseURLs) {
                 final String url = urlMatcher.group();
 
-                var c = new ClickAction(ClickType.OPEN_URL, url);
+                var c = new ClickEvent(ClickAction.OPEN_URL, url);
                 var m = new ChatMessage(putColorToURL() + url);
 
                 m.handler.setClick(c);
@@ -167,7 +165,7 @@ public class ChatMessageBuilder implements Cloneable {
             return this;
 
         var message = messageMap.get(index);
-        message.handler.setHover(new HoverAction(hover));
+        message.handler.setHover(new HoverEvent(hover));
 
         messageMap.put(index, message);
         return this;
@@ -186,24 +184,24 @@ public class ChatMessageBuilder implements Cloneable {
             return this;
 
         for (var m : messageMap.values())
-            m.handler.setHover(new HoverAction(hover));
+            m.handler.setHover(new HoverEvent(hover));
 
         return this;
     }
 
-    public ChatMessageBuilder setClick(ClickType type, String action) {
+    public ChatMessageBuilder setClick(ClickAction type, String action) {
         if (index == -1 || type == null || action == null)
             return this;
 
         var message = messageMap.get(index);
-        message.handler.setClick(new ClickAction(type, action));
+        message.handler.setClick(new ClickEvent(type, action));
 
         messageMap.put(index, message);
         return this;
     }
 
     public ChatMessageBuilder setClick(String type, String action) {
-        return setClick(ClickType.fromString(type), action);
+        return setClick(ClickAction.fromString(type), action);
     }
 
     public ChatMessageBuilder setClick(String input) {
@@ -216,29 +214,29 @@ public class ChatMessageBuilder implements Cloneable {
                 c.substring(0, c.length() - 1) : null);
     }
 
-    public ChatMessageBuilder setClickToAll(ClickType type, String action) {
+    public ChatMessageBuilder setClickToAll(ClickAction type, String action) {
         if (index == -1 || type == null || action == null)
             return this;
 
         for (var m : messageMap.values()) {
-            if (parseURLs && m.handler.click.type == ClickType.OPEN_URL)
+            if (parseURLs && m.handler.click.type == ClickAction.OPEN_URL)
                 continue;
 
-            m.handler.setClick(new ClickAction(type, action));
+            m.handler.setClick(new ClickEvent(type, action));
         }
 
         return this;
     }
 
     public ChatMessageBuilder setClickToAll(String input) {
-        if (StringUtils.isEmpty(input))
-            return this;
+        if (StringUtils.isEmpty(input)) return this;
 
         String[] array = input.split(":\"", 2);
         String c = array.length == 1 ? null : array[1];
 
-        var click = ClickType.fromString(array[0]);
-        var action = StringUtils.isNotBlank(c) ?
+        ClickAction click = ClickAction.fromString(array[0]);
+
+        String action = StringUtils.isNotBlank(c) ?
                 c.substring(0, c.length() - 1) : null;
 
         return setClickToAll(click, action);
@@ -355,19 +353,19 @@ public class ChatMessageBuilder implements Cloneable {
         return new TextComponent(TextComponent.fromLegacyText(message));
     }
 
-    class ClickAction {
+    class ClickEvent {
 
-        final ClickType type;
+        final me.croabeast.beanslib.builder.ClickAction type;
         final String input;
 
-        ClickAction(ClickType type, String input) {
+        ClickEvent(me.croabeast.beanslib.builder.ClickAction type, String input) {
             this.type = type;
             this.input = NeoPrismaticAPI.stripAll(input);
         }
 
-        ClickEvent createEvent() {
+        net.md_5.bungee.api.chat.ClickEvent createEvent() {
             String s = Beans.formatPlaceholders(parser, input);
-            return new ClickEvent(type.asBukkit(), s);
+            return new net.md_5.bungee.api.chat.ClickEvent(type.asBukkit(), s);
         }
 
         @Override
@@ -376,15 +374,15 @@ public class ChatMessageBuilder implements Cloneable {
         }
     }
 
-    class HoverAction {
+    class HoverEvent {
 
         final String[] hover;
 
-        HoverAction(String[] hover) {
+        HoverEvent(String[] hover) {
             this.hover = hover;
         }
 
-        HoverAction(List<String> hover) {
+        HoverEvent(List<String> hover) {
             this(hover.toArray(new String[0]));
         }
 
@@ -393,7 +391,7 @@ public class ChatMessageBuilder implements Cloneable {
         }
 
         @SuppressWarnings("deprecation")
-        HoverEvent createEvent() {
+        net.md_5.bungee.api.chat.HoverEvent createEvent() {
             var array = new BaseComponent[hover.length];
 
             for (int i = 0; i < hover.length; i++)
@@ -402,7 +400,7 @@ public class ChatMessageBuilder implements Cloneable {
                         (i == hover.length - 1 ? "" : "\n")
                 );
 
-            return new HoverEvent(HoverEvent.Action.SHOW_TEXT, array);
+            return new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, array);
         }
 
         @Override
@@ -420,8 +418,8 @@ public class ChatMessageBuilder implements Cloneable {
     @Setter
     class ChatEventsHandler {
 
-        ClickAction click = null;
-        HoverAction hover = null;
+        ClickEvent click = null;
+        HoverEvent hover = null;
 
         ChatEventsHandler() {}
 
@@ -431,8 +429,8 @@ public class ChatMessageBuilder implements Cloneable {
                 String c = array[1];
 
                 try {
-                    this.click = new ClickAction(
-                            ClickType.fromString(array[0]),
+                    this.click = new ClickEvent(
+                            me.croabeast.beanslib.builder.ClickAction.fromString(array[0]),
                             c.substring(0, c.length() - 1)
                     );
                 } catch (Exception ignored) {}
@@ -443,7 +441,7 @@ public class ChatMessageBuilder implements Cloneable {
             String h = hover.split(":\"", 2)[1];
             h = h.substring(0, h.length() - 1);
 
-            this.hover = new HoverAction(Beans.splitLine(h));
+            this.hover = new HoverEvent(Beans.splitLine(h));
         }
 
         boolean isEmpty() {
@@ -477,7 +475,7 @@ public class ChatMessageBuilder implements Cloneable {
             var h = handler.hover;
 
             if (parseURLs && urlMatch.find()) {
-                var cl = new ClickAction(ClickType.OPEN_URL, message);
+                var cl = new ClickEvent(me.croabeast.beanslib.builder.ClickAction.OPEN_URL, message);
                 handler.setClick(cl);
             }
 

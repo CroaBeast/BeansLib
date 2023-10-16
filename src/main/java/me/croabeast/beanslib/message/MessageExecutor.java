@@ -10,6 +10,9 @@ import me.croabeast.beanslib.builder.ChatMessageBuilder;
 import me.croabeast.beanslib.discord.Webhook;
 import me.croabeast.beanslib.key.PlayerKey;
 import me.croabeast.beanslib.misc.StringApplier;
+import me.croabeast.beanslib.nms.ActionBarHandler;
+import me.croabeast.beanslib.nms.TitleHandler;
+import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.neoprismatic.NeoPrismaticAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
@@ -24,8 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static me.croabeast.beanslib.utility.TextUtils.*;
 
 /**
  * The {@code MessageExecutor} class manages how to identify a message type if it has
@@ -57,7 +58,7 @@ public abstract class MessageExecutor implements Cloneable {
         @Override
         public boolean execute(Player t, Player p, String s) {
             try {
-                sendActionBar(t, formatString(t, p, s));
+                ActionBarHandler.send(t, formatString(t, p, s));
                 return true;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -89,10 +90,11 @@ public abstract class MessageExecutor implements Cloneable {
                     time = Integer.parseInt(tm) * 20;
             } catch (Exception ignored) {}
 
-            String t1 = formatString(t, p, s);
+            String[] temp = Beans.splitLine(formatString(t, p, s));
+            String sub = temp.length > 1 ? temp[1] : "";
 
             try {
-                return sendTitle(t, Beans.splitLine(t1), a[0], time, a[2]);
+                return TitleHandler.send(t, temp[0], sub, a[0], time, a[2]);
             } catch (Exception e) {
                 e.printStackTrace();
                 return false;
@@ -313,13 +315,15 @@ public abstract class MessageExecutor implements Cloneable {
     }
 
     String formatString(Player target, Player parser, String string) {
-        StringApplier applier = StringApplier.of(string);
+        final StringApplier applier = StringApplier.of(string);
         Matcher matcher = getPattern().matcher(string);
 
         while (matcher.find())
             applier.apply(s -> s.replace(matcher.group(), ""));
 
-        applier.apply(STRIP_JSON).apply(STRIP_FIRST_SPACES).
+        applier.apply(TextUtils.STRIP_JSON);
+
+        applier.apply(TextUtils.STRIP_FIRST_SPACES).
                 apply(s -> PlayerKey.replaceKeys(parser, s)).
                 apply(Beans::convertToSmallCaps);
 

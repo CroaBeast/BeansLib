@@ -1,7 +1,6 @@
 package me.croabeast.beanslib.nms;
 
 import lombok.experimental.UtilityClass;
-import lombok.var;
 import org.bukkit.entity.Player;
 
 import java.util.function.BiFunction;
@@ -11,16 +10,16 @@ import static me.croabeast.beanslib.nms.ReflectionUtils.*;
 @UtilityClass
 public class TitleHandler {
 
-    private enum TitleType {
-        TITLE, SUBTITLE, ANIMATE
-    }
-
     int round(int i) {
         return Math.round((float) i / 20);
     }
 
     interface TimesInitialize {
         Object from(int in, int stay, int out);
+    }
+
+    private enum TitleType {
+        TITLE, SUBTITLE
     }
 
     final TimesInitialize TIMES_PACKET_INSTANCE = (in, stay, out) -> {
@@ -36,11 +35,11 @@ public class TitleHandler {
     };
 
     final BiFunction<Boolean, String, Object> LEGACY_PACKET_INSTANCE = (b, s) -> {
-        var type = b ? TitleType.TITLE : TitleType.SUBTITLE;
-        var component = COMPONENT_SERIALIZER.apply(s);
+        TitleType type = b ? TitleType.TITLE : TitleType.SUBTITLE;
+        Object component = COMPONENT_SERIALIZER.apply(s);
 
         try {
-            var oldEnum = from(
+            Class<?> oldEnum = from(
                     VERSION < 8.3 ? "PacketPlayOutTitle$" : null,
                     "EnumTitleAction"
             );
@@ -73,5 +72,9 @@ public class TitleHandler {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public boolean send(Player player, String title, int in, int stay, int out) {
+        return send(player, title, "", in, stay, out);
     }
 }
