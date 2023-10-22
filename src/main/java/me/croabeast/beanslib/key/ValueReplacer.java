@@ -1,7 +1,7 @@
 package me.croabeast.beanslib.key;
 
 import lombok.experimental.UtilityClass;
-import me.croabeast.beanslib.misc.StringApplier;
+import me.croabeast.beanslib.applier.StringApplier;
 import me.croabeast.beanslib.utility.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.CommandSender;
@@ -36,7 +36,7 @@ public class ValueReplacer {
         String temp = (b ? "" : "(?i)") + Pattern.quote(key);
 
         Matcher m = Pattern.compile(temp).matcher(string);
-        StringApplier applier = StringApplier.of(string);
+        StringApplier applier = StringApplier.simplified(string);
 
         if (m.find()) {
             String v = StringUtils.isEmpty(value) ? "" : value;
@@ -92,7 +92,7 @@ public class ValueReplacer {
         if (StringUtils.isBlank(string) || !isApplicable(keys, values))
             return string;
 
-        final StringApplier applier = StringApplier.of(string);
+        final StringApplier applier = StringApplier.simplified(string);
 
         for (int i = 0; i < keys.length; i++) {
             final T temp = values[i];

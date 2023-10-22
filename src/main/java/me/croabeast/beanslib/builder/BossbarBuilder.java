@@ -111,8 +111,8 @@ public class BossbarBuilder {
         this.progressDecrease = progressDecrease;
     }
 
-    private static String checkPathList(ConfigurationSection section, String path) {
-        final var s = path + ".lines";
+    static String checkPathList(ConfigurationSection section, String path) {
+        String s = path + ".lines";
         return section.isSet(s) ? s : path;
     }
 
@@ -138,8 +138,8 @@ public class BossbarBuilder {
                 section.getBoolean("progress-decrease")
         );
 
-        setUseRandomFormats(section.getBoolean("messages.random")).
-                setUseRandomFormats(section.getBoolean("formats.random"));
+        setUseRandomFormats(section.getBoolean("messages.random"))
+                .setUseRandomFormats(section.getBoolean("formats.random"));
     }
 
     /**
@@ -386,7 +386,7 @@ public class BossbarBuilder {
      * @return the bossbar, if the player exists or has a bossbar displayed; null otherwise
      */
     @Nullable
-    public static Set<BossbarBuilder> getBuilder(Player player) {
+    public static Set<BossbarBuilder> getBuilders(Player player) {
         return player == null ? null : BOSSBAR_MAP.getOrDefault(player, null);
     }
 }

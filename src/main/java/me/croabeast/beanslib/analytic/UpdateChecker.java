@@ -18,6 +18,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -60,8 +61,6 @@ public final class UpdateChecker {
     private static final String USER_AGENT = "CHOCO-update-checker",
             UPDATE_URL = "https://api.spigotmc.org/simple/0.1/index.php?action=getResource&id=%d";
 
-    private static final Pattern DECIMAL_SCHEME_PATTERN = Pattern.compile("\\d+(?:\\.\\d+)*");
-
     /**
      * Get the last update result that was queried by {@link #requestUpdateCheck()}. If no
      * update check was performed since this class' initialization, this method will
@@ -91,8 +90,10 @@ public final class UpdateChecker {
 
             try {
                 var url = new URL(String.format(UPDATE_URL, pluginID));
+
                 var connect = (HttpURLConnection) url.openConnection();
                 connect.addRequestProperty("User-Agent", USER_AGENT);
+
                 responseCode = connect.getResponseCode();
 
                 var reader = new JsonReader(new InputStreamReader(connect.getInputStream()));
@@ -104,8 +105,9 @@ public final class UpdateChecker {
                     return new UpdateResult(UpdateReason.INVALID_JSON);
 
                 current = json.getAsJsonObject().get("current_version").getAsString();
-                var pluginVersion = plugin.getDescription().getVersion();
-                var latest = versionScheme.compareVersions(pluginVersion, current);
+
+                String pluginVersion = plugin.getDescription().getVersion();
+                String latest = versionScheme.compareVersions(pluginVersion, current);
 
                 if (latest == null)
                     return new UpdateResult(UpdateReason.UNSUPPORTED_VERSION_SCHEME);
@@ -129,7 +131,7 @@ public final class UpdateChecker {
     private static String[] splitVersionInfo(String version) {
         version = version.replace("-R", ".").replaceAll("-(HF|DEV)", ".");
 
-        var matcher = DECIMAL_SCHEME_PATTERN.matcher(version);
+        Matcher matcher = Pattern.compile("\\d+(?:\\.\\d+)*").matcher(version);
         return matcher.find() ? matcher.group().split("\\.") : null;
     }
 
@@ -192,8 +194,9 @@ public final class UpdateChecker {
 
         /**
          * A new update is available for download on SpigotMC.
+         * The only reason that requires an update.
          */
-        NEW_UPDATE, // The only reason that requires an update
+        NEW_UPDATE,
 
         /**
          * A successful connection to the Spigot API could not be established.

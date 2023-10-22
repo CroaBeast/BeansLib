@@ -5,7 +5,7 @@ import lombok.experimental.Accessors;
 import me.croabeast.beanslib.Beans;
 import me.croabeast.beanslib.key.PlayerKey;
 import me.croabeast.beanslib.key.ValueReplacer;
-import me.croabeast.beanslib.misc.StringApplier;
+import me.croabeast.beanslib.applier.StringApplier;
 import me.croabeast.beanslib.utility.ArrayUtils;
 import me.croabeast.beanslib.utility.TextUtils;
 import org.apache.commons.lang.StringUtils;
@@ -330,7 +330,7 @@ public final class MessageSender implements Cloneable {
     }
 
     private String formatString(Player p, String string) {
-        final StringApplier applier = StringApplier.of(string);
+        final StringApplier applier = StringApplier.simplified(string);
         final boolean c = caseSensitive;
 
         for (BiFunction<Player, String, String> f : functions)
@@ -371,7 +371,7 @@ public final class MessageSender implements Cloneable {
     public boolean singleSend(String string) {
         if (string == null) return false;
 
-        StringApplier applier = StringApplier.of(string);
+        StringApplier applier = StringApplier.simplified(string);
         applier.apply(s -> Beans.replacePrefixKey(s, false));
 
         if (targets == null || targets.isEmpty())
@@ -390,8 +390,8 @@ public final class MessageSender implements Cloneable {
 
         isMatching = isMatching && count > 0;
 
-        MessageExecutor key = MessageExecutor.identifyKey(string);
-        if (!isFlag(key.getFlag())) return false;
+        MessageExecutor ex = MessageExecutor.identifyKey(string);
+        if (!isFlag(ex.getFlag())) return false;
 
         boolean notSend = true;
 
@@ -403,13 +403,13 @@ public final class MessageSender implements Cloneable {
 
             Player parser = this.parser == null ? t : this.parser;
 
-            StringApplier temp = StringApplier.of(applier);
+            StringApplier temp = StringApplier.simplified(applier);
             temp.apply(s -> formatString(parser, s));
 
-            if (noFirstSpaces && key == MessageExecutor.CHAT_EXECUTOR)
+            if (noFirstSpaces && ex == MessageExecutor.CHAT_EXECUTOR)
                 temp.apply(TextUtils.STRIP_FIRST_SPACES);
 
-            boolean b = key.execute(t, parser, temp.toString());
+            boolean b = ex.execute(t, parser, temp.toString());
             if (notSend && b) notSend = false;
         }
 
@@ -566,12 +566,16 @@ public final class MessageSender implements Cloneable {
         return loaded.clone();
     }
 
+    public static <T> KeyValue<T> newKeyValue(String key, T value) {
+        return new KeyValue<>(key, value);
+    }
+
     public static class KeyValue<T> {
 
         private final String key;
         private final T value;
 
-        public KeyValue(String key, T value) {
+        private KeyValue(String key, T value) {
             this.key = key;
             this.value = value;
         }

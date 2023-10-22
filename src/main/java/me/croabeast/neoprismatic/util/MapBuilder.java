@@ -15,7 +15,7 @@ public class MapBuilder<A, B> {
 
     public MapBuilder(Map<? extends A, ? extends B> map) {
         if (map != null)
-            map.forEach((k, v) -> entries.add(new Entry<>(k, v)));
+            map.forEach((k, v) -> entries.add(entry(k, v)));
     }
 
     public MapBuilder(Collection<Entry<? extends A,? extends B>> collection) {
@@ -23,7 +23,7 @@ public class MapBuilder<A, B> {
     }
 
     public MapBuilder<A, B> put(A key, B value) {
-        entries.add(new Entry<>(key, value));
+        entries.add(entry(key, value));
         return this;
     }
 
@@ -41,7 +41,7 @@ public class MapBuilder<A, B> {
                     B v = e.value;
                     A k = e.key;
 
-                    return new Entry<>(k, v);
+                    return entry(k, v);
                 }).
                 collect(Collectors.toList());
     }
@@ -71,6 +71,10 @@ public class MapBuilder<A, B> {
      */
     public static <A, B> boolean isEmpty(MapBuilder<A, B> builder) {
         return builder == null || builder.isEmpty();
+    }
+
+    public static <A, B> Entry<A, B> entry(A a, B b) {
+        return new Entry<>(a, b);
     }
 
     /**

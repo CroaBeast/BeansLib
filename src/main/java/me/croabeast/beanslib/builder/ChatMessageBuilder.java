@@ -3,9 +3,8 @@ package me.croabeast.beanslib.builder;
 import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.var;
 import me.croabeast.beanslib.Beans;
-import me.croabeast.beanslib.misc.StringApplier;
+import me.croabeast.beanslib.applier.StringApplier;
 import me.croabeast.beanslib.utility.ArrayUtils;
 import me.croabeast.beanslib.utility.Exceptions;
 import me.croabeast.beanslib.utility.TextUtils;
@@ -18,10 +17,8 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -37,7 +34,7 @@ public class ChatMessageBuilder implements Cloneable {
     private final Player target, parser;
     private boolean parseURLs = true;
 
-    private final HashMap<Integer, ChatMessage> messageMap = new HashMap<>();
+    private final HashMap<Integer, ChatMessage> map = new LinkedHashMap<>();
     private int index = -1;
 
     /**
@@ -81,56 +78,54 @@ public class ChatMessageBuilder implements Cloneable {
         this(null);
     }
 
-    private String putColorToURL() {
-        return ++index > 0 ? messageMap.get(index - 1).getLastColor() + "" : "";
+    private String colorURL() {
+        return ++index > 0 ? map.get(index - 1).getLastColor() + "" : "";
     }
 
     private void toURL(String s) {
-        var urlMatcher = TextUtils.URL_PATTERN.matcher(s);
+        Matcher urlMatcher = TextUtils.URL_PATTERN.matcher(s);
         int end = 0;
 
         while (urlMatcher.find()) {
             String t = s.substring(end, urlMatcher.start());
             if (t.length() > 0) {
-                var m = new ChatMessage(putColorToURL() + t);
-                messageMap.put(index, m);
+                ChatMessage m = new ChatMessage(colorURL() + t);
+                map.put(index, m);
             }
 
             if (parseURLs) {
                 final String url = urlMatcher.group();
 
-                var c = new ClickEvent(ClickAction.OPEN_URL, url);
-                var m = new ChatMessage(putColorToURL() + url);
+                ClickEvent c = new ClickEvent(ClickAction.OPEN_URL, url);
+                ChatMessage m = new ChatMessage(colorURL() + url);
 
                 m.handler.setClick(c);
-                messageMap.put(index, m);
+                map.put(index, m);
             }
 
             end = urlMatcher.end();
         }
 
         if (end > (s.length() - 1)) return;
-
-        var st = putColorToURL() + s.substring(end);
-        messageMap.put(index, new ChatMessage(st));
+        map.put(index, new ChatMessage(colorURL() + s.substring(end)));
     }
 
     private void updateMessageMapping(String string) {
         if (string == null) return;
 
         if (string.length() < 1) {
-            messageMap.put(++index, new ChatMessage(string));
+            map.put(++index, new ChatMessage(string));
             return;
         }
 
-        String line = StringApplier.of(string).
+        String line = StringApplier.simplified(string).
                 apply(s -> TextUtils.PARSE_INTERACTIVE_CHAT.apply(parser, s)).
                 apply(TextUtils.CONVERT_OLD_JSON).
                 apply(Beans::convertToSmallCaps).
                 apply(s -> Beans.createCenteredChatMessage(target, parser, s)).
                 toString();
 
-        var match = TextUtils.FORMAT_CHAT_PATTERN.matcher(line);
+        Matcher match = TextUtils.FORMAT_CHAT_PATTERN.matcher(line);
         int last = 0;
 
         while (match.find()) {
@@ -141,14 +136,14 @@ public class ChatMessageBuilder implements Cloneable {
             String h = null, c = null;
 
             for (String s : args) {
-                var m = Pattern.compile("(?i)hover").matcher(s);
+                Matcher m = Pattern.compile("(?i)hover").matcher(s);
                 if (m.find()) h = s; else c = s;
             }
 
-            var message = new ChatMessage(match.group(7));
+            ChatMessage message = new ChatMessage(match.group(7));
             if (c != null || h != null) message.setHandler(c, h);
 
-            messageMap.put(++index, message);
+            map.put(++index, message);
             last = match.end();
         }
 
@@ -164,10 +159,10 @@ public class ChatMessageBuilder implements Cloneable {
         if (index == -1 || hover == null || hover.isEmpty())
             return this;
 
-        var message = messageMap.get(index);
+        ChatMessage message = map.get(index);
         message.handler.setHover(new HoverEvent(hover));
 
-        messageMap.put(index, message);
+        map.put(index, message);
         return this;
     }
 
@@ -183,7 +178,7 @@ public class ChatMessageBuilder implements Cloneable {
         if (index == -1 || hover == null || hover.isEmpty())
             return this;
 
-        for (var m : messageMap.values())
+        for (ChatMessage m : map.values())
             m.handler.setHover(new HoverEvent(hover));
 
         return this;
@@ -193,10 +188,10 @@ public class ChatMessageBuilder implements Cloneable {
         if (index == -1 || type == null || action == null)
             return this;
 
-        var message = messageMap.get(index);
+        ChatMessage message = map.get(index);
         message.handler.setClick(new ClickEvent(type, action));
 
-        messageMap.put(index, message);
+        map.put(index, message);
         return this;
     }
 
@@ -218,7 +213,7 @@ public class ChatMessageBuilder implements Cloneable {
         if (index == -1 || type == null || action == null)
             return this;
 
-        for (var m : messageMap.values()) {
+        for (ChatMessage m : map.values()) {
             if (parseURLs && m.handler.click.type == ClickAction.OPEN_URL)
                 continue;
 
@@ -263,13 +258,13 @@ public class ChatMessageBuilder implements Cloneable {
     @NotNull
     public BaseComponent[] build() {
         if (index < 0) {
-            var m = "The builder does not contain any message";
+            String m = "The builder does not contain any message";
             throw new IllegalStateException(m);
         }
 
         List<BaseComponent> comps = new ArrayList<>();
 
-        for (ChatMessage message : messageMap.values())
+        for (ChatMessage message : map.values())
             comps.addAll(message.asComponents());
 
         return comps.toArray(new BaseComponent[0]);
@@ -290,8 +285,8 @@ public class ChatMessageBuilder implements Cloneable {
 
         StringBuilder builder = new StringBuilder();
 
-        for (var message : messageMap.values()) {
-            var handler = message.handler;
+        for (ChatMessage message : map.values()) {
+            ChatEventsHandler handler = message.handler;
 
             if (handler.isEmpty()) {
                 builder.append(message.message);
@@ -300,8 +295,8 @@ public class ChatMessageBuilder implements Cloneable {
 
             builder.append('<');
 
-            var click = handler.click;
-            var hover = handler.hover;
+            ClickEvent click = handler.click;
+            HoverEvent hover = handler.hover;
 
             boolean clickSet = false;
 
@@ -392,7 +387,7 @@ public class ChatMessageBuilder implements Cloneable {
 
         @SuppressWarnings("deprecation")
         net.md_5.bungee.api.chat.HoverEvent createEvent() {
-            var array = new BaseComponent[hover.length];
+            BaseComponent[] array = new BaseComponent[hover.length];
 
             for (int i = 0; i < hover.length; i++)
                 array[i] = onlyComp(
@@ -400,7 +395,10 @@ public class ChatMessageBuilder implements Cloneable {
                         (i == hover.length - 1 ? "" : "\n")
                 );
 
-            return new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, array);
+            return new net.md_5.bungee.api.chat.HoverEvent(
+                    net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT,
+                    array
+            );
         }
 
         @Override
@@ -468,14 +466,14 @@ public class ChatMessageBuilder implements Cloneable {
         }
 
         BaseComponent[] compile() {
-            var urlMatch = TextUtils.URL_PATTERN.matcher(message);
-            var comp = onlyComp(message);
+            Matcher urlMatch = TextUtils.URL_PATTERN.matcher(message);
+            TextComponent comp = onlyComp(message);
 
-            var c = handler.click;
-            var h = handler.hover;
+            ClickEvent c = handler.click;
+            HoverEvent h = handler.hover;
 
             if (parseURLs && urlMatch.find()) {
-                var cl = new ClickEvent(me.croabeast.beanslib.builder.ClickAction.OPEN_URL, message);
+                ClickEvent cl = new ClickEvent(ClickAction.OPEN_URL, message);
                 handler.setClick(cl);
             }
 
@@ -484,7 +482,7 @@ public class ChatMessageBuilder implements Cloneable {
             if (h != null && !h.isEmpty())
                 comp.setHoverEvent(h.createEvent());
 
-            var comps = new BaseComponent[] {comp};
+            BaseComponent[] comps = new BaseComponent[] {comp};
 
             color = comps[comps.length - 1].getColor();
             return comps;

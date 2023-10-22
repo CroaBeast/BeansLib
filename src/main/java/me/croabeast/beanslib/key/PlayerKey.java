@@ -8,7 +8,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
@@ -25,8 +25,8 @@ import java.util.function.Function;
  */
 public final class PlayerKey<T> {
 
-    private static final Map<String, PlayerKey<?>> KEY_MAP = new HashMap<>();
-    private static final Map<String, PlayerKey<?>> DEFS = new HashMap<>();
+    private static final Map<String, PlayerKey<?>> KEY_MAP = new LinkedHashMap<>();
+    private static final Map<String, PlayerKey<?>> DEFS = new LinkedHashMap<>();
 
     private final String key;
     private final Function<Player, T> function;

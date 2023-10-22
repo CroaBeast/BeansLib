@@ -1,5 +1,7 @@
 package me.croabeast.beanslib.message;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.util.Locale;
 
 /**
@@ -33,5 +35,16 @@ public enum MessageFlag {
 
     public String getName() {
         return name().toLowerCase(Locale.ENGLISH).replace('_', '-');
+    }
+
+    public static MessageFlag from(String string) {
+        if (StringUtils.isBlank(string))
+            return CHAT;
+
+        for (MessageFlag flag : values())
+            if (string.matches("(?i)" + flag.getName()))
+                return flag;
+
+        return CHAT;
     }
 }

@@ -9,7 +9,7 @@ import me.croabeast.beanslib.builder.BossbarBuilder;
 import me.croabeast.beanslib.builder.ChatMessageBuilder;
 import me.croabeast.beanslib.discord.Webhook;
 import me.croabeast.beanslib.key.PlayerKey;
-import me.croabeast.beanslib.misc.StringApplier;
+import me.croabeast.beanslib.applier.StringApplier;
 import me.croabeast.beanslib.nms.ActionBarHandler;
 import me.croabeast.beanslib.nms.TitleHandler;
 import me.croabeast.beanslib.utility.TextUtils;
@@ -24,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -48,8 +49,12 @@ import java.util.regex.Pattern;
  */
 public abstract class MessageExecutor implements Cloneable {
 
-    private static final HashMap<Integer, MessageExecutor>
-            MESSAGE_EXECUTOR_MAP = new HashMap<>(), DEFAULT_EXECUTOR_MAP = new HashMap<>();
+    private static final HashMap<MessageFlag, MessageExecutor> MESSAGE_EXECUTOR_MAP, DEFAULT_EXECUTOR_MAP;
+
+    static {
+        MESSAGE_EXECUTOR_MAP = new LinkedHashMap<>();
+        DEFAULT_EXECUTOR_MAP = new LinkedHashMap<>();
+    }
 
     /**
      * The {@link MessageExecutor} instance to identify action-bar messages.
@@ -109,7 +114,7 @@ public abstract class MessageExecutor implements Cloneable {
      */
     public static final MessageExecutor WEBHOOK_EXECUTOR = new MessageExecutor(MessageFlag.WEBHOOK, "(:.+)?") {
         @Override
-        public boolean execute(Player t, Player parser, String s) {
+        public boolean execute(Player t, Player p, String s) {
             ConfigurationSection id = Beans.getWebhookSection();
             if (id == null) return false;
 
@@ -117,7 +122,7 @@ public abstract class MessageExecutor implements Cloneable {
             if (list.isEmpty()) return false;
 
             Matcher m3 = getPattern().matcher(s);
-            String line = formatString(t, parser, s);
+            String line = formatString(t, p, s);
 
             String path = list.get(0);
 
@@ -144,13 +149,13 @@ public abstract class MessageExecutor implements Cloneable {
      */
     public static final MessageExecutor JSON_EXECUTOR = new MessageExecutor(MessageFlag.JSON) {
         @Override
-        public boolean execute(Player t, Player parser, String s) {
+        public boolean execute(Player t, Player p, String s) {
             if (StringUtils.isBlank(s)) return false;
 
             try {
                 Bukkit.dispatchCommand(
                         Bukkit.getConsoleSender(), "minecraft:tellraw " +
-                        t.getName() + " " + formatString(t, parser, s)
+                        t.getName() + " " + formatString(t, p, s)
                 );
                 return true;
             } catch (Exception e) {
@@ -168,7 +173,7 @@ public abstract class MessageExecutor implements Cloneable {
      */
     public static final MessageExecutor BOSSBAR_EXECUTOR = new MessageExecutor(MessageFlag.BOSSBAR, "(:.+)?") {
         @Override
-        public boolean execute(Player t, Player parser, String s) {
+        public boolean execute(Player t, Player p, String s) {
             Plugin plugin = Beans.getPlugin();
             Matcher m2 = Beans.getBossbarPattern().matcher(s);
 
@@ -208,9 +213,9 @@ public abstract class MessageExecutor implements Cloneable {
         }
 
         @Override
-        public boolean execute(Player t, Player parser, String s) {
+        public boolean execute(Player t, Player p, String s) {
             try {
-                return new ChatMessageBuilder(t, parser, s).send();
+                return new ChatMessageBuilder(t, p, s).send();
             } catch (Exception e) {
                 e.printStackTrace();
                 return false;
@@ -218,14 +223,11 @@ public abstract class MessageExecutor implements Cloneable {
         }
     }.doColor();
 
-    private static int ordinal = 0;
-
     /**
      * The flag of this object to identify the message and check if it's allowed.
      */
     @Getter
     private final MessageFlag flag;
-    private final int index;
     /**
      * The optional regex string to catch more arguments.
      */
@@ -238,12 +240,9 @@ public abstract class MessageExecutor implements Cloneable {
     private MessageExecutor(MessageFlag flag, @RegExp String regex) {
         this.flag = flag;
         this.regex = regex;
-        index = ordinal;
 
-        MESSAGE_EXECUTOR_MAP.put(ordinal, this);
-        DEFAULT_EXECUTOR_MAP.put(ordinal, clone());
-
-        ordinal++;
+        MESSAGE_EXECUTOR_MAP.put(flag, this);
+        DEFAULT_EXECUTOR_MAP.put(flag, clone());
     }
 
     private MessageExecutor(MessageFlag flag) {
@@ -253,7 +252,7 @@ public abstract class MessageExecutor implements Cloneable {
     MessageExecutor doColor() {
         this.color = true;
 
-        DEFAULT_EXECUTOR_MAP.put(index, clone());
+        DEFAULT_EXECUTOR_MAP.put(flag, clone());
         return this;
     }
 
@@ -315,7 +314,7 @@ public abstract class MessageExecutor implements Cloneable {
     }
 
     String formatString(Player target, Player parser, String string) {
-        final StringApplier applier = StringApplier.of(string);
+        final StringApplier applier = StringApplier.simplified(string);
         Matcher matcher = getPattern().matcher(string);
 
         while (matcher.find())
@@ -336,6 +335,22 @@ public abstract class MessageExecutor implements Cloneable {
         return applier.toString();
     }
 
+    public static MessageExecutor fromFlag(MessageFlag flag) {
+        return MESSAGE_EXECUTOR_MAP.get(flag);
+    }
+
+    /**
+     * Returns the key instance of an input key that could match with any existing
+     * defined key. If there is no match, will return the {@link #CHAT_EXECUTOR}.
+     *
+     * @param string an input string
+     * @return the requested message key
+     */
+    @NotNull
+    public static MessageExecutor matchKey(String string) {
+        return fromFlag(MessageFlag.from(string));
+    }
+
     /**
      * Returns the key instance of an input string to check what message type
      * is the string. If there is no defined type, will return the {@link #CHAT_EXECUTOR}.
@@ -352,23 +367,6 @@ public abstract class MessageExecutor implements Cloneable {
 
         if (Beans.getBossbarPattern().
                 matcher(s).find()) return BOSSBAR_EXECUTOR;
-
-        return CHAT_EXECUTOR;
-    }
-
-    /**
-     * Returns the key instance of an input key that could match with any existing
-     * defined key. If there is no match, will return the {@link #CHAT_EXECUTOR}.
-     *
-     * @param k an input string
-     * @return the requested message key
-     */
-    @NotNull
-    public static MessageExecutor matchKey(String k) {
-        if (StringUtils.isBlank(k)) return CHAT_EXECUTOR;
-
-        for (MessageExecutor e : MESSAGE_EXECUTOR_MAP.values())
-            if (k.matches("(?i)" + e.getFlag())) return e;
 
         return CHAT_EXECUTOR;
     }

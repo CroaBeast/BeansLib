@@ -4,7 +4,7 @@ import lombok.SneakyThrows;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.message.MessageExecutor;
 import me.croabeast.beanslib.message.MessageSender;
-import me.croabeast.beanslib.misc.StringApplier;
+import me.croabeast.beanslib.applier.StringApplier;
 import me.croabeast.beanslib.utility.ArrayUtils;
 import me.croabeast.beanslib.utility.LibUtils;
 import me.croabeast.beanslib.utility.TextUtils;
@@ -56,23 +56,25 @@ public class BeansLogger {
     }
 
     private List<String> toLoggerStrings(Player player, boolean useLogger, String... strings) {
-        if (ArrayUtils.isArrayEmpty(strings)) return new ArrayList<>();
+        if (ArrayUtils.isArrayEmpty(strings))
+            return new ArrayList<>();
 
-        final String sp = lib.getLineSeparator();
+        String split = lib.getLineSeparator();
+        String resultSplit = "&f" + split.replaceAll("\\\\[QE]", "");
+
         List<String> list = new ArrayList<>();
-
         boolean isLog = useLogger && lib.isStripPrefix();
 
         for (String string : strings) {
             if (string == null) continue;
 
-            StringApplier applier = StringApplier.of(string)
+            StringApplier applier = StringApplier.simplified(string)
                     .apply(s -> lib.replacePrefixKey(s, isLog))
-                    .apply(s -> s.replaceAll(sp, "&f" + sp));
+                    .apply(s -> s.replaceAll(split, resultSplit));
 
+            StringApplier result = StringApplier.simplified(applier);
             String temp = applier.toString();
 
-            StringApplier result = StringApplier.of(temp);
             MessageExecutor e = MessageExecutor.identifyKey(temp);
 
             if (isLog && e != MessageExecutor.CHAT_EXECUTOR) {
@@ -265,25 +267,23 @@ public class BeansLogger {
         private final Object logger;
 
         @SneakyThrows
+        static Class<?> from(String name) {
+            return Class.forName(KYORI_PREFIX + name);
+        }
+
+        @SneakyThrows
         private PaperLogger(Plugin plugin) {
             if (LibUtils.isPaper()) {
                 String name = plugin != null ? plugin.getName() : "";
 
-                logger = Class
-                        .forName(KYORI_PREFIX + "logger.slf4j.ComponentLogger")
-                        .getMethod("logger", String.class)
-                        .invoke(null, name);
+                logger = from("logger.slf4j.ComponentLogger")
+                        .getMethod("logger", String.class).invoke(null, name);
 
                 clazz = logger.getClass();
                 return;
             }
 
             throw new IllegalAccessException("Paper is not being used");
-        }
-
-        @SneakyThrows
-        static Class<?> from(String name) {
-            return Class.forName(KYORI_PREFIX + name);
         }
 
         @Override

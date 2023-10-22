@@ -90,7 +90,7 @@ public class TimeParser {
      * @return formatted string with seconds, minutes, hours and days
      */
     public String formatTime(Player parser) {
-        final var split = keys.getSplitter();
+        final String split = keys.getSplitter();
         long result = this.seconds;
 
         if (result <= 0)
@@ -102,47 +102,47 @@ public class TimeParser {
         years = getFixedTime(result, YEAR);
         result = result - (years * YEAR);
 
-        if (years > 0) formattedTime.
-                append(isPlural(years, keys.getYearFormat())).
-                append(split);
+        if (years > 0) formattedTime
+                .append(isPlural(years, keys.getYearFormat()))
+                .append(split);
 
         months = getFixedTime(result, MONTH);
         result = result - (months * MONTH);
 
-        if (months > 0) formattedTime.
-                append(isPlural(months, keys.getMonthFormat())).
-                append(split);
+        if (months > 0) formattedTime
+                .append(isPlural(months, keys.getMonthFormat()))
+                .append(split);
 
         weeks = getFixedTime(result, WEEK);
         result = result - (weeks * WEEK);
 
-        if (weeks > 0) formattedTime.
-                append(isPlural(weeks, keys.getWeekFormat())).
-                append(split);
+        if (weeks > 0) formattedTime
+                .append(isPlural(weeks, keys.getWeekFormat()))
+                .append(split);
 
         days = getFixedTime(result, DAY);
         result = result - (days * DAY);
 
-        if (days > 0) formattedTime.
-                append(isPlural(days, keys.getDayFormat())).
-                append(split);
+        if (days > 0) formattedTime
+                .append(isPlural(days, keys.getDayFormat()))
+                .append(split);
 
         hours = getFixedTime(result, HOUR);
         result = result - (hours * HOUR);
 
-        if (hours > 0) formattedTime.
-                append(isPlural(hours, keys.getHourFormat())).
-                append(split);
+        if (hours > 0) formattedTime
+                .append(isPlural(hours, keys.getHourFormat()))
+                .append(split);
 
         mins = getFixedTime(result, MINUTE);
         result = result - (mins * MINUTE);
 
-        if (mins > 0) formattedTime.
-                    append(isPlural(mins, keys.getMinuteFormat())).
-                    append(split);
+        if (mins > 0) formattedTime
+                .append(isPlural(mins, keys.getMinuteFormat()))
+                .append(split);
 
-        if (result > 0) formattedTime.
-                append(isPlural(result, keys.getSecondFormat() + split));
+        if (result > 0) formattedTime
+                .append(isPlural(result, keys.getSecondFormat() + split));
 
         int time = formattedTime.length(), s = split.length();
         return Beans.colorize(parser, formattedTime.substring(0, time - s));
