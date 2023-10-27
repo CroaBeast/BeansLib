@@ -23,7 +23,7 @@ public interface StringApplier {
      * @param priority the priority
      * @param operator the operator
      *
-     * @throws NullPointerException if the priority or the operator is null
+     * @throws NullPointerException if the operator is null
      * @return a reference of this applier
      */
     @NotNull

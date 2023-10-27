@@ -92,7 +92,7 @@ public class ValueReplacer {
         if (StringUtils.isBlank(string) || !isApplicable(keys, values))
             return string;
 
-        final StringApplier applier = StringApplier.simplified(string);
+        StringApplier applier = StringApplier.simplified(string);
 
         for (int i = 0; i < keys.length; i++) {
             final T temp = values[i];
@@ -183,20 +183,24 @@ public class ValueReplacer {
         if (StringUtils.isBlank(string)) return string;
         if (map.isEmpty()) return string;
 
+        StringApplier applier = StringApplier.simplified(string);
+
         for (Map.Entry<String, ? extends T> entry : map.entrySet()) {
             T first = entry.getValue();
 
-            R result = null;
-            if (function != null) result = function.apply(first);
+            R value = null;
+            if (function != null) value = function.apply(first);
 
-            string = ValueReplacer.of(
+            R result = value;
+
+            applier.apply(s -> ValueReplacer.of(
                     entry.getKey(),
                     (result != null ? result : first).toString(),
-                    string, b
-            );
+                    s, b
+            ));
         }
 
-        return string;
+        return applier.toString();
     }
 
     /**

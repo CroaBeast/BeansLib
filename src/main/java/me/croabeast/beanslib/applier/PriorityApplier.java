@@ -22,7 +22,7 @@ class PriorityApplier implements StringApplier {
 
     @NotNull
     public PriorityApplier apply(Priority priority, UnaryOperator<String> operator) {
-        Objects.requireNonNull(priority);
+        priority = priority == null ? Priority.NORMAL : priority;
         Objects.requireNonNull(operator);
 
         Set<UnaryOperator<String>> set = os.get(priority);
@@ -34,7 +34,7 @@ class PriorityApplier implements StringApplier {
 
     @NotNull
     public PriorityApplier apply(UnaryOperator<String> operator) {
-        return apply(Priority.NORMAL, operator);
+        return apply(null, operator);
     }
 
     @Override

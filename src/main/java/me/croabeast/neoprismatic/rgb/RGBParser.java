@@ -1,7 +1,7 @@
 package me.croabeast.neoprismatic.rgb;
 
 import lombok.var;
-import me.croabeast.neoprismatic.util.MapBuilder;
+import me.croabeast.beanslib.map.MapBuilder;
 import org.apache.commons.lang.StringUtils;
 
 import java.awt.*;

@@ -7,7 +7,7 @@ import me.croabeast.neoprismatic.rgb.MultipleRGB;
 import me.croabeast.neoprismatic.rgb.RGBParser;
 import me.croabeast.neoprismatic.rgb.SingleRGB;
 import me.croabeast.neoprismatic.util.ClientVersion;
-import me.croabeast.neoprismatic.util.MapBuilder;
+import me.croabeast.beanslib.map.MapBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;

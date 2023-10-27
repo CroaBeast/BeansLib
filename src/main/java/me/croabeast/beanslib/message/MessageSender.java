@@ -6,6 +6,7 @@ import me.croabeast.beanslib.Beans;
 import me.croabeast.beanslib.key.PlayerKey;
 import me.croabeast.beanslib.key.ValueReplacer;
 import me.croabeast.beanslib.applier.StringApplier;
+import me.croabeast.beanslib.map.Entry;
 import me.croabeast.beanslib.utility.ArrayUtils;
 import me.croabeast.beanslib.utility.TextUtils;
 import org.apache.commons.lang.StringUtils;
@@ -218,12 +219,12 @@ public final class MessageSender implements Cloneable {
         return this;
     }
 
-    public <T> MessageSender addKeyValue(KeyValue<T> keyValue) {
-        keyValues.add(keyValue);
+    public <T> MessageSender addKeyValue(Entry<String, T> entry) {
+        keyValues.add(new KeyValue<>(entry.getKey(), entry.getValue()));
         return this;
     }
 
-    public <T> MessageSender addKeyValue(Supplier<KeyValue<T>> supplier) {
+    public <T> MessageSender addKeyValue(Supplier<Entry<String, T>> supplier) {
         return addKeyValue(supplier.get());
     }
 
@@ -238,7 +239,7 @@ public final class MessageSender implements Cloneable {
     @SafeVarargs
     public final <T> MessageSender addKeysValues(String[] keys, T... values) {
         if (!ValueReplacer.isApplicable(keys, values))
-            throw new NullPointerException("Keys and/or values are empty/null");
+            throw new NullPointerException("Keys/Values are not applicable for replacements.");
 
         for (int i = 0; i < keys.length; i++) addKeyValue(keys[i], values[i]);
         return this;
@@ -254,7 +255,7 @@ public final class MessageSender implements Cloneable {
         if (ArrayUtils.isArrayEmpty(keys))
             return this;
 
-        int size = keyValues.size();
+        final int size = keyValues.size();
 
         if (size <= 0 || size != keys.length)
             return this;
@@ -263,7 +264,7 @@ public final class MessageSender implements Cloneable {
             KeyValue<?> o = keyValues.get(i);
             String k = keys[i];
 
-            keyValues.set(i, new KeyValue<>(k, o.value));
+            keyValues.set(i, new KeyValue<>(k, o.getValue()));
         }
         return this;
     }
@@ -324,7 +325,7 @@ public final class MessageSender implements Cloneable {
             KeyValue<?> o = keyValues.get(i);
             Object v = result[i];
 
-            keyValues.set(i, new KeyValue<>(o.key, v));
+            keyValues.set(i, new KeyValue<>(o.getKey(), v));
         }
         return this;
     }
@@ -570,14 +571,10 @@ public final class MessageSender implements Cloneable {
         return new KeyValue<>(key, value);
     }
 
-    public static class KeyValue<T> {
-
-        private final String key;
-        private final T value;
+    static class KeyValue<T> extends Entry<String, T> {
 
         private KeyValue(String key, T value) {
-            this.key = key;
-            this.value = value;
+            super(key, value);
         }
 
         private String replace(String string, boolean caseSensitive) {
