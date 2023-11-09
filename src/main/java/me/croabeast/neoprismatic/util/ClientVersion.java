@@ -130,8 +130,7 @@ public final class ClientVersion {
             return o;
         }
 
-        UUID u = player.getUniqueId();
-        int i = Via.getAPI().getPlayerVersion(u);
+        int i = Via.getAPI().getPlayerVersion(player.getUniqueId());
 
         for (ClientVersion p : values()) {
             if (p == UNKNOWN) continue;
@@ -142,6 +141,6 @@ public final class ClientVersion {
     }
 
     public static boolean isLegacy(Player player) {
-        return getClientVersion(player) != 0 && getClientVersion(player) <= 15;
+        return getClientVersion(player) <= 15;
     }
 }

@@ -1,9 +1,5 @@
 package me.croabeast.beanslib.map;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
 import java.util.*;
 import java.util.stream.Collectors;
 

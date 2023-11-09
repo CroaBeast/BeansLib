@@ -14,7 +14,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.awt.*;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -122,7 +121,6 @@ public class NeoPrismaticAPI {
 
     private Object[] reverseRainbow(int step, float sat, boolean isLegacy) {
         List<Object> r = Lists.newArrayList(createRainbow(step, sat, isLegacy));
-        Collections.reverse(r);
         return r.toArray(new Object[0]);
     }
 
@@ -167,7 +165,7 @@ public class NeoPrismaticAPI {
 
     public String colorize(Player player, String string) {
         for (RGBParser p : PARSER_LIST)
-            string = p.parse(string, ClientVersion.isLegacy(player) && MC_VERSION < 16.0);
+            string = p.parse(string, MC_VERSION < 16.0 || ClientVersion.isLegacy(player));
 
         return ChatColor.translateAlternateColorCodes('&', string);
     }

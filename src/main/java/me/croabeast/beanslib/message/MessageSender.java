@@ -54,7 +54,7 @@ import java.util.regex.Matcher;
  * @since 1.3
  */
 @Accessors(chain = true)
-public final class MessageSender implements Cloneable {
+public class MessageSender implements Cloneable {
 
     @NotNull
     private static MessageSender loaded = new MessageSender();
@@ -241,7 +241,11 @@ public final class MessageSender implements Cloneable {
         if (!ValueReplacer.isApplicable(keys, values))
             throw new NullPointerException("Keys/Values are not applicable for replacements.");
 
-        for (int i = 0; i < keys.length; i++) addKeyValue(keys[i], values[i]);
+        for (int i = 0; i < keys.length; i++)
+            try {
+                addKeyValue(keys[i], values[i]);
+            } catch (Exception ignored) {}
+
         return this;
     }
 
@@ -251,6 +255,7 @@ public final class MessageSender implements Cloneable {
      * @param keys an array of keys
      * @return a reference of this object
      */
+    @Deprecated
     public MessageSender setKeys(String... keys) {
         if (ArrayUtils.isArrayEmpty(keys))
             return this;
@@ -310,6 +315,7 @@ public final class MessageSender implements Cloneable {
      * @param <T> the clazz of any given value
      */
     @SafeVarargs
+    @Deprecated
     public final <T> MessageSender setValues(T... values) {
         String[] result = createValueArray(values);
 
