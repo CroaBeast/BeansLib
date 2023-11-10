@@ -24,7 +24,7 @@ public class LibUtils {
      * @return server version and fork
      */
     public String serverFork() {
-        return WordUtils.capitalize(Bukkit.getName()) + " " + Bukkit.getVersion();
+        return WordUtils.capitalize(Bukkit.getName()) + " 1." + getBukkitVersion();
     }
 
     /**

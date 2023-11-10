@@ -3,6 +3,7 @@ package me.croabeast.neoprismatic;
 import com.google.common.collect.Lists;
 import lombok.experimental.UtilityClass;
 import me.croabeast.beanslib.map.MapBuilder;
+import me.croabeast.beanslib.utility.LibUtils;
 import me.croabeast.neoprismatic.rgb.CustomRGB;
 import me.croabeast.neoprismatic.rgb.MultipleRGB;
 import me.croabeast.neoprismatic.rgb.RGBParser;
@@ -40,19 +41,6 @@ public class NeoPrismaticAPI {
             .put(new Color(16733695), ChatColor.getByChar('d'))
             .put(new Color(16777045), ChatColor.getByChar('e'))
             .put(new Color(16777215), ChatColor.getByChar('f')).map();
-
-    private final double MC_VERSION = ((Function<String, Double>) s -> {
-        Matcher m = Pattern
-                .compile("1\\.(\\d+(\\.\\d+)?)")
-                .matcher(s);
-        if (!m.find()) return 0.0;
-
-        try {
-            return Double.parseDouble(m.group(1));
-        } catch (Exception e) {
-            return 0.0;
-        }
-    }).apply(Bukkit.getVersion());
 
     private final List<RGBParser> PARSER_LIST =
             Lists.newArrayList(new CustomRGB(), new MultipleRGB(), new SingleRGB());
@@ -164,7 +152,7 @@ public class NeoPrismaticAPI {
     }
 
     public String colorize(Player player, String string) {
-        boolean isLegacy = MC_VERSION < 16.0;
+        boolean isLegacy = LibUtils.getMainVersion() < 16.0;
 
         if (player != null)
             isLegacy = isLegacy || ClientVersion.isLegacy(player);
