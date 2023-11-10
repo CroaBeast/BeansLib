@@ -79,6 +79,7 @@ public class ArrayUtils {
      * Converts an array to a list and applies an optional operator to each element.
      *
      * @param operator the operator to be applied to each element, can be null
+     * @param check if true will throw an exception when the array is null or empty
      * @param array the array to be converted
      * @param <T> the type of the elements in the array and the list
      *
@@ -87,8 +88,11 @@ public class ArrayUtils {
      */
     @SafeVarargs
     @NotNull
-    public <T> List<T> fromArray(UnaryOperator<T> operator, T... array) {
-        List<T> list = new ArrayList<>();
+    public <T> List<T> fromArray(UnaryOperator<T> operator, boolean check, T... array) {
+        final List<T> list = new ArrayList<>();
+
+        if (!check && isArrayEmpty(array))
+            return list;
 
         for (T element : checkArray(array))
             list.add(operator != null ? operator.apply(element) : element);
@@ -97,13 +101,43 @@ public class ArrayUtils {
     }
 
     /**
-     * Converts an array to a list without applying any operator.
+     * Converts an array to a list and applies an optional operator to each element.
      *
+     * @param operator the operator to be applied to each element, can be null
+     * @param array the array to be converted
+     * @param <T> the type of the elements in the array and the list
+     *
+     * @return a new list that contains the elements from the array after applying the operator
+     */
+    @SafeVarargs
+    @NotNull
+    public <T> List<T> fromArray(UnaryOperator<T> operator, T... array) {
+        return fromArray(operator, false, array);
+    }
+
+    /**
+     * Converts an array to a list.
+     *
+     * @param check if true will throw an exception when the array is null or empty
      * @param array the array to be converted
      * @param <T> the type of the elements in the array and the list
      *
      * @return a new list that contains the same elements as the array
      * @throws IllegalArgumentException if the array is null or has zero length
+     */
+    @SafeVarargs
+    @NotNull
+    public <T> List<T> fromArray(boolean check, T... array) {
+        return fromArray(null, check, array);
+    }
+
+    /**
+     * Converts an array to a list.
+     *
+     * @param array the array to be converted
+     * @param <T> the type of the elements in the array and the list
+     *
+     * @return a new list that contains the same elements as the array
      */
     @SafeVarargs
     @NotNull
@@ -116,8 +150,10 @@ public class ArrayUtils {
     public <T, R> List<R> fromArray(Function<T, ? extends R> function, T... array) {
         List<R> list = new ArrayList<>();
 
+        Objects.requireNonNull(function);
+
         for (T element : checkArray(array))
-            list.add(Objects.requireNonNull(function).apply(element));
+            list.add(function.apply(element));
 
         return list;
     }

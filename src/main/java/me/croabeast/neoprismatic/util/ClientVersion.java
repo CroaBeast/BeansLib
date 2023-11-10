@@ -2,6 +2,7 @@ package me.croabeast.neoprismatic.util;
 
 import com.google.common.collect.Lists;
 import com.viaversion.viaversion.api.Via;
+import me.croabeast.beanslib.utility.Exceptions;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -121,19 +122,16 @@ public final class ClientVersion {
     public static int getClientVersion(Player player) {
         int o = UNKNOWN.version;
 
-        if (!Bukkit.getPluginManager().isPluginEnabled("ViaVersion"))
+        if (!Exceptions.isPluginEnabled("ViaVersion"))
             return o;
 
-        try {
-            Objects.requireNonNull(player);
-        } catch (Exception e) {
-            return o;
-        }
+        if (player == null) return o;
 
         int i = Via.getAPI().getPlayerVersion(player.getUniqueId());
 
         for (ClientVersion p : values()) {
             if (p == UNKNOWN) continue;
+
             if (p.protocols.contains(i)) return p.version;
         }
 

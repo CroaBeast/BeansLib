@@ -2,15 +2,15 @@ package me.croabeast.neoprismatic;
 
 import com.google.common.collect.Lists;
 import lombok.experimental.UtilityClass;
+import me.croabeast.beanslib.map.MapBuilder;
 import me.croabeast.neoprismatic.rgb.CustomRGB;
 import me.croabeast.neoprismatic.rgb.MultipleRGB;
 import me.croabeast.neoprismatic.rgb.RGBParser;
 import me.croabeast.neoprismatic.rgb.SingleRGB;
 import me.croabeast.neoprismatic.util.ClientVersion;
-import me.croabeast.beanslib.map.MapBuilder;
+import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.awt.*;
@@ -75,16 +75,16 @@ public class NeoPrismaticAPI {
         return COLOR_MAP.get(nearestColor);
     }
 
-    private Object getBukkit(Color color, boolean isLegacy) {
-        return isLegacy ? getClosestColor(color) : net.md_5.bungee.api.ChatColor.of(color);
+    private ChatColor getBukkit(Color color, boolean isLegacy) {
+        return isLegacy ? getClosestColor(color) : ChatColor.of(color);
     }
 
-    public Object fromString(String string, boolean isLegacy) {
+    public ChatColor fromString(String string, boolean isLegacy) {
         return getBukkit(new Color(Integer.parseInt(string, 16)), isLegacy);
     }
 
-    private Object[] createGradient(Color start, Color end, int step, boolean isLegacy) {
-        Object[] colors = new Object[step];
+    private ChatColor[] createGradient(Color start, Color end, int step, boolean isLegacy) {
+        ChatColor[] colors = new ChatColor[step];
 
         int stepR = Math.abs(start.getRed() - end.getRed()) / (step - 1),
                 stepG = Math.abs(start.getGreen() - end.getGreen()) / (step - 1),
@@ -107,8 +107,8 @@ public class NeoPrismaticAPI {
         return colors;
     }
 
-    private Object[] createRainbow(int step, float sat, boolean isLegacy) {
-        Object[] colors = new Object[step];
+    private ChatColor[] createRainbow(int step, float sat, boolean isLegacy) {
+        ChatColor[] colors = new ChatColor[step];
         double colorStep = (1.00 / step);
 
         for (int i = 0; i < step; i++) {
@@ -119,16 +119,16 @@ public class NeoPrismaticAPI {
         return colors;
     }
 
-    private Object[] reverseRainbow(int step, float sat, boolean isLegacy) {
-        List<Object> r = Lists.newArrayList(createRainbow(step, sat, isLegacy));
-        return r.toArray(new Object[0]);
+    private ChatColor[] reverseRainbow(int step, float sat, boolean isLegacy) {
+        List<ChatColor> r = Lists.newArrayList(createRainbow(step, sat, isLegacy));
+        return r.toArray(new ChatColor[0]);
     }
 
     public String applyColor(Color color, String string, boolean isLegacy) {
         return getBukkit(color, isLegacy) + string;
     }
 
-    private String apply(String source, Object[] colors) {
+    private String apply(String source, ChatColor[] colors) {
         StringBuilder specials = new StringBuilder();
         StringBuilder builder = new StringBuilder();
 
@@ -164,8 +164,13 @@ public class NeoPrismaticAPI {
     }
 
     public String colorize(Player player, String string) {
+        boolean isLegacy = MC_VERSION < 16.0;
+
+        if (player != null)
+            isLegacy = isLegacy || ClientVersion.isLegacy(player);
+
         for (RGBParser p : PARSER_LIST)
-            string = p.parse(string, MC_VERSION < 16.0 || ClientVersion.isLegacy(player));
+            string = p.parse(string, isLegacy);
 
         return ChatColor.translateAlternateColorCodes('&', string);
     }

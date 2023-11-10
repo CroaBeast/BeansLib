@@ -33,7 +33,7 @@ public class Exceptions {
      * @return if the plugin is enabled
      */
     public boolean isPluginEnabled(String name, boolean checkRunning) {
-        var plugin = Bukkit.getPluginManager().getPlugin(name);
+        Plugin plugin = Bukkit.getPluginManager().getPlugin(name);
         return plugin != null && (!checkRunning || plugin.isEnabled());
     }
 

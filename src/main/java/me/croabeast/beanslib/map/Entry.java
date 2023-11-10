@@ -3,6 +3,7 @@ package me.croabeast.beanslib.map;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Map;
 import java.util.Objects;
 
 @RequiredArgsConstructor
@@ -13,8 +14,11 @@ public class Entry<A, B> {
     protected final B value;
 
     public Entry(Entry<? extends A, ? extends B> entry) {
-        key = entry.key;
-        value = entry.value;
+        this(entry.key, entry.value);
+    }
+
+    public Entry(Map.Entry<? extends A, ? extends B> entry) {
+        this(entry.getKey(), entry.getValue());
     }
 
     @Override

@@ -15,10 +15,8 @@ public class MapBuilder<A, B> {
     }
 
     public MapBuilder(Collection<Entry<? extends A,? extends B>> collection) {
-        if (collection == null) return;
-
-        for (Entry<? extends A, ? extends B> entry : collection)
-            entries.add(new Entry<>(entry));
+        if (collection != null)
+            collection.forEach(e -> entries.add(new Entry<>(e)));
     }
 
     public MapBuilder<A, B> put(A key, B value) {
@@ -47,7 +45,10 @@ public class MapBuilder<A, B> {
 
     public Map<A, B> map() {
         Map<A, B> map = new LinkedHashMap<>();
-        entries.forEach(e -> map.put(e.getKey(), e.getValue()));
+
+        entries.forEach(e ->
+                map.put(e.getKey(), e.getValue()));
+
         return map;
     }
 
