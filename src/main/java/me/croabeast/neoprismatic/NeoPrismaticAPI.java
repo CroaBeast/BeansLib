@@ -11,13 +11,11 @@ import me.croabeast.neoprismatic.rgb.SingleRGB;
 import me.croabeast.neoprismatic.util.ClientVersion;
 import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.awt.*;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -152,7 +150,7 @@ public class NeoPrismaticAPI {
     }
 
     public String colorize(Player player, String string) {
-        boolean isLegacy = LibUtils.getMainVersion() < 16.0;
+        boolean isLegacy = LibUtils.MAIN_VERSION < 16.0;
 
         if (player != null)
             isLegacy = isLegacy || ClientVersion.isLegacy(player);

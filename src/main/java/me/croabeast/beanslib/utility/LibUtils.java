@@ -1,12 +1,11 @@
 package me.croabeast.beanslib.utility;
 
 import lombok.experimental.UtilityClass;
-import lombok.var;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
-import org.jetbrains.annotations.ApiStatus;
 
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -19,65 +18,52 @@ import java.util.regex.Pattern;
 public class LibUtils {
 
     /**
-     * Get the spigot-format server version and fork.
-     *
-     * @return server version and fork
-     */
-    public String serverFork() {
-        return WordUtils.capitalize(Bukkit.getName()) + " 1." + getBukkitVersion();
-    }
-
-    /**
      * Retrieves the version number of the Bukkit package that is currently running.
-     *
-     * @return the Bukkit package version
      */
-    public String getBukkitVersion() {
-        return Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
-    }
+    public final String BUKKIT_NMS_VERSION;
 
     /**
      * Returns the main version of the server in a double/decimal format.
-     * If version is <code>1.16.5</code>, will return <code>16.5</code>.
      *
-     * @return server's main version, <code>0.0</code> if an error occurs.
+     * <p> If version is <code>1.16.5</code>, will return <code>16.5</code>.
      */
-    public double getMainVersion() {
-        var m = Pattern.
-                compile("1\\.(\\d+(\\.\\d+)?)").
-                matcher(Bukkit.getVersion());
-
-        if (!m.find()) return 0.0;
-
-        try {
-            return Double.parseDouble(m.group(1));
-        } catch (Exception e) {
-            return 0.0;
-        }
-    }
-
-    /**
-     * Returns the major version of the active server.
-     * If version is <code>1.16.5</code>, will return <code>16</code>.
-     *
-     * @return server's major version, <code>0</code> if an error occurs.
-     * @deprecated See {@link #getMainVersion()} to get the double value using the minor
-     *             and patch version of the active server.
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
-    @Deprecated
-    public int majorVersion() {
-        return (int) getMainVersion();
-    }
+    public final double MAIN_VERSION;
 
     /**
      * Returns the Java major version of the server.
-     * <p> Example: if version is <code>1.8.0.302</code>, will return <code>8</code>.
      *
-     * @return server's java version
+     * <p> Example: if version is <code>1.8.0.302</code>, will return <code>8</code>.
      */
-    public int majorJavaVersion() {
-        var version = SystemUtils.JAVA_VERSION;
+    public final int MAJOR_JAVA_VERSION;
+
+    /**
+     * Returns the spigot-format server version and fork.
+     */
+    public final String SERVER_FORK;
+
+    /**
+     * Returns true if the server is Paper or a fork of it, otherwise false.
+     */
+    public final boolean IS_PAPER;
+    
+    static {
+        BUKKIT_NMS_VERSION = Bukkit.getServer().getClass()
+                .getPackage()
+                .getName().split("\\.")[3];
+        
+        double main = 0.0;
+        
+        Pattern p = Pattern.compile("1\\.(\\d+(\\.\\d+)?)");
+        Matcher m = p.matcher(Bukkit.getVersion());
+
+        if (m.find()) 
+            try {
+                main = Double.parseDouble(m.group(1));
+            } catch (Exception ignored) {}
+        
+        MAIN_VERSION = main;
+        
+        String version = SystemUtils.JAVA_VERSION;
 
         if (!version.startsWith("1.")) {
             int dot = version.indexOf(".");
@@ -86,38 +72,25 @@ public class LibUtils {
         }
         else version = version.substring(2, 3);
 
-        return Integer.parseInt(version);
-    }
+        MAJOR_JAVA_VERSION = Integer.parseInt(version);
+        
+        SERVER_FORK = WordUtils.capitalize(Bukkit.getName())
+                + " 1." +
+                MAIN_VERSION;
 
-    /**
-     * Checks if the server is Paper or a fork of it.
-     *
-     * @return if is Paper environment
-     */
-    public boolean isPaper() {
-        if (getMainVersion() < 8) return false;
+        boolean isPaper = false;
 
-        var clazz = getMainVersion() >= 12.0 ?
-                "com.destroystokyo.paper.ParticleBuilder" :
-                "io.papermc.paperclip.Paperclip";
+        if (MAIN_VERSION >= 8) {
+            String clazz = MAIN_VERSION >= 12.0 ?
+                    "com.destroystokyo.paper.ParticleBuilder" :
+                    "io.papermc.paperclip.Paperclip";
 
-        try {
-            Class.forName(clazz);
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
+            try {
+                Class.forName(clazz);
+                isPaper = true;
+            } catch (ClassNotFoundException ignored) {}
         }
-    }
 
-    /**
-     * Checks if the server is in a Windows' environment.
-     *
-     * @return if the server is in a Windows system
-     * @deprecated Use {@link SystemUtils#IS_OS_WINDOWS} instead.
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
-    @Deprecated
-    public boolean isWindows() {
-        return SystemUtils.IS_OS_WINDOWS;
+        IS_PAPER = isPaper;
     }
 }

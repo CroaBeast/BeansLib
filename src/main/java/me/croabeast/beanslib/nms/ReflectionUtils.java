@@ -10,7 +10,7 @@ import java.util.function.Function;
 @UtilityClass
 class ReflectionUtils {
 
-    final double VERSION = LibUtils.getMainVersion();
+    final double VERSION = LibUtils.MAIN_VERSION;
     final boolean IS_LEGACY = VERSION < 17.0;
 
     final Class<?> BASE_COMP_CLASS = from(
@@ -21,7 +21,7 @@ class ReflectionUtils {
 
         if (IS_LEGACY)
             builder.append("server.")
-                    .append(LibUtils.getBukkitVersion())
+                    .append(LibUtils.BUKKIT_NMS_VERSION)
                     .append(".");
 
         if (prefix != null) builder.append(prefix);

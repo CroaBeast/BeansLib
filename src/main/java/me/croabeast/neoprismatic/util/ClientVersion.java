@@ -3,7 +3,6 @@ package me.croabeast.neoprismatic.util;
 import com.google.common.collect.Lists;
 import com.viaversion.viaversion.api.Via;
 import me.croabeast.beanslib.utility.Exceptions;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.*;

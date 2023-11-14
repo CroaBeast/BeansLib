@@ -8,7 +8,7 @@ import lombok.var;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.croabeast.beanslib.character.SmallCaps;
 import me.croabeast.beanslib.key.PlayerKey;
-import me.croabeast.beanslib.logger.BeansLogger;
+import me.croabeast.beanslib.misc.BeansLogger;
 import me.croabeast.beanslib.message.CenteredMessage;
 import me.croabeast.beanslib.message.MessageSender;
 import me.croabeast.beanslib.utility.TextUtils;

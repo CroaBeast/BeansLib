@@ -1,6 +1,7 @@
-package me.croabeast.beanslib.logger;
+package me.croabeast.beanslib.misc;
 
 import lombok.SneakyThrows;
+import me.croabeast.beanslib.Beans;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.message.MessageExecutor;
 import me.croabeast.beanslib.message.MessageSender;
@@ -44,7 +45,7 @@ public class BeansLogger {
         pluginLogger = new BukkitLogger(plugin);
         rawLogger = new BukkitLogger(null);
 
-        if (!LibUtils.isPaper() || LibUtils.getMainVersion() < 18.2)
+        if (!LibUtils.IS_PAPER || LibUtils.MAIN_VERSION < 18.2)
             return;
 
         try {
@@ -53,6 +54,10 @@ public class BeansLogger {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public BeansLogger() {
+        this(Beans.getLoaded());
     }
 
     private List<String> toLoggerStrings(Player player, boolean useLogger, String... strings) {
@@ -149,8 +154,7 @@ public class BeansLogger {
     }
 
     /**
-     * Sends requested information to a {@link CommandSender} using the plugin's
-     * logger and its prefix.
+     * Sends requested information to the console using the plugin's prefix.
      *
      * @param lines the information to send
      * @throws NullPointerException if the plugin is null
@@ -273,7 +277,7 @@ public class BeansLogger {
 
         @SneakyThrows
         private PaperLogger(Plugin plugin) {
-            if (LibUtils.isPaper()) {
+            if (LibUtils.IS_PAPER) {
                 String name = plugin != null ? plugin.getName() : "";
 
                 logger = from("logger.slf4j.ComponentLogger")
