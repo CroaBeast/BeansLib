@@ -597,7 +597,7 @@ public class BeansLib {
     public void sendMessageList(CommandSender sender, List<String> list, String[] keys, String[] values) {
         new MessageSender().setTargets(sender)
                 .addKeysValues(keys, values)
-                .setLogger(false).setCaseSensitive(false)
+                .setLogger(false).setSensitive(false)
                 .send(list);
     }
 

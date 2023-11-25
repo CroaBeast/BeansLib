@@ -55,7 +55,7 @@ public enum ClickAction {
         names.add(name().toLowerCase(Locale.ENGLISH));
 
         if (!ArrayUtils.isArrayEmpty(extras))
-            names.addAll(ArrayUtils.fromArray(extras));
+            names.addAll(ArrayUtils.toList(extras));
     }
 
     /**

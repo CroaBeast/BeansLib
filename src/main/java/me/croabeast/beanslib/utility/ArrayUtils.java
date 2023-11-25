@@ -76,86 +76,131 @@ public class ArrayUtils {
     }
 
     /**
-     * Converts an array to a list and applies an optional operator to each element.
+     * Converts an array of elements into a collection.
      *
-     * @param operator the operator to be applied to each element, can be null
-     * @param check if true will throw an exception when the array is null or empty
-     * @param array the array to be converted
-     * @param <T> the type of the elements in the array and the list
+     * @param collection the collection to which the elements will be added.
+     *                  Must not be null.
+     * @param function the function to apply to each element of the array.
+     *                  If null, the identity function is used.
+     * @param array the array of elements to be converted. If empty, the collection
+     *                  is returned unchanged.
      *
-     * @return a new list that contains the elements from the array after applying the operator
-     * @throws IllegalArgumentException if the array is null or has zero length
+     * @param <T> the type of the elements in the array and the collection.
+     * @param <I> the type of the collection that extends Collection<T>.
+     *
+     * @return the collection with the elements of the array added after applying the function.
+     * @throws NullPointerException if the collection is null.
      */
     @SafeVarargs
-    @NotNull
-    public <T> List<T> fromArray(UnaryOperator<T> operator, boolean check, T... array) {
-        final List<T> list = new ArrayList<>();
+    public <T, I extends Collection<T>> I toCollection(I collection, UnaryOperator<T> function, T... array) {
+        Objects.requireNonNull(collection);
+        if (function == null) function = o -> o;
 
-        if (!check && isArrayEmpty(array))
-            return list;
+        if (isArrayEmpty(array)) return collection;
 
-        for (T element : checkArray(array))
-            list.add(operator != null ? operator.apply(element) : element);
+        for (T o : array)
+            collection.add(function.apply(o));
 
-        return list;
+        return collection;
     }
 
     /**
-     * Converts an array to a list and applies an optional operator to each element.
+     * Converts an array of elements into a collection.
      *
-     * @param operator the operator to be applied to each element, can be null
-     * @param array the array to be converted
-     * @param <T> the type of the elements in the array and the list
+     * @param collection the collection to which the elements will be added.
+     *                  Must not be null.
+     * @param array the array of elements to be converted. If empty, the
+     *                  collection is returned unchanged.
      *
-     * @return a new list that contains the elements from the array after applying the operator
+     * @param <T> the type of the elements in the array and the collection.
+     * @param <I> the type of the collection that extends Collection<T>.
+     *
+     * @return the collection with the elements of the array.
+     * @throws NullPointerException if the collection is null.
      */
     @SafeVarargs
-    @NotNull
-    public <T> List<T> fromArray(UnaryOperator<T> operator, T... array) {
-        return fromArray(operator, false, array);
-    }
-
-    /**
-     * Converts an array to a list.
-     *
-     * @param check if true will throw an exception when the array is null or empty
-     * @param array the array to be converted
-     * @param <T> the type of the elements in the array and the list
-     *
-     * @return a new list that contains the same elements as the array
-     * @throws IllegalArgumentException if the array is null or has zero length
-     */
-    @SafeVarargs
-    @NotNull
-    public <T> List<T> fromArray(boolean check, T... array) {
-        return fromArray(null, check, array);
-    }
-
-    /**
-     * Converts an array to a list.
-     *
-     * @param array the array to be converted
-     * @param <T> the type of the elements in the array and the list
-     *
-     * @return a new list that contains the same elements as the array
-     */
-    @SafeVarargs
-    @NotNull
-    public <T> List<T> fromArray(T... array) {
-        return fromArray(null, array);
+    public <T, I extends Collection<T>> I toCollection(I collection, T... array) {
+        return toCollection(collection, null, array);
     }
 
     @SafeVarargs
-    @NotNull
-    public <T, R> List<R> fromArray(Function<T, ? extends R> function, T... array) {
-        List<R> list = new ArrayList<>();
-
+    public <T, U, I extends Collection<U>> I mapToCollection(I collection, Function<? extends T, U> function, T... array) {
+        Objects.requireNonNull(collection);
         Objects.requireNonNull(function);
 
-        for (T element : checkArray(array))
-            list.add(function.apply(element));
+        if (isArrayEmpty(array)) return collection;
 
-        return list;
+        Function<T, U> f = (Function<T, U>) function;
+        for (T o : array) collection.add(f.apply(o));
+
+        return collection;
+    }
+
+    /**
+     * Applies a given function to each element of a given collection and returns a new
+     * collection of the same type with the results.
+     *
+     * @param <T> the type of the elements in the input collection
+     * @param <U> the type of the elements in the output collection
+     * @param <C> the type of the input collection
+     * @param <D> the type of the output collection
+     *
+     * @param collection the input collection to be mapped
+     * @param function the function to be applied to each element
+     *
+     * @return a new collection of the same type as the input collection with the mapped elements
+     *
+     * @throws NullPointerException if the collection or the function is null
+     * @throws IllegalStateException if the collection type cannot be instantiated
+     */
+    public static <T, U, C extends Collection<T>, D extends Collection<U>> D mapCollection(C collection, Function<T, U> function) {
+        Objects.requireNonNull(collection);
+        Objects.requireNonNull(function);
+
+        Class<?> clazz = collection.getClass();
+
+        if (clazz.getName().equals("java.util.Arrays$ArrayList"))
+            clazz = ArrayList.class;
+
+        final D result;
+
+        try {
+            result = (D) clazz.getConstructor().newInstance();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
+        for (T element : collection) result.add(function.apply(element));
+        return result;
+    }
+
+    /**
+     * Converts an array to a list and applies an optional operator to each element.
+     *
+     * @param operator the operator to be applied to each element, can be null
+     * @param array the array to be converted
+     * @param <T> the type of the elements in the array and the list
+     *
+     * @return a new list that contains the elements from the array after applying the operator
+     */
+    @SafeVarargs
+    @NotNull
+    public <T> List<T> toList(UnaryOperator<T> operator, T... array) {
+        return toCollection(new ArrayList<>(), operator, array);
+    }
+
+    /**
+     * Converts an array to a list.
+     *
+     * @param array the array to be converted
+     * @param <T> the type of the elements in the array and the list
+     *
+     * @return a new list that contains the same elements as the array
+     */
+    @SafeVarargs
+    @NotNull
+    public <T> List<T> toList(T... array) {
+        return toList(null, array);
     }
 
     /**
@@ -168,6 +213,8 @@ public class ArrayUtils {
      * @throws NullPointerException if the iterable is null
      */
     public <T> T[] toArray(Iterable<? extends T> iterable) {
+        Objects.requireNonNull(iterable);
+
         List<T> list = new ArrayList<>();
         iterable.forEach(list::add);
         return list.toArray((T[]) new Object[0]);

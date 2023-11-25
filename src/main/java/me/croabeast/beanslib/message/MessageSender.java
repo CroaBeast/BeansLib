@@ -3,9 +3,9 @@ package me.croabeast.beanslib.message;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import me.croabeast.beanslib.Beans;
+import me.croabeast.beanslib.applier.StringApplier;
 import me.croabeast.beanslib.key.PlayerKey;
 import me.croabeast.beanslib.key.ValueReplacer;
-import me.croabeast.beanslib.applier.StringApplier;
 import me.croabeast.beanslib.map.Entry;
 import me.croabeast.beanslib.utility.ArrayUtils;
 import me.croabeast.beanslib.utility.TextUtils;
@@ -45,45 +45,42 @@ import java.util.regex.Matcher;
  * );
  * } </pre>
  *
- * Also, this objects implements the {@link Cloneable} interface to allow
- * cloning an instance, instead of creating new instances separately.
- *
  * <p> See {@link #send(List)} and/or {@link #send(String...)} for more info.
  *
  * @author CroaBeast
  * @since 1.3
  */
 @Accessors(chain = true)
-public class MessageSender implements Cloneable {
+public class MessageSender {
 
     @NotNull
     private static MessageSender loaded = new MessageSender();
 
-    private Collection<? extends CommandSender> targets = null;
+    private final Set<CommandSender> targets;
     /**
      * The player object to parse all the internal and global placeholders, and
      * to format the message with the player client' color support.
      */
     @Setter
-    private Player parser = null;
+    private Player parser;
 
-    private Set<MessageFlag> flags = new LinkedHashSet<>();
+    private final List<KeyValue<?>> entries = new LinkedList<>();
+    private final List<PlayerFunction> functions = new LinkedList<>();
 
-    private final List<KeyValue<?>> keyValues = new LinkedList<>();
-    private final List<BiFunction<Player, String, String>> functions = new LinkedList<>();
+    private final Set<MessageFlag> flags = new HashSet<>();
 
     /**
      * Sets if messages can be sent into the console or not.
      */
     @Setter
-    private boolean isLogger = true;
+    private boolean logger = true;
 
     /**
      * Sets if the input defined keys in this object are case-sensitive or not
      * if input keys were set.
      */
     @Setter
-    private boolean caseSensitive = true;
+    private boolean sensitive = true;
 
     /**
      * Sets if all chat messages will remove all the first space characters.
@@ -99,7 +96,7 @@ public class MessageSender implements Cloneable {
      * @param parser a player to parse messages
      */
     public MessageSender(Collection<? extends CommandSender> targets, Player parser) {
-        this.targets = targets;
+        this.targets = new HashSet<>(targets);
         this.parser = parser;
     }
 
@@ -111,7 +108,7 @@ public class MessageSender implements Cloneable {
      */
     public MessageSender(CommandSender sender) {
         this(
-                sender != null ? ArrayUtils.fromArray(sender) : null,
+                sender != null ? ArrayUtils.toList(sender) : null,
                 sender instanceof Player ? (Player) sender : null
         );
     }
@@ -121,27 +118,30 @@ public class MessageSender implements Cloneable {
      * to define the targets, parser, keys, values and other parameters before
      * sending a list or array.
      */
-    public MessageSender() {}
+    public MessageSender() {
+        this(null, null);
+    }
 
     public MessageSender(MessageSender sender) {
         Objects.requireNonNull(sender);
 
         this.parser = sender.parser;
 
-        if (sender.targets != null)
-            targets = new ArrayList<>(sender.targets);
+        Set<CommandSender> set = sender.targets;
+        targets = set == null ?
+                null : new HashSet<>(set);
 
-        if (sender.flags != null)
-            flags = new HashSet<>(sender.flags);
+        flags.clear();
+        flags.addAll(sender.flags);
 
-        keyValues.clear();
-        keyValues.addAll(sender.keyValues);
+        entries.clear();
+        entries.addAll(sender.entries);
 
         functions.clear();
         functions.addAll(sender.functions);
 
-        caseSensitive = sender.caseSensitive;
-        isLogger = sender.isLogger;
+        sensitive = sender.sensitive;
+        logger = sender.logger;
         noFirstSpaces = sender.noFirstSpaces;
     }
 
@@ -153,7 +153,11 @@ public class MessageSender implements Cloneable {
      * @return a reference of this object
      */
     public MessageSender setTargets(Collection<? extends CommandSender> targets) {
-        this.targets = targets;
+        if (targets == null || targets.isEmpty())
+            return this;
+
+        this.targets.clear();
+        this.targets.addAll(targets);
         return this;
     }
 
@@ -168,7 +172,7 @@ public class MessageSender implements Cloneable {
         return setTargets(
                 ArrayUtils.isArrayEmpty(targets) ?
                         null :
-                        ArrayUtils.fromArray(targets)
+                        ArrayUtils.toList(targets)
         );
     }
 
@@ -179,9 +183,8 @@ public class MessageSender implements Cloneable {
      * @param functions an array of functions
      * @return a reference of this object
      */
-    @SafeVarargs
-    public final MessageSender addFunctions(BiFunction<Player, String, String>... functions) {
-        this.functions.addAll(ArrayUtils.fromArray(functions));
+    public final MessageSender addFunctions(PlayerFunction... functions) {
+        this.functions.addAll(ArrayUtils.toList(functions));
         return this;
     }
 
@@ -195,7 +198,7 @@ public class MessageSender implements Cloneable {
     @SafeVarargs
     public final MessageSender addFunctions(UnaryOperator<String>... ops) {
         try {
-            ArrayUtils.fromArray(ops).forEach(u -> {
+            ArrayUtils.toList(ops).forEach(u -> {
                 if (u != null)
                     functions.add((p, s) -> u.apply(s));
             });
@@ -213,14 +216,17 @@ public class MessageSender implements Cloneable {
      * @return a reference of this object
      */
     public MessageSender setFlags(MessageFlag... flags) {
-        try {
-            this.flags = new HashSet<>(ArrayUtils.fromArray(flags));
-        } catch (Exception ignored) {}
+        if (ArrayUtils.isArrayEmpty(flags))
+            return this;
+
+        this.flags.clear();
+        this.flags.addAll(ArrayUtils.toList(flags));
+
         return this;
     }
 
     public <T> MessageSender addKeyValue(Entry<String, T> entry) {
-        keyValues.add(new KeyValue<>(entry.getKey(), entry.getValue()));
+        entries.add(new KeyValue<>(entry.getKey(), entry.getValue()));
         return this;
     }
 
@@ -249,6 +255,20 @@ public class MessageSender implements Cloneable {
         return this;
     }
 
+    private void checkOrIncreaseCapacity(int length) {
+        if (!entries.isEmpty() && entries.size() >= length)
+            return;
+
+        List<KeyValue<?>> list = entries;
+        List<KeyValue<?>> result = new ArrayList<>(length);
+
+        for (int i = 0; i < list.size(); i++)
+            result.set(i, list.get(i));
+
+        entries.clear();
+        entries.addAll(new LinkedList<>(result));
+    }
+
     /**
      * Sets the string keys to be replaced for the input values.
      *
@@ -260,25 +280,23 @@ public class MessageSender implements Cloneable {
         if (ArrayUtils.isArrayEmpty(keys))
             return this;
 
-        final int size = keyValues.size();
-
-        if (size <= 0 || size != keys.length)
-            return this;
+        checkOrIncreaseCapacity(keys.length);
+        final int size = entries.size();
 
         for (int i = 0; i < size; i++) {
-            KeyValue<?> o = keyValues.get(i);
+            KeyValue<?> o = entries.get(i);
             String k = keys[i];
 
-            keyValues.set(i, new KeyValue<>(k, o.getValue()));
+            entries.set(i, new KeyValue<>(k, o.getValue()));
         }
         return this;
     }
 
     private static List<String> listFromObject(Object o) {
-        if (o == null) return ArrayUtils.fromArray("null");
+        if (o == null) return ArrayUtils.toList("null");
 
         if (o instanceof CommandSender)
-            return ArrayUtils.fromArray(((CommandSender) o).getName());
+            return ArrayUtils.toList(((CommandSender) o).getName());
 
         if (o.getClass().isArray()) {
             List<String> result = new ArrayList<>();
@@ -294,7 +312,7 @@ public class MessageSender implements Cloneable {
             return result;
         }
 
-        return ArrayUtils.fromArray(String.valueOf(o));
+        return ArrayUtils.toList(String.valueOf(o));
     }
 
     @SafeVarargs
@@ -322,30 +340,28 @@ public class MessageSender implements Cloneable {
         if (ArrayUtils.isArrayEmpty(result))
             return this;
 
-        int size = keyValues.size();
-
-        if (size <= 0 || size != result.length)
-            return this;
+        checkOrIncreaseCapacity(result.length);
+        int size = entries.size();
 
         for (int i = 0; i < size; i++) {
-            KeyValue<?> o = keyValues.get(i);
+            KeyValue<?> o = entries.get(i);
             Object v = result[i];
 
-            keyValues.set(i, new KeyValue<>(o.getKey(), v));
+            entries.set(i, new KeyValue<>(o.getKey(), v));
         }
         return this;
     }
 
     private String formatString(Player p, String string) {
         final StringApplier applier = StringApplier.simplified(string);
-        final boolean c = caseSensitive;
+        final boolean c = sensitive;
 
         for (BiFunction<Player, String, String> f : functions)
             applier.apply(s -> f.apply(p, s));
 
         applier.apply(s -> PlayerKey.replaceKeys(p, s, c));
-        for (KeyValue<?> k : keyValues)
-            applier.apply(s -> k.replace(s, caseSensitive));
+        for (KeyValue<?> k : entries)
+            applier.apply(s -> k.replace(s, sensitive));
 
         return applier.toString();
     }
@@ -422,7 +438,7 @@ public class MessageSender implements Cloneable {
 
         if (notSend) return false;
 
-        if (isLogger) {
+        if (logger) {
             applier.apply(s -> {
                 boolean is = parser == null && targets.size() == 1;
                 return formatString(is ? targets.get(0) : parser, s);
@@ -442,16 +458,17 @@ public class MessageSender implements Cloneable {
      * @return true if the list was sent, false otherwise
      */
     public boolean send(List<String> stringList) {
-        if (stringList == null) return false;
+        if (stringList == null || stringList.isEmpty()) return false;
 
         final List<String> list = new ArrayList<>();
 
         for (String s : stringList)
             if (s != null) list.add(Beans.replacePrefixKey(s, false));
 
-        if (list.isEmpty()) return false;
-        if (list.size() == 1 &&
-                StringUtils.isBlank(list.get(0))) return false;
+        if (list.size() == 1) {
+            final String temp = list.get(0);
+            return !StringUtils.isBlank(temp) && singleSend(temp);
+        }
 
         if (targets == null || targets.isEmpty())
             return sendWebhooks(list, true);
@@ -474,8 +491,8 @@ public class MessageSender implements Cloneable {
 
             isMatching = isMatching && count > 0;
 
-            MessageExecutor key = MessageExecutor.identifyKey(s);
-            if (!isFlag(key.getFlag())) continue;
+            MessageExecutor e = MessageExecutor.identifyKey(s);
+            if (!isFlag(e.getFlag())) continue;
 
             List<Boolean> executed = new ArrayList<>();
 
@@ -488,8 +505,8 @@ public class MessageSender implements Cloneable {
                 Player temp = parser == null ? t : parser;
                 String  p = formatString(temp, s);
 
-                executed.add(key.execute(t, temp,
-                        noFirstSpaces && key == MessageExecutor.CHAT_EXECUTOR ?
+                executed.add(e.execute(t, temp,
+                        noFirstSpaces && e == MessageExecutor.CHAT_EXECUTOR ?
                         TextUtils.STRIP_FIRST_SPACES.apply(p) : p
                 ));
             }
@@ -502,7 +519,7 @@ public class MessageSender implements Cloneable {
             ));
         }
 
-        if (isLogger && logList.size() > 0)
+        if (logger && logList.size() > 0)
             Beans.rawLog(logList.toArray(new String[0]));
         return true;
     }
@@ -517,7 +534,7 @@ public class MessageSender implements Cloneable {
      * @return true if the list was sent, false otherwise
      */
     public boolean send(String... strings) {
-        return send(ArrayUtils.fromArray(strings));
+        return send(ArrayUtils.toList(strings));
     }
 
     /**
@@ -525,32 +542,10 @@ public class MessageSender implements Cloneable {
      *
      * @return a clone of this instance
      */
+    @SuppressWarnings("all")
     @NotNull
     public MessageSender clone() {
-        try {
-            MessageSender sender = (MessageSender) super.clone();
-
-            if (targets != null)
-                sender.targets = new ArrayList<>(targets);
-
-            sender.flags = new HashSet<>(flags);
-
-            sender.keyValues.clear();
-            sender.keyValues.addAll(new LinkedList<>(keyValues));
-
-            sender.functions.clear();
-            sender.functions.addAll(new LinkedList<>(functions));
-
-            sender.caseSensitive = caseSensitive;
-            sender.isLogger = isLogger;
-            sender.noFirstSpaces = noFirstSpaces;
-
-            return sender;
-        }
-        catch (Exception e) {
-            // this shouldn't happen, since the sender is Cloneable
-            return new MessageSender(this);
-        }
+        return new MessageSender(this);
     }
 
     /**
@@ -573,7 +568,7 @@ public class MessageSender implements Cloneable {
         return loaded.clone();
     }
 
-    public static <T> KeyValue<T> newKeyValue(String key, T value) {
+    public static <T> Entry<String, T> newKeyValue(String key, T value) {
         return new KeyValue<>(key, value);
     }
 
@@ -587,4 +582,6 @@ public class MessageSender implements Cloneable {
             return ValueReplacer.of(key, String.valueOf(value), string, caseSensitive);
         }
     }
+
+    public interface PlayerFunction extends BiFunction<Player, String, String> {}
 }

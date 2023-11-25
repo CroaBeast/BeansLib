@@ -1,50 +1,54 @@
 package me.croabeast.beanslib.map;
 
+import me.croabeast.beanslib.utility.ArrayUtils;
+
 import java.util.*;
-import java.util.stream.Collectors;
 
-public class MapBuilder<A, B> {
+public class MapBuilder<X, Y> {
 
-    private final List<Entry<A, B>> entries = new LinkedList<>();
+    private final List<Entry<X, Y>> entries = new LinkedList<>();
 
     public MapBuilder() {}
 
-    public MapBuilder(Map<? extends A, ? extends B> map) {
+    public MapBuilder(Map<? extends X, ? extends Y> map) {
         if (map != null)
-            map.forEach((k, v) -> entries.add(new Entry<>(k, v)));
+            map.entrySet().forEach(e -> entries.add(new Entry<>(e)));
     }
 
-    public MapBuilder(Collection<Entry<? extends A,? extends B>> collection) {
+    public MapBuilder(Collection<Entry<? extends X, ? extends Y>> collection) {
         if (collection != null)
             collection.forEach(e -> entries.add(new Entry<>(e)));
     }
 
-    public MapBuilder<A, B> put(A key, B value) {
+    public MapBuilder<X, Y> put(X key, Y value) {
         entries.add(new Entry<>(key, value));
         return this;
     }
 
-    public List<A> keys() {
-        return entries.stream().map(Entry::getKey).collect(Collectors.toList());
+    public MapBuilder<X, Y> put(Entry<? extends X, ? extends Y> entry) {
+        entries.add(new Entry<>(entry));
+        return this;
     }
 
-    public List<B> values() {
-        return entries.stream().map(Entry::getValue).collect(Collectors.toList());
+    public MapBuilder<X, Y> put(Map.Entry<? extends X, ? extends Y> entry) {
+        entries.add(new Entry<>(entry));
+        return this;
     }
 
-    public List<Entry<A, B>> entries(){
-        return entries.stream().
-                map(e -> {
-                    B v = e.getValue();
-                    A k = e.getKey();
-
-                    return new Entry<>(k, v);
-                }).
-                collect(Collectors.toList());
+    public List<X> keys() {
+        return ArrayUtils.mapCollection(entries, Entry::getKey);
     }
 
-    public Map<A, B> map() {
-        Map<A, B> map = new LinkedHashMap<>();
+    public List<Y> values() {
+        return ArrayUtils.mapCollection(entries, Entry::getValue);
+    }
+
+    public List<Entry<X, Y>> entries() {
+        return new LinkedList<>(entries);
+    }
+
+    public Map<X, Y> map() {
+        Map<X, Y> map = new LinkedHashMap<>();
 
         entries.forEach(e ->
                 map.put(e.getKey(), e.getValue()));
