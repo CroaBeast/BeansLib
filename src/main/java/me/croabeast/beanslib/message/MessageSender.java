@@ -1,5 +1,7 @@
 package me.croabeast.beanslib.message;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import me.croabeast.beanslib.Beans;
@@ -572,14 +574,15 @@ public class MessageSender {
         return new KeyValue<>(key, value);
     }
 
-    static class KeyValue<T> extends Entry<String, T> {
+    @RequiredArgsConstructor
+    @Getter
+    static class KeyValue<T> implements Entry<String, T> {
 
-        private KeyValue(String key, T value) {
-            super(key, value);
-        }
+        private final String key;
+        private final T value;
 
-        private String replace(String string, boolean caseSensitive) {
-            return ValueReplacer.of(key, String.valueOf(value), string, caseSensitive);
+        private String replace(String string, boolean sensitive) {
+            return ValueReplacer.of(key, String.valueOf(value), string, sensitive);
         }
     }
 

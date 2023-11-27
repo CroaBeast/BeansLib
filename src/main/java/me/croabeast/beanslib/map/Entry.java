@@ -1,10 +1,6 @@
 package me.croabeast.beanslib.map;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * A class that represents a pair of values with a key and a value.
@@ -13,34 +9,19 @@ import java.util.Objects;
  * @param <A> the type of the key
  * @param <B> the type of the value
  */
-@RequiredArgsConstructor
-@Getter
-public class Entry<A, B> {
+public interface Entry<A, B> {
 
     /**
-     * The key corresponding to this entry.
+     * Returns the key corresponding to this entry.
+     * @return the key
      */
-    protected final A key;
-    /**
-     * The value corresponding to this entry.
-     */
-    protected final B value;
+    A getKey();
 
     /**
-     * Constructs a new Entry object from another Entry object.
-     * @param entry the Entry object to copy from
+     * Returns the value corresponding to this entry.
+     * @return the value
      */
-    public Entry(Entry<? extends A, ? extends B> entry) {
-        this(entry.key, entry.value);
-    }
-
-    /**
-     * Constructs a new Entry object from a Map.Entry object.
-     * @param entry the Map.Entry object to copy from
-     */
-    public Entry(Map.Entry<? extends A, ? extends B> entry) {
-        this(entry.getKey(), entry.getValue());
-    }
+    B getValue();
 
     /**
      * Returns a string representation of this Entry object using
@@ -48,10 +29,15 @@ public class Entry<A, B> {
      *
      * @return a string representation of the Entry object
      */
-    @Override
-    public String toString() {
-        return key + ":" + value;
-    }
+    String toString();
+
+    /**
+     * Returns the hash code value for this Entry object.
+     * The hash code is computed based on the key and the value fields.
+     *
+     * @return the hash code value for this Entry object
+     */
+    int hashCode();
 
     /**
      * Compares the specified object with this Entry object for equality.
@@ -62,25 +48,17 @@ public class Entry<A, B> {
      * @param o the object to be compared for equality with this Entry object
      * @return true if the specified object is equal to this Entry object
      */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Entry)) return false;
+    boolean equals(Object o);
 
-        Entry<?, ?> e = (Entry<?, ?>) o;
-
-        return Objects.equals(key, e.key) &&
-                Objects.equals(value, e.value);
+    static <A, B> Entry<A, B> of(A key, B value) {
+        return new SimpleEntry<>(key, value);
     }
 
-    /**
-     * Returns the hash code value for this Entry object.
-     * The hash code is computed based on the key and the value fields.
-     *
-     * @return the hash code value for this Entry object
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hash(key, value);
+    static <A, B> Entry<A, B> of(Entry<? extends A, ? extends B> entry) {
+        return of(entry.getKey(), entry.getValue());
+    }
+
+    static <A, B> Entry<A, B> of(Map.Entry<? extends A, ? extends B> entry) {
+        return of(entry.getKey(), entry.getValue());
     }
 }

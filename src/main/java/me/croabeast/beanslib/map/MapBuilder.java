@@ -12,26 +12,26 @@ public class MapBuilder<X, Y> {
 
     public MapBuilder(Map<? extends X, ? extends Y> map) {
         if (map != null)
-            map.entrySet().forEach(e -> entries.add(new Entry<>(e)));
+            map.entrySet().forEach(e -> entries.add(Entry.of(e)));
     }
 
     public MapBuilder(Collection<Entry<? extends X, ? extends Y>> collection) {
         if (collection != null)
-            collection.forEach(e -> entries.add(new Entry<>(e)));
+            collection.forEach(e -> entries.add(Entry.of(e)));
     }
 
     public MapBuilder<X, Y> put(X key, Y value) {
-        entries.add(new Entry<>(key, value));
+        entries.add(Entry.of(key, value));
         return this;
     }
 
     public MapBuilder<X, Y> put(Entry<? extends X, ? extends Y> entry) {
-        entries.add(new Entry<>(entry));
+        entries.add(Entry.of(entry));
         return this;
     }
 
     public MapBuilder<X, Y> put(Map.Entry<? extends X, ? extends Y> entry) {
-        entries.add(new Entry<>(entry));
+        entries.add(Entry.of(entry));
         return this;
     }
 

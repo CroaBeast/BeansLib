@@ -2,6 +2,7 @@ package me.croabeast.beanslib.utility;
 
 import lombok.experimental.UtilityClass;
 import lombok.var;
+import me.croabeast.beanslib.misc.CollectionOperator;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Array;
@@ -85,9 +86,6 @@ public class ArrayUtils {
      * @param array the array of elements to be converted. If empty, the collection
      *                  is returned unchanged.
      *
-     * @param <T> the type of the elements in the array and the collection.
-     * @param <I> the type of the collection that extends Collection<T>.
-     *
      * @return the collection with the elements of the array added after applying the function.
      * @throws NullPointerException if the collection is null.
      */
@@ -100,38 +98,6 @@ public class ArrayUtils {
 
         for (T o : array)
             collection.add(function.apply(o));
-
-        return collection;
-    }
-
-    /**
-     * Converts an array of elements into a collection.
-     *
-     * @param collection the collection to which the elements will be added.
-     *                  Must not be null.
-     * @param array the array of elements to be converted. If empty, the
-     *                  collection is returned unchanged.
-     *
-     * @param <T> the type of the elements in the array and the collection.
-     * @param <I> the type of the collection that extends Collection<T>.
-     *
-     * @return the collection with the elements of the array.
-     * @throws NullPointerException if the collection is null.
-     */
-    @SafeVarargs
-    public <T, I extends Collection<T>> I toCollection(I collection, T... array) {
-        return toCollection(collection, null, array);
-    }
-
-    @SafeVarargs
-    public <T, U, I extends Collection<U>> I mapToCollection(I collection, Function<? extends T, U> function, T... array) {
-        Objects.requireNonNull(collection);
-        Objects.requireNonNull(function);
-
-        if (isArrayEmpty(array)) return collection;
-
-        Function<T, U> f = (Function<T, U>) function;
-        for (T o : array) collection.add(f.apply(o));
 
         return collection;
     }
@@ -154,24 +120,7 @@ public class ArrayUtils {
      * @throws IllegalStateException if the collection type cannot be instantiated
      */
     public static <T, U, C extends Collection<T>, D extends Collection<U>> D mapCollection(C collection, Function<T, U> function) {
-        Objects.requireNonNull(collection);
-        Objects.requireNonNull(function);
-
-        Class<?> clazz = collection.getClass();
-
-        if (clazz.getName().equals("java.util.Arrays$ArrayList"))
-            clazz = ArrayList.class;
-
-        final D result;
-
-        try {
-            result = (D) clazz.getConstructor().newInstance();
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-
-        for (T element : collection) result.add(function.apply(element));
-        return result;
+        return (D) CollectionOperator.of(collection).map(function).collect();
     }
 
     /**
