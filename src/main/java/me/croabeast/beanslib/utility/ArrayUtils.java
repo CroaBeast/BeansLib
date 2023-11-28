@@ -103,27 +103,6 @@ public class ArrayUtils {
     }
 
     /**
-     * Applies a given function to each element of a given collection and returns a new
-     * collection of the same type with the results.
-     *
-     * @param <T> the type of the elements in the input collection
-     * @param <U> the type of the elements in the output collection
-     * @param <C> the type of the input collection
-     * @param <D> the type of the output collection
-     *
-     * @param collection the input collection to be mapped
-     * @param function the function to be applied to each element
-     *
-     * @return a new collection of the same type as the input collection with the mapped elements
-     *
-     * @throws NullPointerException if the collection or the function is null
-     * @throws IllegalStateException if the collection type cannot be instantiated
-     */
-    public static <T, U, C extends Collection<T>, D extends Collection<U>> D mapCollection(C collection, Function<T, U> function) {
-        return (D) CollectionOperator.of(collection).map(function).collect();
-    }
-
-    /**
      * Converts an array to a list and applies an optional operator to each element.
      *
      * @param operator the operator to be applied to each element, can be null

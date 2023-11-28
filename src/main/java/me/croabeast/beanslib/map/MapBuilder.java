@@ -1,6 +1,6 @@
 package me.croabeast.beanslib.map;
 
-import me.croabeast.beanslib.utility.ArrayUtils;
+import me.croabeast.beanslib.misc.CollectionOperator;
 
 import java.util.*;
 
@@ -36,11 +36,11 @@ public class MapBuilder<X, Y> {
     }
 
     public List<X> keys() {
-        return ArrayUtils.mapCollection(entries, Entry::getKey);
+        return CollectionOperator.of(entries).map(Entry::getKey).toList();
     }
 
     public List<Y> values() {
-        return ArrayUtils.mapCollection(entries, Entry::getValue);
+        return CollectionOperator.of(entries).map(Entry::getValue).toList();
     }
 
     public List<Entry<X, Y>> entries() {

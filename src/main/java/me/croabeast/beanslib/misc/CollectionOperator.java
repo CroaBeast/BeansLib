@@ -13,14 +13,145 @@ import java.util.function.*;
  * implementation. It also supports creating collections from iterables and enumerations.
  *
  * @param <T> the type of elements in the collection
- * @param <C> the type of collection
  */
-public final class CollectionOperator<T, C extends Collection<T>> {
+public final class CollectionOperator<T> {
 
-    private final C collection;
+    private final Collection<T> collection;
 
-    private CollectionOperator(C collection) {
-        this.collection = Objects.requireNonNull(collection);
+    private CollectionOperator(Collection<T> collection) {
+        this.collection = collection;
+    }
+
+    /**
+     * Filters the collection by a predicate and returns this operator.
+     *
+     * @param predicate the predicate to test each element
+     *
+     * @return a reference of this operator
+     * @throws NullPointerException if predicate is null
+     */
+    public CollectionOperator<T> filter(Predicate<T> predicate) {
+        collection.removeIf(Objects.requireNonNull(predicate).negate());
+        return this;
+    }
+
+    /**
+     * Adds all the elements from another collection to this collection.
+     *
+     * @param elements the collection of elements to add
+     *
+     * @return a reference of this operator
+     * @throws NullPointerException if elements is null
+     */
+    public CollectionOperator<T> add(Collection<? extends T> elements) {
+        collection.addAll(elements);
+        return this;
+    }
+
+    /**
+     * Adds all the elements from an iterable to this collection.
+     *
+     * @param elements the iterable of elements to add
+     *
+     * @return a reference of this operator
+     * @throws NullPointerException if elements is null
+     */
+    public CollectionOperator<T> add(Iterable<? extends T> elements) {
+        List<T> collection = new LinkedList<>();
+        Objects.requireNonNull(elements).forEach(collection::add);
+        return add(collection);
+    }
+
+    /**
+     * Adds all the elements from an enumeration to this collection.
+     *
+     * @param elements the enumeration of elements to add
+     *
+     * @return a reference of this operator
+     * @throws NullPointerException if elements is null
+     */
+    public CollectionOperator<T> add(Enumeration<? extends T> elements) {
+        Objects.requireNonNull(elements);
+        List<T> collection = new LinkedList<>();
+
+        while (elements.hasMoreElements())
+            collection.add(elements.nextElement());
+        return add(collection);
+    }
+
+    /**
+     * Adds all the elements from an array to this collection.
+     *
+     * @param elements the array of elements to add
+     * @return a reference of this operator
+     */
+    @SafeVarargs
+    public final CollectionOperator<T> add(T... elements) {
+        return add(ArrayUtils.toList(elements));
+    }
+
+    /**
+     * Applies a consumer to this collection.
+     *
+     * @param consumer the consumer to accept the collection
+     *
+     * @return a reference of this operator
+     * @throws NullPointerException if consumer is null
+     */
+    public CollectionOperator<T> modify(Consumer<Collection<T>> consumer) {
+        Objects.requireNonNull(consumer).accept(collection);
+        return this;
+    }
+
+    /**
+     * Sorts the collection by a comparator and returns a new operator with a sorted list.
+     *
+     * @param comparator the comparator to compare the elements
+     *
+     * @return a new operator with a sorted list
+     * @throws NullPointerException if comparator is null
+     */
+    public CollectionOperator<T> sort(Comparator<? extends T> comparator) {
+        Objects.requireNonNull(comparator);
+
+        List<T> list = new ArrayList<>(collection);
+        list.sort((Comparator<T>) comparator);
+
+        return new CollectionOperator<>(new LinkedList<>(list));
+    }
+
+    /**
+     * Applies a unary operator to each element of the collection and returns a new
+     * operator with a modified list.
+     *
+     * @param operator the unary operator to apply to each element
+     *
+     * @return a new operator with a modified list
+     * @throws NullPointerException if operator is null
+     */
+    public CollectionOperator<T> apply(UnaryOperator<T> operator) {
+        List<T> list = new LinkedList<>(collection);
+        list.replaceAll(operator);
+        return new CollectionOperator<>(list);
+    }
+
+    /**
+     * Maps each element of the collection to another type and returns a new
+     * operator with a mapped list.
+     *
+     * @param function the function to map each element
+     * @param <U> the type of the mapped elements
+     *
+     * @return a new operator with a mapped list
+     * @throws NullPointerException if function is null
+     */
+    public <U> CollectionOperator<U> map(Function<T, U> function) {
+        Objects.requireNonNull(function);
+
+        List<U> list = new LinkedList<>();
+        collection.forEach(t -> list.add(function.apply(t)));
+
+        return new CollectionOperator<>(list);
     }
 
     private static <C extends Collection> C newInstance(Class<? extends Collection> clazz) {
@@ -37,201 +168,87 @@ public final class CollectionOperator<T, C extends Collection<T>> {
     }
 
     /**
-     * Filters the elements of the collection that match the given predicate.
+     * Collects the elements of the collection into a new instance of a given
+     * collection class.
      *
-     * @param predicate the predicate to apply to each element
+     * @param clazz the class of the collection to create
+     * @param <C> the type of the collection to create
      *
-     * @return this collection operator
-     * @throws NullPointerException if the predicate is null
+     * @return a new instance of the collection class with the elements of this collection
+     *
+     * @throws NullPointerException if clazz is null
+     * @throws IllegalStateException if the collection class cannot be instantiated
      */
-    public CollectionOperator<T, C> filter(Predicate<T> predicate) {
-        collection.removeIf(Objects.requireNonNull(predicate).negate());
-        return this;
+    public <C extends Collection<T>> C collect(Class<C> clazz) {
+        if (clazz == List.class) return (C) toList();
+        if (clazz == Set.class) return (C) toSet();
+        if (clazz == Queue.class) return (C) toQueue();
+
+        C collection = newInstance(clazz);
+        collection.addAll(this.collection);
+        return collection;
     }
-
     /**
-     * Adds all the elements of the given array to this collection.
+     * Collects the elements of the collection into a given collection.
      *
-     * @param elements the array of elements to add
+     * @param collection the collection to add the elements to
+     * @param <C> the type of the collection
      *
-     * @return this collection operator
-     * @throws NullPointerException if the array of elements is null
+     * @return the given collection with the elements of this collection
+     * @throws NullPointerException if collection is null
      */
-    public CollectionOperator<T, C> add(Collection<? extends T> elements) {
-        collection.addAll(elements);
-        return this;
-    }
+    public <C extends Collection<T>> C collect(C collection) {
+        Objects.requireNonNull(collection);
 
-    /**
-     * Adds all the elements of the given array to this collection.
-     *
-     * @param elements the array of elements to add
-     *
-     * @return this collection operator
-     * @throws NullPointerException if the array of elements is null
-     */
-    public CollectionOperator<T, C> add(Iterable<? extends T> elements) {
-        List<T> collection = new LinkedList<>();
-        elements.forEach(collection::add);
-        return add(collection);
-    }
-
-    /**
-     * Adds all the elements of the given array to this collection.
-     *
-     * @param elements the array of elements to add
-     *
-     * @return this collection operator
-     * @throws NullPointerException if the array of elements is null
-     */
-    public CollectionOperator<T, C> add(Enumeration<? extends T> elements) {
-        List<T> collection = new LinkedList<>();
-        while (elements.hasMoreElements())
-            collection.add(elements.nextElement());
-        return add(collection);
-    }
-
-    /**
-     * Adds all the elements of the given array to this collection.
-     *
-     * @param elements the array of elements to add
-     *
-     * @return this collection operator
-     * @throws NullPointerException if the array of elements is null
-     */
-    @SafeVarargs
-    public final CollectionOperator<T, C> add(T... elements) {
-        return add(ArrayUtils.toList(elements));
-    }
-
-    /**
-     * Modifies the collection using the given consumer function.
-     *
-     * @param consumer the consumer function to apply to the collection
-     *
-     * @return this collection operator
-     * @throws NullPointerException if the consumer function is null
-     */
-    public CollectionOperator<T, C> modify(Consumer<C> consumer) {
-        Objects.requireNonNull(consumer).accept(collection);
-        return this;
-    }
-
-    /**
-     * Maps each element of the collection to a new element using the given unary operator.
-     *
-     * @param operator the unary operator to apply to each element
-     *
-     * @return a new collection operator with the mapped elements
-     * @throws NullPointerException if the unary operator is null
-     */
-    public CollectionOperator<T, C> map(UnaryOperator<T> operator) {
-        Objects.requireNonNull(operator);
-
-        C result = newInstance(collection.getClass());
-
-        for (T obj : collection)
-            result.add(operator.apply(obj));
-
-        return new CollectionOperator<>(result);
-    }
-
-    /**
-     * Maps each element of the collection to a new element of a different type using
-     * the given function.
-     *
-     * @param <U> the type of the new elements
-     * @param <D> the type of the new collection
-     *
-     * @param function the function to apply to each element
-     *
-     * @return a new collection operator with the mapped elements
-     *
-     * @throws NullPointerException if the function is null
-     * @throws IllegalStateException if the instantiation of the new collection fails
-     */
-    public <U, D extends Collection<U>> CollectionOperator<U, D> map(Function<T, U> function) {
-        Objects.requireNonNull(function);
-
-        D result = newInstance(collection.getClass());
-
-        for (T obj : collection)
-            result.add(function.apply(obj));
-
-        return new CollectionOperator<>(result);
-    }
-
-    /**
-     * Returns the underlying collection of this operator.
-     * @return the collection
-     */
-    public C collect() {
+        collection.addAll(this.collection);
         return collection;
     }
 
     /**
-     * Returns a new collection of the given type with the same elements as this operator.
-     *
-     * @param <D> the type of the new collection
-     * @param clazz the class of the new collection
-     *
-     * @return the new collection
-     *
-     * @throws NullPointerException if the class is null
-     * @throws IllegalStateException if the instantiation of the new collection fails
+     * Converts the collection to a list.
+     * @return a list with the elements of the collection
      */
-    public <D extends Collection<T>> D collect(Class<D> clazz) {
-        D result = newInstance(clazz);
-        result.addAll(collection);
-        return result;
+    public List<T> toList() {
+        return new ArrayList<>(collection);
     }
 
     /**
-     * Creates a new collection operator from the given collection.
-     *
-     * @param <T> the type of elements in the collection
-     * @param <C> the type of collection
-     *
-     * @param collection the collection to wrap
-     *
-     * @return the collection operator
-     * @throws NullPointerException if the collection is null
+     * Converts the collection to a set.
+     * @return a set with the elements of the collection
      */
-    public static <T, C extends Collection<T>> CollectionOperator<T, C> of(C collection) {
-        return new CollectionOperator<>(collection);
+    public Set<T> toSet() {
+        return new HashSet<>(collection);
     }
 
     /**
-     * Creates a new collection operator from the given iterable and the given collection type.
-     *
-     * @param <T> the type of elements in the iterable
-     * @param <C> the type of collection
-     *
-     * @param iterable the iterable to wrap
-     * @param clazz the class of the collection
-     *
-     * @return the collection operator
-     * @throws NullPointerException if the iterable or the class is null
+     * Converts the collection to a queue.
+     * @return a queue with the elements of the collection
      */
-    public static <T, C extends Collection<T>> CollectionOperator<T, C> of(Iterable<T> iterable, Class<C> clazz) {
-        Objects.requireNonNull(iterable);
-
-        C collection = newInstance(clazz);
-        iterable.forEach(collection::add);
-
-        return of(collection);
+    public Queue<T> toQueue() {
+        return new LinkedList<>(collection);
     }
 
     /**
-     * Creates a new collection operator from the given iterable and a default list type.
-     *
-     * @param <T> the type of elements in the iterable
-     * @param iterable the iterable to wrap
-     *
-     * @return the collection operator
-     * @throws NullPointerException if the iterable is null
+     * Converts the collection to an iterator.
+     * @return an iterator with the elements of the collection
      */
-    public static <T> CollectionOperator<T, List<T>> of(Iterable<T> iterable) {
+    public Iterator<T> toIterator() {
+        return collection.iterator();
+    }
+
+    /**
+     * Converts the collection to an enumeration.
+     * @return an enumeration with the elements of the collection
+     */
+    public Enumeration<T> toEnumeration() {
+        return Collections.enumeration(collection);
+    }
+
+    public static <T> CollectionOperator<T> of(Collection<T> collection) {
+        return new CollectionOperator<>(Objects.requireNonNull(collection));
+    }
+
+    public static <T> CollectionOperator<T> of(Iterable<T> iterable) {
         Objects.requireNonNull(iterable);
 
         List<T> collection = new LinkedList<>();
@@ -240,38 +257,7 @@ public final class CollectionOperator<T, C extends Collection<T>> {
         return of(collection);
     }
 
-    /**
-     * Creates a new collection operator from the given enumeration and the given collection type.
-     *
-     * @param <T> the type of elements in the enumeration
-     * @param <C> the type of collection
-     *
-     * @param enumeration the enumeration to wrap
-     * @param clazz the class of the collection
-     *
-     * @return the collection operator
-     * @throws NullPointerException if the enumeration or the class is null
-     */
-    public static <T, C extends Collection<T>> CollectionOperator<T, C> of(Enumeration<T> enumeration, Class<C> clazz) {
-        Objects.requireNonNull(enumeration);
-
-        final C collection = newInstance(clazz);
-        while (enumeration.hasMoreElements())
-            collection.add(enumeration.nextElement());
-
-        return of(collection);
-    }
-
-    /**
-     * Creates a new collection operator from the given enumeration and a default list type.
-     *
-     * @param <T> the type of elements in the enumeration
-     * @param enumeration the enumeration to wrap
-     *
-     * @return the collection operator
-     * @throws NullPointerException if the enumeration is null
-     */
-    public static <T> CollectionOperator<T, List<T>> of(Enumeration<T> enumeration) {
+    public static <T> CollectionOperator<T> of(Enumeration<T> enumeration) {
         Objects.requireNonNull(enumeration);
 
         List<T> collection = new LinkedList<>();
@@ -281,36 +267,8 @@ public final class CollectionOperator<T, C extends Collection<T>> {
         return of(collection);
     }
 
-    /**
-     * Creates a new collection operator from the given array and the given collection type.
-     *
-     * @param <T> the type of elements in the enumeration
-     * @param <C> the type of collection
-     *
-     * @param clazz the class of the collection
-     * @param elements the array to wrap
-     *
-     * @return the collection operator
-     * @throws NullPointerException if the class is null
-     */
     @SafeVarargs
-    public static <T, C extends Collection<T>> CollectionOperator<T, C> of(Class<C> clazz, T... elements) {
-        final C collection = newInstance(clazz);
-        collection.addAll(ArrayUtils.toList(elements));
-        return of(collection);
-    }
-
-    /**
-     * Creates a new collection operator from the given array and a default list type.
-     *
-     * @param <T> the type of elements in the array
-     * @param elements the array to wrap
-     *
-     * @return the collection operator
-     * @throws NullPointerException if the array is null
-     */
-    @SafeVarargs
-    public static <T> CollectionOperator<T, List<T>> of(T... elements) {
+    public static <T> CollectionOperator<T> of(T... elements) {
         return of(ArrayUtils.toList(elements));
     }
 }
