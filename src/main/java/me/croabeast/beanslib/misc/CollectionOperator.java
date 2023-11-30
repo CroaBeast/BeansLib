@@ -49,6 +49,24 @@ public final class CollectionOperator<T> {
     }
 
     /**
+     * Adds all the elements from an iterator to this collection.
+     *
+     * @param elements the iterator of elements to add
+     *
+     * @return a reference of this operator
+     * @throws NullPointerException if elements is null
+     */
+    public CollectionOperator<T> add(Iterator<? extends T> elements) {
+        Objects.requireNonNull(elements);
+
+        List<T> collection = new LinkedList<>();
+        while (elements.hasNext())
+            collection.add(elements.next());
+
+        return add(collection);
+    }
+
+    /**
      * Adds all the elements from an iterable to this collection.
      *
      * @param elements the iterable of elements to add
@@ -180,14 +198,11 @@ public final class CollectionOperator<T> {
      * @throws IllegalStateException if the collection class cannot be instantiated
      */
     public <C extends Collection<T>> C collect(Class<C> clazz) {
-        if (clazz == List.class) return (C) toList();
-        if (clazz == Set.class) return (C) toSet();
-        if (clazz == Queue.class) return (C) toQueue();
-
         C collection = newInstance(clazz);
         collection.addAll(this.collection);
         return collection;
     }
+
     /**
      * Collects the elements of the collection into a given collection.
      *
@@ -246,6 +261,16 @@ public final class CollectionOperator<T> {
 
     public static <T> CollectionOperator<T> of(Collection<T> collection) {
         return new CollectionOperator<>(Objects.requireNonNull(collection));
+    }
+
+    public static <T> CollectionOperator<T> of(Iterator<T> iterator) {
+        Objects.requireNonNull(iterator);
+
+        List<T> collection = new LinkedList<>();
+        while (iterator.hasNext())
+            collection.add(iterator.next());
+
+        return of(collection);
     }
 
     public static <T> CollectionOperator<T> of(Iterable<T> iterable) {

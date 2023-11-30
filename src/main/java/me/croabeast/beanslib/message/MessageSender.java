@@ -1,5 +1,6 @@
 package me.croabeast.beanslib.message;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -53,41 +54,43 @@ import java.util.regex.Matcher;
  * @since 1.3
  */
 @Accessors(chain = true)
+@Getter @Setter
 public class MessageSender {
 
     @NotNull
     private static MessageSender loaded = new MessageSender();
 
+    @Getter(value = AccessLevel.NONE)
     private final Set<CommandSender> targets;
+
     /**
      * The player object to parse all the internal and global placeholders, and
      * to format the message with the player client' color support.
      */
-    @Setter
     private Player parser;
 
+    @Getter(value = AccessLevel.NONE)
     private final List<KeyValue<?>> entries = new LinkedList<>();
+    @Getter(value = AccessLevel.NONE)
     private final List<PlayerFunction> functions = new LinkedList<>();
 
+    @Getter(value = AccessLevel.NONE)
     private final Set<MessageFlag> flags = new HashSet<>();
 
-    /**
-     * Sets if messages can be sent into the console or not.
+     /**
+     * If messages can be sent into the console or not.
      */
-    @Setter
     private boolean logger = true;
 
     /**
-     * Sets if the input defined keys in this object are case-sensitive or not
+     * If the input defined keys in this object are case-sensitive or not
      * if input keys were set.
      */
-    @Setter
     private boolean sensitive = true;
 
     /**
-     * Sets if all chat messages will remove all the first space characters.
+     * If all chat messages will remove all the first space characters.
      */
-    @Setter
     private boolean noFirstSpaces = false;
 
     /**
