@@ -61,13 +61,7 @@ public class MessageSender {
     private static MessageSender loaded = new MessageSender();
 
     @Getter(value = AccessLevel.NONE)
-    private final Set<CommandSender> targets;
-
-    /**
-     * The player object to parse all the internal and global placeholders, and
-     * to format the message with the player client' color support.
-     */
-    private Player parser;
+    private final Set<CommandSender> targets = new HashSet<>();
 
     @Getter(value = AccessLevel.NONE)
     private final List<KeyValue<?>> entries = new LinkedList<>();
@@ -76,6 +70,12 @@ public class MessageSender {
 
     @Getter(value = AccessLevel.NONE)
     private final Set<MessageFlag> flags = new HashSet<>();
+
+    /**
+     * The player object to parse all the internal and global placeholders, and
+     * to format the message with the player client' color support.
+     */
+    private Player parser;
 
      /**
      * If messages can be sent into the console or not.
@@ -101,7 +101,7 @@ public class MessageSender {
      * @param parser a player to parse messages
      */
     public MessageSender(Collection<? extends CommandSender> targets, Player parser) {
-        this.targets = new HashSet<>(targets);
+        this.targets.addAll(targets);
         this.parser = parser;
     }
 
@@ -113,7 +113,7 @@ public class MessageSender {
      */
     public MessageSender(CommandSender sender) {
         this(
-                sender != null ? ArrayUtils.toList(sender) : null,
+                sender != null ? ArrayUtils.toList(sender) : new HashSet<>(),
                 sender instanceof Player ? (Player) sender : null
         );
     }
@@ -124,7 +124,7 @@ public class MessageSender {
      * sending a list or array.
      */
     public MessageSender() {
-        this(null, null);
+        this(new HashSet<>(), null);
     }
 
     public MessageSender(MessageSender sender) {
@@ -132,17 +132,9 @@ public class MessageSender {
 
         this.parser = sender.parser;
 
-        Set<CommandSender> set = sender.targets;
-        targets = set == null ?
-                null : new HashSet<>(set);
-
-        flags.clear();
+        targets.addAll(sender.targets);
         flags.addAll(sender.flags);
-
-        entries.clear();
         entries.addAll(sender.entries);
-
-        functions.clear();
         functions.addAll(sender.functions);
 
         sensitive = sender.sensitive;
@@ -402,7 +394,7 @@ public class MessageSender {
         StringApplier applier = StringApplier.simplified(string);
         applier.apply(s -> Beans.replacePrefixKey(s, false));
 
-        if (targets == null || targets.isEmpty())
+        if (targets.isEmpty())
             return sendWebhook(applier.toString(), true);
 
         List<Player> targets = new ArrayList<>();
@@ -475,8 +467,7 @@ public class MessageSender {
             return !StringUtils.isBlank(temp) && singleSend(temp);
         }
 
-        if (targets == null || targets.isEmpty())
-            return sendWebhooks(list, true);
+        if (targets.isEmpty()) return sendWebhooks(list, true);
 
         Set<Player> targets = new HashSet<>();
 

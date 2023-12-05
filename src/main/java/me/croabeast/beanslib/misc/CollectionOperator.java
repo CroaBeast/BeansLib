@@ -19,7 +19,7 @@ public final class CollectionOperator<T> {
     private final Collection<T> collection;
 
     private CollectionOperator(Collection<T> collection) {
-        this.collection = collection;
+        this.collection = new LinkedList<>(collection);
     }
 
     /**

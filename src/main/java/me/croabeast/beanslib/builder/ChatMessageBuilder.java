@@ -384,6 +384,8 @@ public class ChatMessageBuilder {
      * <p> The string can contain URLs and format patterns that will be converted into components.
      *
      * @param object the object to append
+     * @param <T> the type of the object
+     *
      * @return the builder itself
      */
     public <T> ChatMessageBuilder append(T object) {
@@ -443,7 +445,7 @@ public class ChatMessageBuilder {
      * Converts the message to a pattern string that can be used to recreate the message with the
      * same format and interactive features.
      *
-     * <p> The pattern string will use the format of "<click|hover>message</text>" for each part
+     * <p> The pattern string will use the format of {@code <click|hover>message</text>} for each part
      * of the message that has a click or hover event.
      *
      * <p> The click and hover arguments will be in the format of "click_action:\"action_string\""
