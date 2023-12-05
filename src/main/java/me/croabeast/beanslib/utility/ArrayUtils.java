@@ -1,13 +1,10 @@
 package me.croabeast.beanslib.utility;
 
 import lombok.experimental.UtilityClass;
-import lombok.var;
-import me.croabeast.beanslib.misc.CollectionOperator;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Array;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 /**
@@ -40,7 +37,7 @@ public class ArrayUtils {
         for (T[] a : extraArrays)
             if (a != null) Collections.addAll(resultList, a);
 
-        var clazz = array.getClass().getComponentType();
+        Class<?> clazz = array.getClass().getComponentType();
         T[] resultArray = (T[]) Array.newInstance(clazz, 0);
 
         return resultList.toArray(resultArray);
@@ -86,6 +83,9 @@ public class ArrayUtils {
      * @param array the array of elements to be converted. If empty, the collection
      *                  is returned unchanged.
      *
+     * @param <T> the type of the elements
+     * @param <I> the type of the collection
+     *
      * @return the collection with the elements of the array added after applying the function.
      * @throws NullPointerException if the collection is null.
      */
@@ -100,6 +100,25 @@ public class ArrayUtils {
             collection.add(function.apply(o));
 
         return collection;
+    }
+
+    /**
+     * Converts an array of elements into a collection.
+     *
+     * @param collection the collection to which the elements will be added.
+     *                  Must not be null.
+     * @param array the array of elements to be converted. If empty, the collection
+     *                  is returned unchanged.
+     *
+     * @param <T> the type of the elements
+     * @param <I> the type of the collection
+     *
+     * @return the collection with the elements of the array added.
+     * @throws NullPointerException if the collection is null.
+     */
+    @SafeVarargs
+    public <T, I extends Collection<T>> I toCollection(I collection, T... array) {
+        return toCollection(collection, null, array);
     }
 
     /**
@@ -128,7 +147,7 @@ public class ArrayUtils {
     @SafeVarargs
     @NotNull
     public <T> List<T> toList(T... array) {
-        return toList(null, array);
+        return toCollection(new ArrayList<>(), array);
     }
 
     /**
@@ -138,13 +157,18 @@ public class ArrayUtils {
      * @param <T> the type of the elements in the iterable and the array
      *
      * @return a new array that contains the elements from the iterable
-     * @throws NullPointerException if the iterable is null
+     * @throws NullPointerException if the iterable is null or empty
      */
     public <T> T[] toArray(Iterable<? extends T> iterable) {
-        Objects.requireNonNull(iterable);
+        if (iterable == null || !iterable.iterator().hasNext())
+            throw new NullPointerException();
 
-        List<T> list = new ArrayList<>();
+        final List<T> list = new ArrayList<>();
         iterable.forEach(list::add);
-        return list.toArray((T[]) new Object[0]);
+
+        Class<?> clazz = list.get(0).getClass();
+        T[] array = (T[]) Array.newInstance(clazz, list.size());
+
+        return list.toArray(array);
     }
 }

@@ -1,6 +1,5 @@
 package me.croabeast.beanslib.builder;
 
-import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import me.croabeast.beanslib.Beans;
@@ -22,27 +21,31 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A builder class for creating complex chat messages in Minecraft. Allows for
- * setting hover and click actions on individual parts of the message.
+ * A builder class for creating chat messages with interactive features such as hover
+ * and click events.
  *
- * <p> Every string that is appended is being colorized using {@link NeoPrismaticAPI}
- * color formatting, and placeholders are being replaced if a {@link Player} parser
- * variable is defined.
+ * <p> The builder can parse URLs and format patterns from a string and convert them into
+ * components, also append any object to the message and send it to a player.
  */
-public class ChatMessageBuilder implements Cloneable {
+public class ChatMessageBuilder {
 
     private final Player target, parser;
     private boolean parseURLs = true;
 
-    private final HashMap<Integer, ChatMessage> map = new LinkedHashMap<>();
+    private final Map<Integer, ChatMessage> map = new LinkedHashMap<>();
     private int index = -1;
 
     /**
-     * Constructs a new <code>ChatMessageBuilder</code> object from a string message.
+     * Creates a new builder with a target player, a parser player, and an initial string.
      *
-     * @param target the player that will receive the chat builder
-     * @param parser the player to parse placeholders and colors
-     * @param string the string message to construct the builder from
+     * <p> The target player is the one who will receive the message, and the parser player is
+     * the one who will provide the placeholders and centering.
+     *
+     * <p> The initial string is the first part of the message to be parsed and formatted.
+     *
+     * @param target the target player
+     * @param parser the parser player
+     * @param string the initial string
      */
     public ChatMessageBuilder(Player target, Player parser, String string) {
         this.target = target;
@@ -51,31 +54,56 @@ public class ChatMessageBuilder implements Cloneable {
     }
 
     /**
-     * Constructs a new <code>ChatMessageBuilder</code> object from a string message.
+     * Creates a new builder with a player and an initial string.
      *
-     * @param player the player to parse placeholders and colors
-     * @param string the string message to construct the builder from
+     * <p> The player will be both the target and the parser of the message.
+     *
+     * @param player the player
+     * @param string the initial string
      */
     public ChatMessageBuilder(Player player, String string) {
         this(player, player, string);
     }
 
     /**
-     * Constructs a new <code>ChatMessageBuilder</code> object from a string message.
-     *
-     * @param string the string message to construct the builder from
+     * Creates a new builder with an initial string. The target and the parser will be null.
+     * @param string the initial string
      */
     public ChatMessageBuilder(String string) {
         this(null, string);
     }
 
     /**
-     * Constructs a new <code>ChatMessageBuilder</code> object without any initial string.
+     * Creates a new builder with no initial string. The target and the parser will be null.
      *
      * <p> The {@link #append(String)} method should be called at least once before building it.
      */
     public ChatMessageBuilder() {
-        this(null);
+        this((String) null);
+    }
+
+    /**
+     * Creates a new builder by copying another builder.
+     *
+     * <p> The target, parser, parseURLs, map, and index will be copied from the other
+     * builder.
+     *
+     * @param builder the other builder
+     * @throws NullPointerException if the other builder is null
+     */
+    public ChatMessageBuilder(ChatMessageBuilder builder) {
+        Objects.requireNonNull(builder);
+
+        target = builder.target;
+        parser = builder.parser;
+
+        parseURLs = builder.parseURLs;
+
+        if (builder.map.isEmpty())
+            return;
+
+        map.putAll(builder.map);
+        index = builder.index;
     }
 
     private String colorURL() {
@@ -150,11 +178,27 @@ public class ChatMessageBuilder implements Cloneable {
         if (last <= (line.length() - 1)) toURL(line.substring(last));
     }
 
+    /**
+     * Sets whether the builder should parse URLs from the string and create click
+     * events for them.
+     *
+     * @param b true to parse URLs, false otherwise
+     * @return the builder itself
+     */
     public ChatMessageBuilder setParseURLs(boolean b) {
         parseURLs = b;
         return this;
     }
 
+    /**
+     * Sets the hover event for the last part of the message with a list of strings.
+     *
+     * <p> The list of strings will be shown as text when the mouse hovers over the
+     * message part.
+     *
+     * @param hover the list of strings for the hover event
+     * @return the builder itself
+     */
     public ChatMessageBuilder setHover(List<String> hover) {
         if (index == -1 || hover == null || hover.isEmpty())
             return this;
@@ -166,14 +210,32 @@ public class ChatMessageBuilder implements Cloneable {
         return this;
     }
 
+    /**
+     * Sets the hover event for the last part of the message with an array of strings.
+     *
+     * <p> The array of strings will be shown as text when the mouse hovers over the
+     * message part.
+     *
+     * @param hover the array of strings for the hover event
+     * @return the builder itself
+     */
     public ChatMessageBuilder setHover(String... hover) {
         return setHover(
                 ArrayUtils.isArrayEmpty(hover) ?
                         null :
-                        Lists.newArrayList(hover)
+                        ArrayUtils.toList(hover)
         );
     }
 
+    /**
+     * Sets the hover event for all parts of the message with a list of strings.
+     *
+     * <p> The list of strings will be shown as text when the mouse hovers over any part
+     * of the message.
+     *
+     * @param hover the list of strings for the hover event
+     * @return the builder itself
+     */
     public ChatMessageBuilder setHoverToAll(List<String> hover) {
         if (index == -1 || hover == null || hover.isEmpty())
             return this;
@@ -184,6 +246,21 @@ public class ChatMessageBuilder implements Cloneable {
         return this;
     }
 
+    /**
+     * Sets the click event for the last part of the message with a click action and
+     * an action string.
+     *
+     * <p> The click action determines what will happen when the message part is clicked,
+     * such as opening a URL, running a command, suggesting a command, etc.
+     *
+     * <p> The action string is the argument for the click action, such as the URL, the
+     * command, the suggestion, the page number, or the text to copy.
+     *
+     * @param type the click action
+     * @param action the action string
+     *
+     * @return the builder itself
+     */
     public ChatMessageBuilder setClick(ClickAction type, String action) {
         if (index == -1 || type == null || action == null)
             return this;
@@ -195,10 +272,34 @@ public class ChatMessageBuilder implements Cloneable {
         return this;
     }
 
+    /**
+     * Sets the click event for the last part of the message with a string representation
+     * of the click action and an action string.
+     *
+     * <p> The string representation of the click action can be one of the following:
+     * <pre>{@code open_url, run_command, suggest_command, change_page, or copy_to_clipboard}</pre>
+     *
+     * <p> The action string is the argument for the click action, such as the URL, the
+     * command, the suggestion, the page number, or the text to copy.
+     *
+     * @param type the string representation of the click action
+     * @param action the action string
+     *
+     * @return the builder itself
+     */
     public ChatMessageBuilder setClick(String type, String action) {
         return setClick(ClickAction.fromString(type), action);
     }
 
+    /**
+     * Sets the click event for the last part of the message with a single string input.
+     *
+     * <p> The input should be in the format of "click_action:\"action_string\"", such as
+     * "open_url:\"https://www.bing.com\"", "run_command:\"/help\"", etc.
+     *
+     * @param input the single string input for the click event
+     * @return the builder itself
+     */
     public ChatMessageBuilder setClick(String input) {
         if (input == null) return this;
 
@@ -209,6 +310,20 @@ public class ChatMessageBuilder implements Cloneable {
                 c.substring(0, c.length() - 1) : null);
     }
 
+    /**
+     * Sets the click event for all parts of the message with a click action and an action
+     * string.
+     *
+     * <p> The click action determines what will happen when any part of the message is clicked,
+     * such as opening a URL, running a command, or suggesting a command.
+     *
+     * <p> The action string is the argument for the click action, such as the URL, the
+     * command, the suggestion, the page number, or the text to copy.
+     *
+     * @param type the click action
+     * @param action the action string
+     * @return the builder itself
+     */
     public ChatMessageBuilder setClickToAll(ClickAction type, String action) {
         if (index == -1 || type == null || action == null)
             return this;
@@ -223,6 +338,15 @@ public class ChatMessageBuilder implements Cloneable {
         return this;
     }
 
+    /**
+     * Sets the click event for all parts of the message with a single string input.
+     *
+     * <p> The input should be in the format of "click_action:\"action_string\"", such as
+     * "open_url:\"https://www.bing.com\"", "run_command:\"/help\"", etc.
+     *
+     * @param input the single string input for the click event
+     * @return the builder itself
+     */
     public ChatMessageBuilder setClickToAll(String input) {
         if (StringUtils.isEmpty(input)) return this;
 
@@ -237,11 +361,31 @@ public class ChatMessageBuilder implements Cloneable {
         return setClickToAll(click, action);
     }
 
+    /**
+     * Appends a string to the message and parses and formats it.
+     *
+     * <p> The string can contain URLs and format patterns that will be converted into
+     * components.
+     *
+     * @param string the string to append
+     * @return the builder itself
+     */
     public ChatMessageBuilder append(String string) {
         updateMessageMapping(string);
         return this;
     }
 
+    /**
+     * Appends an object to the message and parses and formats it.
+     *
+     * <p> The object will be converted to a string using its toString method or using
+     * {@link String#valueOf(Object)}.
+     *
+     * <p> The string can contain URLs and format patterns that will be converted into components.
+     *
+     * @param object the object to append
+     * @return the builder itself
+     */
     public <T> ChatMessageBuilder append(T object) {
         String initial = object.toString();
 
@@ -255,6 +399,15 @@ public class ChatMessageBuilder implements Cloneable {
         return append(initial);
     }
 
+    /**
+     * Builds the message as an array of base components.
+     *
+     * <p> The components will have the interactive features such as hover and click events
+     * applied to them.
+     *
+     * @return the array of base components
+     * @throws IllegalStateException if the builder does not contain any message
+     */
     @NotNull
     public BaseComponent[] build() {
         if (index < 0) {
@@ -267,9 +420,15 @@ public class ChatMessageBuilder implements Cloneable {
         for (ChatMessage message : map.values())
             comps.addAll(message.asComponents());
 
-        return comps.toArray(new BaseComponent[0]);
+        return ArrayUtils.toArray(comps);
     }
 
+    /**
+     * Sends the message to the target player.
+     * <p> The message will be built as an array of base components and sent using the spigot method.
+     *
+     * @return true if the message was sent successfully, false otherwise
+     */
     public boolean send() {
         try {
             Exceptions.checkPlayer(target).spigot().sendMessage(build());
@@ -280,10 +439,23 @@ public class ChatMessageBuilder implements Cloneable {
         }
     }
 
+    /**
+     * Converts the message to a pattern string that can be used to recreate the message with the
+     * same format and interactive features.
+     *
+     * <p> The pattern string will use the format of "<click|hover>message</text>" for each part
+     * of the message that has a click or hover event.
+     *
+     * <p> The click and hover arguments will be in the format of "click_action:\"action_string\""
+     * and "hover:\"hover_text\"", respectively.
+     *
+     * @return the pattern string
+     */
     public String toPatternString() {
         if (index == -1) return "";
 
-        StringBuilder builder = new StringBuilder();
+        final StringBuilder builder = new StringBuilder();
+        String split = Beans.getLineSeparator();
 
         for (ChatMessage message : map.values()) {
             ChatEventsHandler handler = message.handler;
@@ -293,74 +465,90 @@ public class ChatMessageBuilder implements Cloneable {
                 continue;
             }
 
-            builder.append('<');
-
             ClickEvent click = handler.click;
             HoverEvent hover = handler.hover;
 
-            boolean clickSet = false;
+            boolean hasHover = !ChatEvent.isEmpty(hover);
+            boolean hasClick = !ChatEvent.isEmpty(click);
 
-            if (click != null) {
-                builder.append(click.type.asBukkit()).
-                        append(":\"").
-                        append(click.input).
-                        append('"');
+            if (hasHover || hasClick) {
+                if (hasHover) {
+                    StringJoiner joiner = new StringJoiner(split);
+                    hover.hover.forEach(joiner::add);
 
-                clickSet = true;
+                    String temp = (joiner + "")
+                            .replaceAll("\\\\[QE]", "");
+
+                    builder.append("<hover:\"")
+                            .append(temp).append('"');
+                }
+
+                if (hasClick) {
+                    builder.append(hasHover ? '|' : '<');
+
+                    builder.append(click.type)
+                            .append(":\"")
+                            .append(click.input).append("\">");
+                }
+                else builder.append('>');
             }
 
-            if (hover != null) {
-                if (clickSet) builder.append('|');
-
-                String s = Beans.getLineSeparator();
-                builder.append("hover:\"").
-                        append(String.join(s, hover.hover)).
-                        append('"');
-            }
-
-            builder.append('>').
-                    append(message.message).
-                    append("</text>");
+            builder.append(message.message).append("</text>");
         }
 
         return builder.toString();
     }
 
-    @Override
-    public String toString() {
-        try {
-            return TextComponent.toPlainText(build());
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
+    /**
+     * Clones the builder and returns a new builder with the same properties.
+     *
+     * <p> The target, parser, parseURLs, map, and index will be copied from the original builder.
+     *
+     * @return the cloned builder
+     */
+    @SuppressWarnings("all")
     @Override
     public ChatMessageBuilder clone() {
-        try {
-            return (ChatMessageBuilder) super.clone();
-        } catch (Exception e) {
-            return this;
-        }
+        return new ChatMessageBuilder(this);
     }
 
-    static TextComponent onlyComp(String message) {
+    @Override
+    public String toString() {
+        return "ChatMessageBuilder{" + map.entrySet() + '}';
+    }
+
+    private static TextComponent onlyComp(String message) {
         return new TextComponent(TextComponent.fromLegacyText(message));
     }
 
-    class ClickEvent {
+    private interface ChatEvent {
 
-        final me.croabeast.beanslib.builder.ClickAction type;
-        final String input;
+        boolean isEmpty();
 
-        ClickEvent(me.croabeast.beanslib.builder.ClickAction type, String input) {
+        String toString();
+
+        static boolean isEmpty(ChatEvent event) {
+            return event == null || event.isEmpty();
+        }
+    }
+
+    private class ClickEvent implements ChatEvent {
+
+        private final ClickAction type;
+        private final String input;
+
+        private ClickEvent(ClickAction type, String input) {
             this.type = type;
             this.input = NeoPrismaticAPI.stripAll(input);
         }
 
-        net.md_5.bungee.api.chat.ClickEvent createEvent() {
+        public net.md_5.bungee.api.chat.ClickEvent createEvent() {
             String s = Beans.formatPlaceholders(parser, input);
             return new net.md_5.bungee.api.chat.ClickEvent(type.asBukkit(), s);
+        }
+
+        public boolean isEmpty() {
+            return StringUtils.isBlank(input);
         }
 
         @Override
@@ -369,30 +557,27 @@ public class ChatMessageBuilder implements Cloneable {
         }
     }
 
-    class HoverEvent {
+    private class HoverEvent implements ChatEvent {
 
-        final String[] hover;
+        private final List<String> hover;
 
-        HoverEvent(String[] hover) {
+        private HoverEvent(List<String> hover) {
             this.hover = hover;
         }
 
-        HoverEvent(List<String> hover) {
-            this(hover.toArray(new String[0]));
-        }
-
-        boolean isEmpty() {
-            return ArrayUtils.isArrayEmpty(hover);
+        private HoverEvent(String... hover) {
+            this(ArrayUtils.toList(hover));
         }
 
         @SuppressWarnings("deprecation")
-        net.md_5.bungee.api.chat.HoverEvent createEvent() {
-            BaseComponent[] array = new BaseComponent[hover.length];
+        public net.md_5.bungee.api.chat.HoverEvent createEvent() {
+            int size = hover.size();
+            BaseComponent[] array = new BaseComponent[size];
 
-            for (int i = 0; i < hover.length; i++)
+            for (int i = 0; i < size; i++)
                 array[i] = onlyComp(
-                        Beans.colorize(target, parser, hover[i]) +
-                        (i == hover.length - 1 ? "" : "\n")
+                        Beans.colorize(target, parser, hover.get(i)) +
+                        (i == size - 1 ? "" : "\n")
                 );
 
             return new net.md_5.bungee.api.chat.HoverEvent(
@@ -401,34 +586,37 @@ public class ChatMessageBuilder implements Cloneable {
             );
         }
 
+        public boolean isEmpty() {
+            return ArrayUtils.isArrayEmpty(hover);
+        }
+
         @Override
         public String toString() {
-            if (isEmpty()) return "{}";
+            if (this.isEmpty()) return "{}";
 
-            String[] array = Arrays.copyOf(hover, hover.length);
-            array[array.length - 1] =
-                    array[array.length - 1] + "§r";
+            int last = hover.size() - 1;
+            hover.set(last, hover.get(last) + "§r");
 
-            return '{' + Arrays.toString(array) + '}';
+            return '{' + hover.toString() + '}';
         }
     }
 
     @Setter
-    class ChatEventsHandler {
+    private class ChatEventsHandler {
 
-        ClickEvent click = null;
-        HoverEvent hover = null;
+        private ClickEvent click = null;
+        private HoverEvent hover = null;
 
-        ChatEventsHandler() {}
+        private ChatEventsHandler() {}
 
-        ChatEventsHandler(String click, String hover) {
+        private ChatEventsHandler(String click, String hover) {
             if (click != null) {
                 String[] array = click.split(":\"", 2);
                 String c = array[1];
 
                 try {
                     this.click = new ClickEvent(
-                            me.croabeast.beanslib.builder.ClickAction.fromString(array[0]),
+                            ClickAction.fromString(array[0]),
                             c.substring(0, c.length() - 1)
                     );
                 } catch (Exception ignored) {}
@@ -442,8 +630,8 @@ public class ChatMessageBuilder implements Cloneable {
             this.hover = new HoverEvent(Beans.splitLine(h));
         }
 
-        boolean isEmpty() {
-            return click == null && hover == null;
+        private boolean isEmpty() {
+            return ChatEvent.isEmpty(click) && ChatEvent.isEmpty(hover);
         }
 
         @Override
@@ -453,19 +641,19 @@ public class ChatMessageBuilder implements Cloneable {
     }
 
     @RequiredArgsConstructor
-    class ChatMessage {
+    private class ChatMessage {
 
         @Setter @NotNull
-        ChatEventsHandler handler = new ChatEventsHandler();
-        final String message;
+        private ChatEventsHandler handler = new ChatEventsHandler();
+        private final String message;
 
-        ChatColor color = null;
+        private ChatColor color = null;
 
-        void setHandler(String click, String hover) {
+        private void setHandler(String click, String hover) {
             handler = new ChatEventsHandler(click, hover);
         }
 
-        BaseComponent[] compile() {
+        private BaseComponent[] compile() {
             Matcher urlMatch = TextUtils.URL_PATTERN.matcher(message);
             TextComponent comp = onlyComp(message);
 
@@ -477,9 +665,9 @@ public class ChatMessageBuilder implements Cloneable {
                 handler.setClick(cl);
             }
 
-            if (c != null) comp.setClickEvent(c.createEvent());
+            if (!ChatEvent.isEmpty(c)) comp.setClickEvent(c.createEvent());
 
-            if (h != null && !h.isEmpty())
+            if (!ChatEvent.isEmpty(h))
                 comp.setHoverEvent(h.createEvent());
 
             BaseComponent[] comps = new BaseComponent[] {comp};
@@ -488,11 +676,11 @@ public class ChatMessageBuilder implements Cloneable {
             return comps;
         }
 
-        List<BaseComponent> asComponents() {
-            return Lists.newArrayList(compile());
+        private List<BaseComponent> asComponents() {
+            return ArrayUtils.toCollection(new LinkedList<>(), compile());
         }
 
-        ChatColor getLastColor() {
+        private ChatColor getLastColor() {
             if (color == null) compile();
             return color;
         }

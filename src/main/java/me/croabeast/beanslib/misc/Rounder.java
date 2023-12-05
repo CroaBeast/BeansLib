@@ -1,6 +1,5 @@
 package me.croabeast.beanslib.misc;
 
-import lombok.var;
 import org.apache.commons.lang.StringUtils;
 
 import java.text.DecimalFormat;
@@ -37,7 +36,7 @@ public final class Rounder<T extends Number> {
         String s = "#." + StringUtils.repeat("#", decimalAmount);
         if (decimalAmount == 0) s = "#";
 
-        var d = DecimalFormatSymbols.getInstance(Locale.ENGLISH);
+        DecimalFormatSymbols d = DecimalFormatSymbols.getInstance(Locale.ENGLISH);
         return new DecimalFormat(s, d).format(number);
     }
 

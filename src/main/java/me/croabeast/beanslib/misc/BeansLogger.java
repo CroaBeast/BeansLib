@@ -3,6 +3,7 @@ package me.croabeast.beanslib.misc;
 import lombok.SneakyThrows;
 import me.croabeast.beanslib.Beans;
 import me.croabeast.beanslib.BeansLib;
+import me.croabeast.beanslib.message.CenteredMessage;
 import me.croabeast.beanslib.message.MessageExecutor;
 import me.croabeast.beanslib.message.MessageSender;
 import me.croabeast.beanslib.applier.StringApplier;
@@ -18,21 +19,37 @@ import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 
 /**
- * This class can manages how strings can be logged/sent to a player and/or console.
+ * A class that provides methods for logging messages to the console or to a player.
+ *
+ * <p> It uses the {@link BeansLib} and {@link NeoPrismaticAPI} libraries for colorizing and
+ * formatting the messages.
+ *
+ * <p> It also supports different types of loggers depending on the server
+ * platform (Bukkit or Paper).
  *
  * @author CroaBeast
- * @since 1.4
+ * @version 1.0
  */
 public class BeansLogger {
 
     private RawLogger rawLogger, pluginLogger;
     private final BeansLib lib;
 
+    /**
+     * Creates a BeansLogger instance with a given BeansLib instance.
+     *
+     * <p> It initializes the raw logger and the plugin logger according to the
+     * server platform (Bukkit or Paper).
+     *
+     * @param lib the BeansLib instance to use for logging
+     * @throws NullPointerException if the lib is null
+     */
     public BeansLogger(BeansLib lib) {
         this.lib = Objects.requireNonNull(lib);
 
@@ -56,6 +73,12 @@ public class BeansLogger {
         }
     }
 
+    /**
+     * Creates a BeansLogger instance with the default BeansLib instance.
+     *
+     * <p> It initializes the raw logger and the plugin logger according to the
+     * server platform (Bukkit or Paper).
+     */
     public BeansLogger() {
         this(Beans.getLoaded());
     }
@@ -67,8 +90,10 @@ public class BeansLogger {
         String split = lib.getLineSeparator();
         String resultSplit = "&f" + split.replaceAll("\\\\[QE]", "");
 
-        List<String> list = new ArrayList<>();
+        List<String> list = new LinkedList<>();
         boolean isLog = useLogger && lib.isStripPrefix();
+
+        CenteredMessage c = new CenteredMessage(player).setColored(false);
 
         for (String string : strings) {
             if (string == null) continue;
@@ -77,21 +102,17 @@ public class BeansLogger {
                     .apply(s -> lib.replacePrefixKey(s, isLog))
                     .apply(s -> s.replaceAll(split, resultSplit));
 
-            StringApplier result = StringApplier.simplified(applier);
             String temp = applier.toString();
+            StringApplier result = StringApplier.simplified(temp);
 
             MessageExecutor e = MessageExecutor.identifyKey(temp);
 
             if (isLog && e != MessageExecutor.CHAT_EXECUTOR) {
                 Matcher m = e.getPattern().matcher(temp);
-
-                if (m.find())
-                    result.apply(s -> s.replace(m.group(), ""));
+                if (m.find()) result.apply(s -> s.replace(m.group(), ""));
             }
 
-            result.apply(s -> lib
-                    .createCenteredChatMessage(player, s));
-            list.add(result.toString());
+            list.add(result.apply(c::center).toString());
         }
 
         return list;
@@ -102,20 +123,24 @@ public class BeansLogger {
     }
 
     /**
-     * Sends information to a player using the {@link MessageSender} object.
+     * Logs a list of messages to a player only, if not null.
+     * <p> The messages are formatted and colorized according to the BeansLib settings.
      *
-     * @param player a valid player
-     * @param lines the information to send
+     * @param player the player to send the messages to, or null if none
+     * @param lines the array of messages to log
      */
     public void playerLog(Player player, String... lines) {
         new MessageSender(player).setLogger(false).send(toLoggerStrings(player, false, lines));
     }
 
     private String colorLogger(String string) {
-        final String s = TextUtils.STRIP_JSON.apply(string);
-
-        return lib.isColoredConsole() ?
-                NeoPrismaticAPI.colorize(s) : NeoPrismaticAPI.stripAll(s);
+        return StringApplier.simplified(string).apply(TextUtils.STRIP_JSON)
+                .apply(
+                        lib.isColoredConsole() ?
+                                NeoPrismaticAPI::colorize :
+                                NeoPrismaticAPI::stripAll
+                )
+                .toString();
     }
 
     private void raw(String line) {
@@ -123,10 +148,10 @@ public class BeansLogger {
     }
 
     /**
-     * Sends requested information using {@link Bukkit#getLogger()} to the console,
-     * avoiding the plugin prefix.
+     * Logs a list of messages to the raw logger only.
+     * <p> The messages are formatted and colorized according to the BeansLib settings.
      *
-     * @param lines the information to send
+     * @param lines the array of messages to log
      */
     public void rawLog(String... lines) {
         toLoggerStrings(lines).forEach(this::raw);
@@ -137,16 +162,11 @@ public class BeansLogger {
     }
 
     /**
-     * Sends requested information to a {@link CommandSender} using the plugin's
-     * logger and its prefix.
+     * Logs a list of messages to a player, if not null, and to the console.
+     * <p> The messages are formatted and colorized according to the BeansLib settings.
      *
-     * <p> If the sender is a {@link Player} and it's not null, it will also send
-     * the information to the player using {@link #playerLog(Player, String...)}.
-     *
-     * @param sender a valid sender, can be the console, a player or null
-     * @param lines the information to send
-     *
-     * @throws NullPointerException if the plugin is null
+     * @param sender the sender to send the messages to, or null if none
+     * @param lines the array of messages to log
      */
     public void doLog(CommandSender sender, String... lines) {
         if (sender instanceof Player) playerLog((Player) sender, lines);
@@ -154,10 +174,10 @@ public class BeansLogger {
     }
 
     /**
-     * Sends requested information to the console using the plugin's prefix.
+     * Logs a list of messages to the console only.
+     * <p> The messages are formatted and colorized according to the BeansLib settings.
      *
-     * @param lines the information to send
-     * @throws NullPointerException if the plugin is null
+     * @param lines the array of messages to log
      */
     public void doLog(String... lines) {
         doLog(null, lines);

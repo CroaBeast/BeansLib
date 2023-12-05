@@ -1,5 +1,7 @@
 package me.croabeast.beanslib.message;
 
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import me.croabeast.beanslib.Beans;
 import me.croabeast.beanslib.character.CharHandler;
 import me.croabeast.beanslib.character.CharacterInfo;
@@ -8,13 +10,17 @@ import me.croabeast.beanslib.utility.TextUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
 
+@Accessors(chain = true)
+@Setter
 public final class CenteredMessage {
 
-    public static final int DEFAULT_CHAT_BOX_LIMIT = 154;
+    public static final int CHAT_BOX_LIMIT = 154;
     public static final int MOTD_LIMIT = 140;
 
     private final Player parser, target;
-    private int limit = DEFAULT_CHAT_BOX_LIMIT;
+
+    private int limit = CHAT_BOX_LIMIT;
+    private boolean colored = true;
 
     public CenteredMessage(Player parser, Player target) {
         this.parser = parser;
@@ -29,18 +35,15 @@ public final class CenteredMessage {
         this(null, null);
     }
 
-    public CenteredMessage setLimit(int limit) {
-        this.limit = limit;
-        return this;
-    }
-
     public String center(String string) {
         if (StringUtils.isBlank(string)) return string;
 
         String prefix = Beans.getCenterPrefix();
         int i = prefix.length();
 
-        String output = Beans.colorize(target, parser, string);
+        String output = colored ?
+                Beans.colorize(target, parser, string) :
+                string;
         if (!string.startsWith(prefix)) return output;
 
         String initial = StringApplier.simplified(string.substring(i))

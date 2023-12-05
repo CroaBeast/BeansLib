@@ -1,12 +1,12 @@
 package me.croabeast.beanslib.misc;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.var;
 import org.apache.commons.lang.math.NumberUtils;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -42,8 +42,8 @@ public final class UpdateChecker {
      * The default version scheme for this update checker.
      */
     public static final VersionScheme VERSION_SCHEME_DECIMAL = (first, second) -> {
-        var firstSplit = splitVersionInfo(first);
-        var secondSplit = splitVersionInfo(second);
+        String[] firstSplit = splitVersionInfo(first);
+        String[] secondSplit = splitVersionInfo(second);
 
         if (firstSplit == null || secondSplit == null) return null;
 
@@ -89,16 +89,16 @@ public final class UpdateChecker {
             int responseCode;
 
             try {
-                var url = new URL(String.format(UPDATE_URL, pluginID));
+                URL url = new URL(String.format(UPDATE_URL, pluginID));
 
-                var connect = (HttpURLConnection) url.openConnection();
+                HttpURLConnection connect = (HttpURLConnection) url.openConnection();
                 connect.addRequestProperty("User-Agent", USER_AGENT);
 
                 responseCode = connect.getResponseCode();
 
-                var reader = new JsonReader(new InputStreamReader(connect.getInputStream()));
+                JsonReader reader = new JsonReader(new InputStreamReader(connect.getInputStream()));
 
-                var json = new JsonParser().parse(reader);
+                JsonElement json = new JsonParser().parse(reader);
                 reader.close();
 
                 if (!json.isJsonObject())

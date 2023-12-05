@@ -6,6 +6,7 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
@@ -48,7 +49,7 @@ public enum ClickAction {
     CLIPBOARD(ClickEvent.Action.COPY_TO_CLIPBOARD);
 
     private final ClickEvent.Action bukkit;
-    private final List<String> names = new ArrayList<>();
+    private final List<String> names = new LinkedList<>();
 
     ClickAction(ClickEvent.Action bukkit, String... extras) {
         this.bukkit = bukkit;

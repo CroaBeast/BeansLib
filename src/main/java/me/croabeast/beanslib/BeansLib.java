@@ -4,17 +4,14 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import lombok.var;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.croabeast.beanslib.character.SmallCaps;
 import me.croabeast.beanslib.key.PlayerKey;
 import me.croabeast.beanslib.message.CenteredMessage;
-import me.croabeast.beanslib.message.MessageSender;
 import me.croabeast.beanslib.misc.BeansLogger;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.neoprismatic.NeoPrismaticAPI;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -24,7 +21,6 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -192,7 +188,7 @@ public class BeansLib {
     }
 
     /**
-     * The {@link Plugin} instance of your project.
+     * Returns the {@link Plugin} instance of your project.
      *
      * @throws NullPointerException if the plugin is null
      * @return plugin's instance
@@ -348,7 +344,7 @@ public class BeansLib {
         if (StringUtils.isBlank(string))
             return string;
 
-        var matcher = getSmallCapsPattern().matcher(string);
+        Matcher matcher = getSmallCapsPattern().matcher(string);
 
         while (matcher.find()) {
             String text = matcher.group(2);
@@ -484,48 +480,42 @@ public class BeansLib {
     }
 
     /**
-     * Sends information to a player using the {@link MessageSender} object.
+     * Logs a list of messages to a player only, if not null.
+     * <p> The messages are formatted and colorized according to this BeansLib settings.
      *
-     * @param player a valid player
-     * @param lines the information to send
+     * @param player the player to send the messages to, or null if none
+     * @param lines the array of messages to log
      */
     public final void playerLog(@NotNull Player player, String... lines) {
         logger.playerLog(player, lines);
     }
 
     /**
-     * Sends requested information using {@link Bukkit#getLogger()} to the console,
-     * avoiding the plugin prefix.
+     * Logs a list of messages to the raw logger only.
+     * <p> The messages are formatted and colorized according to this BeansLib settings.
      *
-     * @param lines the information to send
+     * @param lines the array of messages to log
      */
     public final void rawLog(String... lines) {
         logger.rawLog(lines);
     }
 
     /**
-     * Sends requested information to a {@link CommandSender} using the plugin's
-     * logger and its prefix.
+     * Logs a list of messages to a player, if not null, and to the console.
+     * <p> The messages are formatted and colorized according to the BeansLib settings.
      *
-     * <p> If the sender is a {@link Player} and it's not null, it will log using
-     * {@link #playerLog(Player, String...)}.
-     *
-     *
-     * @param sender a valid sender, can be the console, a player or null
-     * @param lines the information to send
-     *
-     * @throws NullPointerException if the plugin is null
+     * @param sender the sender to send the messages to, or null if none
+     * @param lines the array of messages to log
      */
     public final void doLog(@Nullable CommandSender sender, String... lines) {
         logger.doLog(sender, lines);
     }
 
     /**
-     * Sends requested information to a {@link CommandSender} using the plugin's
-     * logger and its prefix.
+     * Logs a list of messages to the console only.
+     * <p> The messages are formatted and colorized according to the BeansLib settings.
      *
-     * @param lines the information to send
-     * @throws NullPointerException if the plugin is null
+     * @param lines the array of messages to log
      */
     public final void doLog(String... lines) {
         logger.doLog(lines);
@@ -553,14 +543,6 @@ public class BeansLib {
         logger.mixLog(sender, lines);
     }
 
-    public boolean equals(Object o) {
-        if (o == null) return false;
-        if (!(o instanceof BeansLib)) return false;
-
-        BeansLib lib = (BeansLib) o;
-        return Objects.equals(lib.plugin, plugin);
-    }
-
     /**
      * Sends information choosing which of the two main methods will be used in each line.
      * ({@link #rawLog(String...) rawLog}, {@link #doLog(CommandSender, String...) doLog})
@@ -582,68 +564,11 @@ public class BeansLib {
         logger.mixLog(lines);
     }
 
-    /**
-     * Parse keys and values using {@link TextUtils#replaceInsensitiveEach(String[], String[], String)}
-     *
-     * @param sender a sender to format and send the message
-     * @param list the message list
-     * @param keys a keys array
-     * @param values a values array
-     *
-     * @deprecated See {@link MessageSender} and its constructor.
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
-    @Deprecated
-    public void sendMessageList(CommandSender sender, List<String> list, String[] keys, String[] values) {
-        new MessageSender().setTargets(sender)
-                .addKeysValues(keys, values)
-                .setLogger(false).setSensitive(false)
-                .send(list);
-    }
+    public boolean equals(Object o) {
+        if (o == null) return false;
+        if (!(o instanceof BeansLib)) return false;
 
-    /**
-     * Parse keys and values using {@link TextUtils#replaceInsensitiveEach(String[], String[], String)}
-     *
-     * @param sender a sender to format and send the message
-     * @param section the config file or section
-     * @param path the path of the string or string list
-     * @param keys a keys array
-     * @param values a values array
-     *
-     * @deprecated See {@link MessageSender} and its constructor.
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
-    @Deprecated
-    public void sendMessageList(CommandSender sender, ConfigurationSection section, String path, String[] keys, String[] values) {
-        sendMessageList(sender, TextUtils.toList(section, path), keys, values);
-    }
-
-    /**
-     * Parse keys and values using {@link TextUtils#replaceInsensitiveEach(String[], String[], String)}
-     *
-     * @param sender a sender to format and send the message
-     * @param list the message list
-     *
-     * @deprecated See {@link MessageSender} and its constructor.
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
-    @Deprecated
-    public void sendMessageList(CommandSender sender, List<String> list) {
-        sendMessageList(sender, list, null, null);
-    }
-
-    /**
-     * Parse keys and values using {@link TextUtils#replaceInsensitiveEach(String[], String[], String)}
-     *
-     * @param sender a sender to format and send the message
-     * @param section the config file or section
-     * @param path the path of the string or string list
-     *
-     * @deprecated See {@link MessageSender} and its constructor.
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "1.4")
-    @Deprecated
-    public void sendMessageList(CommandSender sender, ConfigurationSection section, String path) {
-        sendMessageList(sender, TextUtils.toList(section, path));
+        BeansLib lib = (BeansLib) o;
+        return Objects.equals(lib.plugin, plugin);
     }
 }

@@ -7,17 +7,11 @@ import java.util.function.UnaryOperator;
 
 class PriorityApplier implements StringApplier {
 
-    final Map<Priority, Set<UnaryOperator<String>>> os = new LinkedHashMap<>();
+    final Map<Priority, Set<UnaryOperator<String>>> os = new HashMap<>();
     private final String string;
 
     PriorityApplier(String string) {
         this.string = Objects.requireNonNull(string);
-
-        os.put(Priority.HIGHEST, new LinkedHashSet<>());
-        os.put(Priority.HIGH, new LinkedHashSet<>());
-        os.put(Priority.NORMAL, new LinkedHashSet<>());
-        os.put(Priority.LOW, new LinkedHashSet<>());
-        os.put(Priority.LOWEST, new LinkedHashSet<>());
     }
 
     @NotNull
@@ -25,7 +19,7 @@ class PriorityApplier implements StringApplier {
         priority = priority == null ? Priority.NORMAL : priority;
         Objects.requireNonNull(operator);
 
-        Set<UnaryOperator<String>> set = os.get(priority);
+        Set<UnaryOperator<String>> set = os.getOrDefault(priority, new LinkedHashSet<>());
         set.add(operator);
 
         os.put(priority, set);
@@ -39,12 +33,13 @@ class PriorityApplier implements StringApplier {
 
     @Override
     public String toString() {
+        Comparator<Priority> sort = Comparator.reverseOrder();
         SimpleApplier applier = new SimpleApplier(string);
 
-        os.values().forEach(s -> {
-            if (!s.isEmpty()) s.forEach(applier::apply);
-        });
+        Map<Priority, Set<UnaryOperator<String>>> result = new TreeMap<>(sort);
+        result.putAll(os);
 
+        result.forEach((p, s) -> s.forEach(applier::apply));
         return applier.toString();
     }
 }
