@@ -3,6 +3,7 @@ package me.croabeast.neoprismatic.util;
 import com.google.common.collect.Lists;
 import com.viaversion.viaversion.api.Via;
 import me.croabeast.beanslib.utility.Exceptions;
+import me.croabeast.beanslib.utility.LibUtils;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -119,12 +120,11 @@ public final class ClientVersion {
      * @return the major version
      */
     public static int getClientVersion(Player player) {
-        int o = UNKNOWN.version;
+        if (player == null)
+            return (int) LibUtils.MAIN_VERSION;
 
         if (!Exceptions.isPluginEnabled("ViaVersion"))
-            return o;
-
-        if (player == null) return o;
+            return (int) LibUtils.MAIN_VERSION;
 
         int i = Via.getAPI().getPlayerVersion(player.getUniqueId());
 
@@ -134,7 +134,7 @@ public final class ClientVersion {
             if (p.protocols.contains(i)) return p.version;
         }
 
-        return o;
+        return UNKNOWN.version;
     }
 
     public static boolean isLegacy(Player player) {

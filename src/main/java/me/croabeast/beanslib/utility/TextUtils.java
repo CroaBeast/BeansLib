@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
 import lombok.experimental.UtilityClass;
-import lombok.var;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.croabeast.beanslib.BeansLib;
 import me.croabeast.beanslib.key.ValueReplacer;
@@ -19,9 +18,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -58,7 +59,7 @@ public class TextUtils {
             return s;
 
         try {
-            var u = Exceptions.checkPlayer(p).getUniqueId();
+            UUID u = Exceptions.checkPlayer(p).getUniqueId();
             return InteractiveChatAPI.markSender(s, u);
         } catch (Exception e) {
             return s;
@@ -71,7 +72,7 @@ public class TextUtils {
      */
     public final UnaryOperator<String> STRIP_FIRST_SPACES = s -> {
         if (StringUtils.isBlank(s)) return s;
-        var startLine = s;
+        String startLine = s;
 
         try {
             while (s.charAt(0) == ' ') s = s.substring(1);
@@ -88,11 +89,11 @@ public class TextUtils {
     public final UnaryOperator<String> CONVERT_OLD_JSON = s -> {
         if (StringUtils.isBlank(s)) return s;
 
-        var p = "(?i)(hover|run|suggest|url)=\\[(.[^|\\[\\]]*)]";
-        var old = Pattern.compile(p).matcher(s);
+        String p = "(?i)(hover|run|suggest|url)=\\[(.[^|\\[\\]]*)]";
+        Matcher old = Pattern.compile(p).matcher(s);
 
         while (old.find()) {
-            var temp = old.group(1) + ":\"" + old.group(2) + "\"";
+            String temp = old.group(1) + ":\"" + old.group(2) + "\"";
             s = s.replace(old.group(), temp);
         }
         return s;
@@ -115,7 +116,7 @@ public class TextUtils {
         s = CONVERT_OLD_JSON.apply(s);
         if (!IS_JSON.test(s)) return s;
 
-        var m = TextUtils.FORMAT_CHAT_PATTERN.matcher(s);
+        Matcher m = TextUtils.FORMAT_CHAT_PATTERN.matcher(s);
 
         while (m.find())
             s = s.replace(m.group(), m.group(7));

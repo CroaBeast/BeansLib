@@ -1,24 +1,31 @@
 package me.croabeast.neoprismatic;
 
-import com.google.common.collect.Lists;
 import lombok.experimental.UtilityClass;
 import me.croabeast.beanslib.map.MapBuilder;
 import me.croabeast.beanslib.utility.LibUtils;
-import me.croabeast.neoprismatic.rgb.CustomRGB;
-import me.croabeast.neoprismatic.rgb.MultipleRGB;
-import me.croabeast.neoprismatic.rgb.RGBParser;
-import me.croabeast.neoprismatic.rgb.SingleRGB;
+import me.croabeast.neoprismatic.color.ColorPattern;
 import me.croabeast.neoprismatic.util.ClientVersion;
 import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
+import org.intellij.lang.annotations.Language;
 
 import java.awt.*;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * The NeoPrismaticAPI class provides utility methods for handling color-related
+ * operations, especially for Bukkit/Spigot server plugins.
+ *
+ * <p> This utility class includes methods for converting colors, creating color
+ * gradients and rainbows, applying colors to String objects, and various other
+ * color-related tasks.
+ *
+ * @author CroaBeast
+ * @since 1.4
+ */
 @UtilityClass
 public class NeoPrismaticAPI {
 
@@ -39,9 +46,6 @@ public class NeoPrismaticAPI {
             .put(new Color(16733695), ChatColor.getByChar('d'))
             .put(new Color(16777045), ChatColor.getByChar('e'))
             .put(new Color(16777215), ChatColor.getByChar('f')).map();
-
-    private final List<RGBParser> PARSER_LIST =
-            Lists.newArrayList(new CustomRGB(), new MultipleRGB(), new SingleRGB());
 
     private ChatColor getClosestColor(Color color) {
         Color nearestColor = null;
@@ -65,6 +69,16 @@ public class NeoPrismaticAPI {
         return isLegacy ? getClosestColor(color) : ChatColor.of(color);
     }
 
+    /**
+     * Converts a hexadecimal color string to a Bukkit ChatColor,
+     * considering legacy support.
+     *
+     * @param string   The hexadecimal color string.
+     * @param isLegacy Whether the server version is considered
+     *                legacy (pre 1.16).
+     *
+     * @return The corresponding ChatColor
+     */
     public ChatColor fromString(String string, boolean isLegacy) {
         return getBukkit(new Color(Integer.parseInt(string, 16)), isLegacy);
     }
@@ -105,11 +119,17 @@ public class NeoPrismaticAPI {
         return colors;
     }
 
-    private ChatColor[] reverseRainbow(int step, float sat, boolean isLegacy) {
-        List<ChatColor> r = Lists.newArrayList(createRainbow(step, sat, isLegacy));
-        return r.toArray(new ChatColor[0]);
-    }
-
+    /**
+     * Colorizes a string by appending the corresponding ChatColor
+     * code to the beginning.
+     *
+     * @param color    The AWT Color to apply.
+     * @param string   The input string.
+     * @param isLegacy Whether the server version is considered
+     *                legacy (pre 1.16).
+     *
+     * @return The colorized string.
+     */
     public String applyColor(Color color, String string, boolean isLegacy) {
         return getBukkit(color, isLegacy) + string;
     }
@@ -139,32 +159,75 @@ public class NeoPrismaticAPI {
         return builder.toString();
     }
 
+    /**
+     * Applies a gradient of colors to a string and returns the formatted result.
+     *
+     * @param string    The input string.
+     * @param start     The starting color of the gradient.
+     * @param end       The ending color of the gradient.
+     * @param isLegacy  Whether the server version is considered
+     *                  legacy (pre 1.16).
+     *
+     * @return          The formatted string.
+     */
     public String applyGradient(String string, Color start, Color end, boolean isLegacy) {
         int i = stripSpecial(string).length();
         return i <= 1 ? string : apply(string, createGradient(start, end, i, isLegacy));
     }
 
+    /**
+     * Applies a rainbow of colors to a string and returns the formatted result.
+     *
+     * @param string       The input string.
+     * @param saturation   The saturation of the rainbow colors.
+     * @param isLegacy     Whether the server version is considered
+     *                     legacy (pre 1.16).
+     *
+     * @return             The formatted string.
+     */
     public String applyRainbow(String string, float saturation, boolean isLegacy) {
         int i = stripSpecial(string).length();
         return i <= 0 ? string : apply(string, createRainbow(i, saturation, isLegacy));
     }
 
+    /**
+     * Colorizes a string based on defined color patterns and the
+     * player's legacy status.
+     *
+     * @param player The player for which to determine legacy status.
+     * @param string The input string to colorize.
+     *
+     * @return The colorized string.
+     */
     public String colorize(Player player, String string) {
         boolean isLegacy = LibUtils.MAIN_VERSION < 16.0;
 
         if (player != null)
             isLegacy = isLegacy || ClientVersion.isLegacy(player);
 
-        for (RGBParser p : PARSER_LIST)
-            string = p.parse(string, isLegacy);
+        for (ColorPattern p : ColorPattern.COLOR_PATTERNS)
+            string = p.apply(string, isLegacy);
 
         return ChatColor.translateAlternateColorCodes('&', string);
     }
 
+    /**
+     * Colorizes a string without considering player-specific legacy
+     * status.
+     *
+     * @param string The input string to colorize.
+     * @return The colorized string.
+     */
     public String colorize(String string) {
         return colorize(null, string);
     }
 
+    /**
+     * Removes Bukkit/Spigot ChatColor codes from a string.
+     *
+     * @param string    The input string.
+     * @return          The string with ChatColor codes removed.
+     */
     public String stripBukkit(String string) {
         if (StringUtils.isBlank(string)) return string;
 
@@ -178,6 +241,12 @@ public class NeoPrismaticAPI {
         return string;
     }
 
+    /**
+     * Removes special color codes from a string.
+     *
+     * @param string    The input string.
+     * @return          The string with special color codes removed.
+     */
     public String stripSpecial(String string) {
         if (StringUtils.isBlank(string)) return string;
 
@@ -191,17 +260,33 @@ public class NeoPrismaticAPI {
         return string;
     }
 
+    /**
+     * Removes RGB color patterns from a string.
+     *
+     * @param string    The input string.
+     * @return          The string with RGB color patterns removed.
+     */
     public String stripRGB(String string) {
-        for (RGBParser p : PARSER_LIST) string = p.strip(string);
+        for (ColorPattern p : ColorPattern.COLOR_PATTERNS)
+            string = p.strip(string);
         return string;
     }
 
+    /**
+     * Removes all Bukkit/Spigot ChatColor and special color codes from a string.
+     *
+     * @param string    The input string.
+     * @return          The string with all color codes removed.
+     */
     public String stripAll(String string) {
         return stripRGB(stripSpecial(stripBukkit(string)));
     }
 
-    String singleToRegex() {
-        return "[&§][a-fk-or\\d]|" + String.join("|", SingleRGB.PATTERNS);
+    @Language("RegExp")
+    private String singleToRegex() {
+        return "[&§][a-fk-or\\d]|[{]#([a-f\\d]{6})[}]|" +
+                "<#([a-f\\d]{6})>|%#([a-f\\d]{6})%|" +
+                "\\[#([a-f\\d]{6})]|&?#([a-f\\d]{6})|&x([a-f\\d]{6})";
     }
 
     public String getLastColor(String string, String key) {

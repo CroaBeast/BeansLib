@@ -19,6 +19,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.intellij.lang.annotations.Language;
 import org.intellij.lang.annotations.RegExp;
 import org.jetbrains.annotations.NotNull;
 
@@ -294,8 +295,11 @@ public abstract class MessageExecutor implements Cloneable {
         return execute(parser, parser, string);
     }
 
+    @Language("RegExp")
     private String getRegex() {
+        @Language("RegExp")
         String f = flag.getName() + (StringUtils.isBlank(regex) ? "" : regex);
+
         String[] del = Beans.getKeysDelimiters();
         return "(?i)^" + Pattern.quote(del[0]) + f + Pattern.quote(del[1]);
     }

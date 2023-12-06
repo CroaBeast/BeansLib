@@ -6,6 +6,7 @@ import me.croabeast.beanslib.utility.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.CommandSender;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -25,15 +26,16 @@ public class ValueReplacer {
      * @param key the placeholder to be replaced, must not be blank
      * @param value the value to replace the placeholder with, can be empty
      * @param string the string to perform the replacement on, can be blank
-     * @param b a boolean flag indicating whether the placeholder is case-sensitive or not
+     * @param sensitive a boolean flag indicating whether the placeholder
+     *                  is case-sensitive or not
      *
      * @return the modified string, or the original string if no replacement was done
      */
-    public String of(String key, String value, String string, boolean b) {
-        if (StringUtils.isBlank(string)) return string;
-        if (StringUtils.isBlank(key)) return string;
+    public String of(String key, String value, String string, boolean sensitive) {
+        if (StringUtils.isBlank(string) || StringUtils.isBlank(key))
+            return string;
 
-        String temp = (b ? "" : "(?i)") + Pattern.quote(key);
+        String temp = (sensitive ? "" : "(?i)") + Pattern.quote(key);
 
         Matcher m = Pattern.compile(temp).matcher(string);
         StringApplier applier = StringApplier.simplified(string);
@@ -60,6 +62,45 @@ public class ValueReplacer {
     }
 
     /**
+     * Replaces a single placeholder with a value in a string.
+     *
+     * @param key the placeholder to be replaced, must not be blank
+     * @param value the value to replace the placeholder with, can be empty
+     * @param string the string to perform the replacement on, can be blank
+     * @param sensitive a boolean flag indicating whether the placeholder
+     *                 is case-sensitive or not
+     *
+     * @param <T> the type of the values
+     * @return the modified string, or the original string if no replacement was done
+     */
+    public <T> String of(String key, T value, String string, boolean sensitive) {
+        String temp;
+
+        if (value instanceof String)
+            temp = (String) value;
+        else if (value instanceof CommandSender)
+            temp = ((CommandSender) value).getName();
+        else
+            temp = value.toString();
+
+        return of(key, temp, string, sensitive);
+    }
+
+    /**
+     * Replaces a single placeholder with a value in a string, using case-insensitive mode.
+     *
+     * @param key the placeholder to be replaced, must not be blank
+     * @param value the value to replace the placeholder with, can be empty
+     * @param string the string to perform the replacement on, can be blank
+     *
+     * @param <T> the type of the values
+     * @return the modified string, or the original string if no replacement was done
+     */
+    public <T> String of(String key, T value, String string) {
+        return of(key, value, string, false);
+    }
+
+    /**
      * Checks if two arrays are applicable for replacement, i.e. they are not empty
      * and have matching lengths.
      *
@@ -82,30 +123,24 @@ public class ValueReplacer {
      * @param values the array of values to replace the placeholders with, must not be
      *               empty and have at least the same length as keys
      * @param string the string to perform the replacements on, can be blank
-     * @param b a boolean flag indicating whether the placeholders are case-sensitive
+     * @param sensitive a boolean flag indicating whether the placeholders are case-sensitive
      *         or not
      *
      * @param <T> the type of the values
      * @return the modified string, or the original string if no replacements were done
      */
-    public <T> String forEach(String[] keys, T[] values, String string, boolean b) {
+    public <T> String forEach(String[] keys, T[] values, String string, boolean sensitive) {
         if (StringUtils.isBlank(string) || !isApplicable(keys, values))
             return string;
 
         StringApplier applier = StringApplier.simplified(string);
 
         for (int i = 0; i < keys.length; i++) {
+            String key = keys[i];
             final T temp = values[i];
 
-            String v = String.valueOf(temp);
-            if (v.equals("null")) continue;
-
-            if (temp instanceof CommandSender)
-                v = ((CommandSender) temp).getName();
-
-            String key = keys[i], value = v;
             applier.apply(s ->
-                    ValueReplacer.of(key, value, s, b));
+                    ValueReplacer.of(key, temp, s, sensitive));
         }
 
         return applier.toString();
@@ -135,14 +170,14 @@ public class ValueReplacer {
      * @param values the list of values to replace the placeholders with, must not be
      *              empty and have at least the same size as keys
      * @param string the string to perform the replacements on, can be blank
-     * @param b a boolean flag indicating whether the placeholders are case-sensitive
+     * @param sensitive a boolean flag indicating whether the placeholders are case-sensitive
      *          or not
      *
      * @param <T> the type of the values
      * @return the modified string, or the original string if no replacements were done
      */
-    public <T> String forEach(List<String> keys, List<T> values, String string, boolean b) {
-        return forEach(ArrayUtils.toArray(keys), ArrayUtils.toArray(values), string, b);
+    public <T> String forEach(Collection<String> keys, Collection<T> values, String string, boolean sensitive) {
+        return forEach(ArrayUtils.toArray(keys), ArrayUtils.toArray(values), string, sensitive);
     }
 
     /**
@@ -157,7 +192,7 @@ public class ValueReplacer {
      * @param <T> the type of the values
      * @return the modified string, or the original string if no replacements were done
      */
-    public <T> String forEach(List<String> keys, List<T> values, String string) {
+    public <T> String forEach(Collection<String> keys, Collection<T> values, String string) {
         return forEach(ArrayUtils.toArray(keys), ArrayUtils.toArray(values), string);
     }
 
@@ -169,23 +204,21 @@ public class ValueReplacer {
      * @param function an optional function to apply on the values before replacing them,
      *                 can be null
      * @param string the string to perform the replacements on, can be blank
-     * @param b a boolean flag indicating whether the placeholders are case-sensitive or not
+     * @param sensitive a boolean flag indicating whether the placeholders are case-sensitive
+     *                  or not
      *
      * @param <T> the type of the values in the map
      * @param <R> the type of the transformed values
      *
      * @return the modified string, or the original string if no replacements were done
      */
-    public <T, R> String forEach(Map<String, ? extends T> map,
-                                 Function<T, ? extends R> function,
-                                 String string, boolean b)
-    {
+    public <T, R> String forEach(Map<String, T> map, Function<T, R> function, String string, boolean sensitive) {
         if (StringUtils.isBlank(string)) return string;
         if (map.isEmpty()) return string;
 
         StringApplier applier = StringApplier.simplified(string);
 
-        for (Map.Entry<String, ? extends T> entry : map.entrySet()) {
+        for (Map.Entry<String, T> entry : map.entrySet()) {
             T first = entry.getValue();
 
             R value = null;
@@ -196,7 +229,7 @@ public class ValueReplacer {
             applier.apply(s -> ValueReplacer.of(
                     entry.getKey(),
                     (result != null ? result : first).toString(),
-                    s, b
+                    s, sensitive
             ));
         }
 
@@ -217,8 +250,7 @@ public class ValueReplacer {
      *
      * @return the modified string, or the original string if no replacements were done
      */
-    public <T, R> String forEach(Map<String, ? extends T> map, Function<T, ? extends R> function, String string)
-    {
+    public <T, R> String forEach(Map<String, T> map, Function<T, R> function, String string) {
         return forEach(map, function, string, false);
     }
 
@@ -227,13 +259,13 @@ public class ValueReplacer {
      *
      * @param map the map of placeholders and values to be replaced, must not be empty
      * @param string the string to perform the replacements on, can be blank
-     * @param b a boolean flag indicating whether the placeholders are case-sensitive or not
+     * @param sensitive a boolean flag indicating whether the placeholders are case-sensitive or not
      *
      * @param <T> the type of the values in the map
      * @return the modified string, or the original string if no replacements were done
      */
-    public <T> String forEach(Map<String, ? extends T> map, String string, boolean b) {
-        return forEach(map, null, string, b);
+    public <T> String forEach(Map<String, ? extends T> map, String string, boolean sensitive) {
+        return forEach(map, null, string, sensitive);
     }
 
     /**

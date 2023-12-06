@@ -1,5 +1,7 @@
 package me.croabeast.beanslib.key;
 
+import me.croabeast.beanslib.applier.StringApplier;
+import me.croabeast.beanslib.misc.CollectionOperator;
 import me.croabeast.beanslib.misc.Rounder;
 import me.croabeast.beanslib.utility.Exceptions;
 import org.apache.commons.lang.StringUtils;
@@ -8,9 +10,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 
 /**
@@ -25,8 +25,8 @@ import java.util.function.Function;
  */
 public final class PlayerKey<T> {
 
-    private static final Map<String, PlayerKey<?>> KEY_MAP = new LinkedHashMap<>();
-    private static final Map<String, PlayerKey<?>> DEFS = new LinkedHashMap<>();
+    private static final Set<PlayerKey<?>> KEY_SET = new LinkedHashSet<>();
+    private static final Set<PlayerKey<?>> DEFS = new LinkedHashSet<>();
 
     private final String key;
     private final Function<Player, T> function;
@@ -66,6 +66,10 @@ public final class PlayerKey<T> {
         this.function = key.function;
     }
 
+    private T apply(Player player) {
+        return function.apply(player);
+    }
+
     public boolean equals(Object o) {
         return o instanceof PlayerKey<?> && Objects.equals(key, ((PlayerKey<?>) o).key);
     }
@@ -75,11 +79,38 @@ public final class PlayerKey<T> {
         return "PlayerKey{key='" + key + "', function=" + function + '}';
     }
 
-    static <T> void loadKey0(String key, Function<Player, T> function) {
+    private static <T> boolean loadKey0(String key, Function<Player, T> function, boolean isDef) {
         PlayerKey<?> first = new PlayerKey<>(key, function);
+        if (isDef) DEFS.add(new PlayerKey<>(first));
+        return KEY_SET.add(first);
+    }
 
-        KEY_MAP.put(key, first);
-        DEFS.put(key, new PlayerKey<>(first));
+    private static <T> boolean loadKey0(String key, Function<Player, T> function) {
+        return loadKey0(key, function, true);
+    }
+
+    private static PlayerKey<?> removeKey0(String key) {
+        PlayerKey<?> result = null;
+
+        for (PlayerKey<?> k : KEY_SET) {
+            if (!k.key.equals(key))
+                continue;
+
+            KEY_SET.remove(result = k);
+            break;
+        }
+
+        return result;
+    }
+
+    /**
+     * Removes a key-function pair from the loaded keys using its key.
+     *
+     * @param key The key string
+     * @return True if the key was successfully removed, false otherwise
+     */
+    public static boolean removeKey(String key) {
+        return removeKey0(key) != null;
     }
 
     /**
@@ -92,17 +123,7 @@ public final class PlayerKey<T> {
      * @return true if the key was successfully loaded, false otherwise
      */
     public static <T> boolean loadKey(String key, Function<Player, T> function) {
-        return KEY_MAP.put(key, new PlayerKey<>(key, function)) != null;
-    }
-
-    /**
-     * Removes a key-function pair from the loaded keys using its key.
-     *
-     * @param key The key string
-     * @return True if the key was successfully removed, false otherwise
-     */
-    public static boolean removeKey(String key) {
-        return KEY_MAP.remove(key) != null;
+        return loadKey0(key, function, false);
     }
 
     /**
@@ -114,11 +135,12 @@ public final class PlayerKey<T> {
      * @return True if the key was successfully edited, false otherwise
      */
     public static boolean editKey(String oldKey, String newKey) {
-        PlayerKey<?> key = KEY_MAP.remove(oldKey);
-        if (key == null) return false;
+        PlayerKey<?> key = removeKey0(oldKey);
+        return key != null && loadKey0(newKey, key.function, false);
+    }
 
-        key = new PlayerKey<>(newKey, key.function);
-        return KEY_MAP.put(newKey, key) != null;
+    private static <T> List<T> map(Function<PlayerKey<?>, T> f) {
+        return CollectionOperator.of(KEY_SET).map(f).collect(new LinkedList<>());
     }
 
     /**
@@ -127,15 +149,25 @@ public final class PlayerKey<T> {
      *
      * @param player The player to apply the function to
      * @param string The string to replace the keys in
-     * @param isSensitive A boolean flag that indicates whether the replacement
+     * @param sensitive A boolean flag that indicates whether the replacement
      *                    is case-sensitive or not
      *
      * @return The modified string after replacing the keys with their values
      */
-    public static String replaceKeys(Player player, String string, boolean isSensitive) {
-        return player != null ?
-                ValueReplacer.forEach(KEY_MAP, k -> k.function.apply(player), string, isSensitive) :
-                string;
+    public static String replaceKeys(Player player, String string, boolean sensitive) {
+        if (player == null || StringUtils.isBlank(string))
+            return string;
+
+        StringApplier applier = StringApplier.simplified(string);
+
+        for (PlayerKey<?> k : KEY_SET)
+            applier.apply(s -> ValueReplacer.of(
+                    k.key,
+                    k.apply(player),
+                    s, sensitive
+            ));
+
+        return applier.toString();
     }
 
     /**
@@ -156,7 +188,7 @@ public final class PlayerKey<T> {
      * Restores the loaded keys to its default configuration.
      */
     public static void setDefaults() {
-        KEY_MAP.clear();
-        KEY_MAP.putAll(DEFS);
+        KEY_SET.clear();
+        KEY_SET.addAll(DEFS);
     }
 }
