@@ -24,48 +24,7 @@ public class ValueReplacer {
      * Replaces a single placeholder with a value in a string.
      *
      * @param key the placeholder to be replaced, must not be blank
-     * @param value the value to replace the placeholder with, can be empty
-     * @param string the string to perform the replacement on, can be blank
-     * @param sensitive a boolean flag indicating whether the placeholder
-     *                  is case-sensitive or not
-     *
-     * @return the modified string, or the original string if no replacement was done
-     */
-    public String of(String key, String value, String string, boolean sensitive) {
-        if (StringUtils.isBlank(string) || StringUtils.isBlank(key))
-            return string;
-
-        String temp = (sensitive ? "" : "(?i)") + Pattern.quote(key);
-
-        Matcher m = Pattern.compile(temp).matcher(string);
-        StringApplier applier = StringApplier.simplified(string);
-
-        if (m.find()) {
-            String v = StringUtils.isEmpty(value) ? "" : value;
-            applier.apply(s -> s.replace(m.group(), v));
-        }
-
-        return applier.toString();
-    }
-
-    /**
-     * Replaces a single placeholder with a value in a string, using case-insensitive mode.
-     *
-     * @param key the placeholder to be replaced, must not be blank
-     * @param value the value to replace the placeholder with, can be blank
-     * @param string the string to perform the replacement on, can be blank
-     *
-     * @return the modified string, or the original string if no replacement was done
-     */
-    public String of(String key, String value, String string) {
-        return of(key, value, string, false);
-    }
-
-    /**
-     * Replaces a single placeholder with a value in a string.
-     *
-     * @param key the placeholder to be replaced, must not be blank
-     * @param value the value to replace the placeholder with, can be empty
+     * @param value the value to replace the placeholder with
      * @param string the string to perform the replacement on, can be blank
      * @param sensitive a boolean flag indicating whether the placeholder
      *                 is case-sensitive or not
@@ -74,16 +33,32 @@ public class ValueReplacer {
      * @return the modified string, or the original string if no replacement was done
      */
     public <T> String of(String key, T value, String string, boolean sensitive) {
-        String temp;
+        if (StringUtils.isBlank(string) ||
+                StringUtils.isBlank(key) || value == null)
+            return string;
 
-        if (value instanceof String)
-            temp = (String) value;
-        else if (value instanceof CommandSender)
-            temp = ((CommandSender) value).getName();
+        final String val;
+
+        if (value instanceof CommandSender)
+            val = ((CommandSender) value).getName();
         else
-            temp = value.toString();
+            val = value instanceof String ?
+                    (String) value :
+                    value.toString();
 
-        return of(key, temp, string, sensitive);
+        String temp = Pattern.quote(key);
+        if (!sensitive)
+            temp = "(?i)" + temp;
+
+        Matcher m = Pattern.compile(temp).matcher(string);
+
+        StringApplier applier =
+                StringApplier.simplified(string);
+
+        while (m.find())
+            applier.apply(s -> s.replace(m.group(), val));
+
+        return applier.toString();
     }
 
     /**
