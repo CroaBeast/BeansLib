@@ -14,11 +14,11 @@ import java.util.function.*;
  *
  * @param <T> the type of elements in the collection
  */
-public final class CollectionOperator<T> {
+public final class CollectionBuilder<T> {
 
     private final Collection<T> collection;
 
-    private CollectionOperator(Collection<T> collection) {
+    private CollectionBuilder(Collection<T> collection) {
         this.collection = new LinkedList<>(collection);
     }
 
@@ -30,7 +30,7 @@ public final class CollectionOperator<T> {
      * @return a reference of this operator
      * @throws NullPointerException if predicate is null
      */
-    public CollectionOperator<T> filter(Predicate<T> predicate) {
+    public CollectionBuilder<T> filter(Predicate<T> predicate) {
         collection.removeIf(Objects.requireNonNull(predicate).negate());
         return this;
     }
@@ -43,7 +43,7 @@ public final class CollectionOperator<T> {
      * @return a reference of this operator
      * @throws NullPointerException if elements is null
      */
-    public CollectionOperator<T> add(Collection<? extends T> elements) {
+    public CollectionBuilder<T> add(Collection<? extends T> elements) {
         collection.addAll(elements);
         return this;
     }
@@ -56,7 +56,7 @@ public final class CollectionOperator<T> {
      * @return a reference of this operator
      * @throws NullPointerException if elements is null
      */
-    public CollectionOperator<T> add(Iterator<? extends T> elements) {
+    public CollectionBuilder<T> add(Iterator<? extends T> elements) {
         Objects.requireNonNull(elements);
 
         List<T> collection = new LinkedList<>();
@@ -74,7 +74,7 @@ public final class CollectionOperator<T> {
      * @return a reference of this operator
      * @throws NullPointerException if elements is null
      */
-    public CollectionOperator<T> add(Iterable<? extends T> elements) {
+    public CollectionBuilder<T> add(Iterable<? extends T> elements) {
         List<T> collection = new LinkedList<>();
         Objects.requireNonNull(elements).forEach(collection::add);
         return add(collection);
@@ -88,7 +88,7 @@ public final class CollectionOperator<T> {
      * @return a reference of this operator
      * @throws NullPointerException if elements is null
      */
-    public CollectionOperator<T> add(Enumeration<? extends T> elements) {
+    public CollectionBuilder<T> add(Enumeration<? extends T> elements) {
         Objects.requireNonNull(elements);
         List<T> collection = new LinkedList<>();
 
@@ -104,7 +104,7 @@ public final class CollectionOperator<T> {
      * @return a reference of this operator
      */
     @SafeVarargs
-    public final CollectionOperator<T> add(T... elements) {
+    public final CollectionBuilder<T> add(T... elements) {
         return add(ArrayUtils.toList(elements));
     }
 
@@ -116,7 +116,7 @@ public final class CollectionOperator<T> {
      * @return a reference of this operator
      * @throws NullPointerException if consumer is null
      */
-    public CollectionOperator<T> modify(Consumer<Collection<T>> consumer) {
+    public CollectionBuilder<T> modify(Consumer<Collection<T>> consumer) {
         Objects.requireNonNull(consumer).accept(collection);
         return this;
     }
@@ -129,13 +129,13 @@ public final class CollectionOperator<T> {
      * @return a new operator with a sorted list
      * @throws NullPointerException if comparator is null
      */
-    public CollectionOperator<T> sort(Comparator<? extends T> comparator) {
+    public CollectionBuilder<T> sort(Comparator<? extends T> comparator) {
         Objects.requireNonNull(comparator);
 
         List<T> list = new ArrayList<>(collection);
         list.sort((Comparator<T>) comparator);
 
-        return new CollectionOperator<>(new LinkedList<>(list));
+        return new CollectionBuilder<>(new LinkedList<>(list));
     }
 
     /**
@@ -147,10 +147,10 @@ public final class CollectionOperator<T> {
      * @return a new operator with a modified list
      * @throws NullPointerException if operator is null
      */
-    public CollectionOperator<T> apply(UnaryOperator<T> operator) {
+    public CollectionBuilder<T> apply(UnaryOperator<T> operator) {
         List<T> list = new LinkedList<>(collection);
         list.replaceAll(operator);
-        return new CollectionOperator<>(list);
+        return new CollectionBuilder<>(list);
     }
 
     /**
@@ -163,13 +163,13 @@ public final class CollectionOperator<T> {
      * @return a new operator with a mapped list
      * @throws NullPointerException if function is null
      */
-    public <U> CollectionOperator<U> map(Function<T, U> function) {
+    public <U> CollectionBuilder<U> map(Function<T, U> function) {
         Objects.requireNonNull(function);
 
         List<U> list = new LinkedList<>();
         collection.forEach(t -> list.add(function.apply(t)));
 
-        return new CollectionOperator<>(list);
+        return new CollectionBuilder<>(list);
     }
 
     private static <C extends Collection> C newInstance(Class<? extends Collection> clazz) {
@@ -259,11 +259,11 @@ public final class CollectionOperator<T> {
         return Collections.enumeration(collection);
     }
 
-    public static <T> CollectionOperator<T> of(Collection<T> collection) {
-        return new CollectionOperator<>(Objects.requireNonNull(collection));
+    public static <T> CollectionBuilder<T> of(Collection<T> collection) {
+        return new CollectionBuilder<>(Objects.requireNonNull(collection));
     }
 
-    public static <T> CollectionOperator<T> of(Iterator<T> iterator) {
+    public static <T> CollectionBuilder<T> of(Iterator<T> iterator) {
         Objects.requireNonNull(iterator);
 
         List<T> collection = new LinkedList<>();
@@ -273,7 +273,7 @@ public final class CollectionOperator<T> {
         return of(collection);
     }
 
-    public static <T> CollectionOperator<T> of(Iterable<T> iterable) {
+    public static <T> CollectionBuilder<T> of(Iterable<T> iterable) {
         Objects.requireNonNull(iterable);
 
         List<T> collection = new LinkedList<>();
@@ -282,7 +282,7 @@ public final class CollectionOperator<T> {
         return of(collection);
     }
 
-    public static <T> CollectionOperator<T> of(Enumeration<T> enumeration) {
+    public static <T> CollectionBuilder<T> of(Enumeration<T> enumeration) {
         Objects.requireNonNull(enumeration);
 
         List<T> collection = new LinkedList<>();
@@ -293,7 +293,7 @@ public final class CollectionOperator<T> {
     }
 
     @SafeVarargs
-    public static <T> CollectionOperator<T> of(T... elements) {
+    public static <T> CollectionBuilder<T> of(T... elements) {
         return of(ArrayUtils.toList(elements));
     }
 }

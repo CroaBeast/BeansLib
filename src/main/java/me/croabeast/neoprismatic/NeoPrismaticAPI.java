@@ -45,7 +45,7 @@ public class NeoPrismaticAPI {
             .put(new Color(16733525), ChatColor.getByChar('c'))
             .put(new Color(16733695), ChatColor.getByChar('d'))
             .put(new Color(16777045), ChatColor.getByChar('e'))
-            .put(new Color(16777215), ChatColor.getByChar('f')).map();
+            .put(new Color(16777215), ChatColor.getByChar('f')).toMap();
 
     private ChatColor getClosestColor(Color color) {
         Color nearestColor = null;

@@ -1,7 +1,7 @@
 package me.croabeast.beanslib.key;
 
 import me.croabeast.beanslib.applier.StringApplier;
-import me.croabeast.beanslib.misc.CollectionOperator;
+import me.croabeast.beanslib.misc.CollectionBuilder;
 import me.croabeast.beanslib.misc.Rounder;
 import me.croabeast.beanslib.utility.Exceptions;
 import org.apache.commons.lang.StringUtils;
@@ -140,7 +140,7 @@ public final class PlayerKey<T> {
     }
 
     private static <T> List<T> map(Function<PlayerKey<?>, T> f) {
-        return CollectionOperator.of(KEY_SET).map(f).collect(new LinkedList<>());
+        return CollectionBuilder.of(KEY_SET).map(f).collect(new LinkedList<>());
     }
 
     /**
