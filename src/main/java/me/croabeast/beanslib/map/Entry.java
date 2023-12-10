@@ -1,6 +1,7 @@
 package me.croabeast.beanslib.map;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * A class that represents a pair of values with a key and a value.
@@ -55,10 +56,12 @@ public interface Entry<A, B> {
     }
 
     static <A, B> Entry<A, B> of(Entry<? extends A, ? extends B> entry) {
+        Objects.requireNonNull(entry);
         return of(entry.getKey(), entry.getValue());
     }
 
     static <A, B> Entry<A, B> of(Map.Entry<? extends A, ? extends B> entry) {
+        Objects.requireNonNull(entry);
         return of(entry.getKey(), entry.getValue());
     }
 }
