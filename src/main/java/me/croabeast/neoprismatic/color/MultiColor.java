@@ -1,7 +1,7 @@
 package me.croabeast.neoprismatic.color;
 
+import me.croabeast.beanslib.misc.Regex;
 import me.croabeast.neoprismatic.NeoPrismaticAPI;
-import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -18,14 +18,14 @@ class MultiColor implements ColorPattern {
 
     private final Set<ColorPattern> colors = new LinkedHashSet<>();
 
-    @Language("RegExp")
-    static String gradientPattern(@Language("RegExp") String prefix) {
-        @Language("RegExp") String hex = prefix + "([\\da-f]{6})";
+    @Regex
+    static String gradientPattern(@Regex String prefix) {
+        @Regex String hex = prefix + "([\\da-f]{6})";
         return "<" + hex + ">(.+?)</" + hex + ">";
     }
 
-    @Language("RegExp")
-    static String rainbowPattern(@Language("RegExp") String prefix) {
+    @Regex
+    static String rainbowPattern(@Regex String prefix) {
         return "<" + prefix + ":(\\d{1,3})>(.+?)</" + prefix + ">";
     }
 
@@ -141,7 +141,7 @@ class MultiColor implements ColorPattern {
         private final BiFunction<String, Boolean, String> applier;
         private final UnaryOperator<String> stripOperator;
 
-        Gradient(@Language("RegExp") String prefix) {
+        Gradient(@Regex String prefix) {
             pattern = Pattern.compile("(?i)" + gradientPattern(prefix));
 
             applier = (string, isLegacy) -> {
@@ -213,7 +213,7 @@ class MultiColor implements ColorPattern {
         private final BiFunction<String, Boolean, String> applier;
         private final UnaryOperator<String> stripOperator;
 
-        Rainbow(@Language("RegExp") String prefix) {
+        Rainbow(@Regex String prefix) {
             pattern = Pattern.compile("(?i)" + rainbowPattern(prefix));
 
             applier = (string, isLegacy) -> {

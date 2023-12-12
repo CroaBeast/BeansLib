@@ -88,10 +88,8 @@ public class MessageSender {
      */
     private boolean sensitive = true;
 
-    /**
-     * If all chat messages will remove all the first space characters.
-     */
-    private boolean noFirstSpaces = false;
+    @Getter(value = AccessLevel.NONE)
+    private boolean trimFirstSpaces = false;
 
     /**
      * Creates a new sender with a defined collection of targets and a player
@@ -101,7 +99,7 @@ public class MessageSender {
      * @param parser a player to parse messages
      */
     public MessageSender(Collection<? extends CommandSender> targets, Player parser) {
-        this.targets.addAll(targets);
+        if (!targets.isEmpty()) this.targets.addAll(targets);
         this.parser = parser;
     }
 
@@ -139,7 +137,7 @@ public class MessageSender {
 
         sensitive = sender.sensitive;
         logger = sender.logger;
-        noFirstSpaces = sender.noFirstSpaces;
+        trimFirstSpaces = sender.trimFirstSpaces;
     }
 
     /**
@@ -351,14 +349,14 @@ public class MessageSender {
 
     private String formatString(Player p, String string) {
         final StringApplier applier = StringApplier.simplified(string);
-        final boolean c = sensitive;
+        final boolean c = isSensitive();
 
         for (BiFunction<Player, String, String> f : functions)
             applier.apply(s -> f.apply(p, s));
 
         applier.apply(s -> PlayerKey.replaceKeys(p, s, c));
         for (KeyValue<?> k : entries)
-            applier.apply(s -> k.replace(s, sensitive));
+            applier.apply(s -> k.replace(s, c));
 
         return applier.toString();
     }
@@ -371,15 +369,23 @@ public class MessageSender {
         MessageExecutor key = MessageExecutor.identifyKey(s);
 
         if (key == MessageExecutor.WEBHOOK_EXECUTOR &&
-                isFlag(MessageFlag.WEBHOOK)) key.execute(parser, s);
+                isFlag(MessageFlag.WEBHOOK)) key.execute(getParser(), s);
 
-        Beans.rawLog(formatString(parser, s));
+        Beans.rawLog(formatString(getParser(), s));
         return output;
     }
 
     private boolean sendWebhooks(List<String> list, boolean output) {
         list.forEach(s -> sendWebhook(s, true));
         return output;
+    }
+
+    /**
+     * Returns ff all chat messages will remove all the first space characters.
+     * @return if chat messages will remove all the first spaces
+     */
+    public boolean shouldTrimSpaces() {
+        return trimFirstSpaces;
     }
 
     /**
@@ -421,12 +427,12 @@ public class MessageSender {
                 continue;
             }
 
-            Player parser = this.parser == null ? t : this.parser;
+            Player parser = getParser() == null ? t : getParser();
 
             StringApplier temp = StringApplier.simplified(applier);
-            temp.apply(s -> formatString(parser, s));
+            temp.apply(s -> formatString(getParser(), s));
 
-            if (noFirstSpaces && ex == MessageExecutor.CHAT_EXECUTOR)
+            if (shouldTrimSpaces() && ex == MessageExecutor.CHAT_EXECUTOR)
                 temp.apply(TextUtils.STRIP_FIRST_SPACES);
 
             boolean b = ex.execute(t, parser, temp.toString());
@@ -435,11 +441,12 @@ public class MessageSender {
 
         if (notSend) return false;
 
-        if (logger) {
+        if (isLogger()) {
             applier.apply(s -> {
-                boolean is = parser == null && targets.size() == 1;
-                return formatString(is ? targets.get(0) : parser, s);
+                boolean is = getParser() == null && targets.size() == 1;
+                return formatString(is ? targets.get(0) : getParser(), s);
             });
+
             Beans.rawLog(applier.toString());
         }
         return true;
@@ -498,24 +505,25 @@ public class MessageSender {
                     continue;
                 }
 
-                Player temp = parser == null ? t : parser;
+                Player temp = getParser() == null ? t : getParser();
                 String  p = formatString(temp, s);
 
                 executed.add(e.execute(t, temp,
-                        noFirstSpaces && e == MessageExecutor.CHAT_EXECUTOR ?
+                        shouldTrimSpaces()
+                                && e == MessageExecutor.CHAT_EXECUTOR ?
                         TextUtils.STRIP_FIRST_SPACES.apply(p) : p
                 ));
             }
 
             if (executed.stream().noneMatch(b -> b)) continue;
 
-            logList.add(formatString(parser == null &&
+            logList.add(formatString(getParser() == null &&
                     targets.size() == 1 ?
-                    targets.toArray(new Player[0])[0] : parser, s
+                    targets.toArray(new Player[0])[0] : getParser(), s
             ));
         }
 
-        if (logger && logList.size() > 0)
+        if (isLogger() && logList.size() > 0)
             Beans.rawLog(logList.toArray(new String[0]));
         return true;
     }
@@ -562,10 +570,6 @@ public class MessageSender {
     @NotNull
     public static MessageSender fromLoaded() {
         return loaded.clone();
-    }
-
-    public static <T> Entry<String, T> newKeyValue(String key, T value) {
-        return new KeyValue<>(key, value);
     }
 
     @RequiredArgsConstructor

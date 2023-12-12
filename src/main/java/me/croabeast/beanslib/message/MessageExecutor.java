@@ -12,6 +12,7 @@ import me.croabeast.beanslib.key.PlayerKey;
 import me.croabeast.beanslib.applier.StringApplier;
 import me.croabeast.beanslib.nms.ActionBarHandler;
 import me.croabeast.beanslib.nms.TitleHandler;
+import me.croabeast.beanslib.misc.Regex;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.neoprismatic.NeoPrismaticAPI;
 import org.apache.commons.lang.StringUtils;
@@ -19,7 +20,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.intellij.lang.annotations.Language;
 import org.intellij.lang.annotations.RegExp;
 import org.jetbrains.annotations.NotNull;
 
@@ -295,13 +295,20 @@ public abstract class MessageExecutor implements Cloneable {
         return execute(parser, parser, string);
     }
 
-    @Language("RegExp")
+    @Regex
     private String getRegex() {
-        @Language("RegExp")
-        String f = flag.getName() + (StringUtils.isBlank(regex) ? "" : regex);
+        @Regex String f = flag.getName();
+
+        if (StringUtils.isNotBlank(regex))
+            f += regex;
 
         String[] del = Beans.getKeysDelimiters();
-        return "(?i)^" + Pattern.quote(del[0]) + f + Pattern.quote(del[1]);
+
+        @Regex
+        String d1 = Pattern.quote(del[0]),
+                d2 = Pattern.quote(del[1]);
+
+        return "(?i)^" + d1 + f + d2;
     }
 
     /**

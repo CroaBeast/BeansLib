@@ -1,8 +1,8 @@
 package me.croabeast.neoprismatic.color;
 
+import me.croabeast.beanslib.misc.Regex;
 import me.croabeast.neoprismatic.NeoPrismaticAPI;
 import net.md_5.bungee.api.ChatColor;
-import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedHashSet;
@@ -41,7 +41,7 @@ class SingleColor implements ColorPattern {
 
         private final Pattern pattern;
 
-        Color(@Language("RegExp") String pattern) {
+        Color(@Regex String pattern) {
             this.pattern = Pattern.compile("(?i)" + pattern);
             colors.add(this);
         }

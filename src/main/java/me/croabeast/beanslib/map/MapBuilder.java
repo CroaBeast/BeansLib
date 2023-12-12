@@ -227,7 +227,10 @@ public class MapBuilder<K, V> {
             entries.add(Entry.of(key, value));
         }
 
-        return new MapBuilder<>(entries);
+        MapBuilder<A, V> builder = new MapBuilder<>();
+        entries.forEach(builder::put);
+
+        return builder;
     }
 
     /**
@@ -251,7 +254,10 @@ public class MapBuilder<K, V> {
             entries.add(Entry.of(key, value));
         }
 
-        return new MapBuilder<>(entries);
+        MapBuilder<K, B> builder = new MapBuilder<>();
+        entries.forEach(builder::put);
+
+        return builder;
     }
 
     /**
@@ -279,7 +285,10 @@ public class MapBuilder<K, V> {
                     valueFunction.apply(entry.getValue())
             ));
 
-        return new MapBuilder<>(entries);
+        MapBuilder<A, B> builder = new MapBuilder<>();
+        entries.forEach(builder::put);
+
+        return builder;
     }
 
     /**

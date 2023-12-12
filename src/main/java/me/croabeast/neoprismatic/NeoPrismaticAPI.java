@@ -3,12 +3,12 @@ package me.croabeast.neoprismatic;
 import lombok.experimental.UtilityClass;
 import me.croabeast.beanslib.map.MapBuilder;
 import me.croabeast.beanslib.utility.LibUtils;
+import me.croabeast.beanslib.misc.Regex;
 import me.croabeast.neoprismatic.color.ColorPattern;
 import me.croabeast.neoprismatic.util.ClientVersion;
 import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
-import org.intellij.lang.annotations.Language;
 
 import java.awt.*;
 import java.util.Map;
@@ -282,7 +282,7 @@ public class NeoPrismaticAPI {
         return stripRGB(stripSpecial(stripBukkit(string)));
     }
 
-    @Language("RegExp")
+    @Regex
     private String singleToRegex() {
         return "[&§][a-fk-or\\d]|[{]#([a-f\\d]{6})[}]|" +
                 "<#([a-f\\d]{6})>|%#([a-f\\d]{6})%|" +
