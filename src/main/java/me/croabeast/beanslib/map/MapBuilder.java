@@ -416,4 +416,8 @@ public class MapBuilder<K, V> {
     public static <A, B> boolean isEmpty(MapBuilder<A, B> builder) {
         return builder == null || builder.isEmpty();
     }
+
+    public static <K, V> Map<K, V> singleton(K key, V value) {
+        return new MapBuilder<K, V>().put(key, value).toMap();
+    }
 }

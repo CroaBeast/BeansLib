@@ -1,11 +1,10 @@
-package me.croabeast.beanslib.builder;
+package me.croabeast.beanslib.message;
 
 import lombok.var;
 import me.croabeast.beanslib.utility.ArrayUtils;
 import net.md_5.bungee.api.chat.ClickEvent;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -46,7 +45,7 @@ public enum ClickAction {
     /**
      * A click action that copies a text to the player's clipboard.
      */
-    CLIPBOARD(ClickEvent.Action.COPY_TO_CLIPBOARD);
+    CLIPBOARD(ClickEvent.Action.COPY_TO_CLIPBOARD, "copy");
 
     private final ClickEvent.Action bukkit;
     private final List<String> names = new LinkedList<>();

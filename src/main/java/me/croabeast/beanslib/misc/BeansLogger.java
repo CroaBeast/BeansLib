@@ -107,9 +107,11 @@ public class BeansLogger {
 
             MessageExecutor e = MessageExecutor.identifyKey(temp);
 
-            if (isLog && e != MessageExecutor.CHAT_EXECUTOR) {
+            if (isLog && e != MessageExecutor.CHAT) {
                 Matcher m = e.getPattern().matcher(temp);
-                if (m.find()) result.apply(s -> s.replace(m.group(), ""));
+
+                if (m.find())
+                    result.apply(s -> s.replace(m.group(), ""));
             }
 
             list.add(result.apply(c::center).toString());

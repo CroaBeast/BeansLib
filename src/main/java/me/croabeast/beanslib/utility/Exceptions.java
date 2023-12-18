@@ -1,6 +1,5 @@
 package me.croabeast.beanslib.utility;
 
-import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import lombok.var;
@@ -15,22 +14,19 @@ import java.util.Collection;
 import java.util.Objects;
 
 /**
- * The exceptions checker class.
- *
- * @author CroaBeast
- * @since 1.2
+ * A utility class for handling various exceptions and plugin-related checks.
  */
 @UtilityClass
 public class Exceptions {
 
     /**
-     * Checks if a plugin is enabled.
-     * Sure, you can just call the Bukkit method, but I like shorter methods.
+     * Checks if a plugin with the given name is enabled or not.
      *
-     * @param name the plugin's name
-     * @param checkRunning if it needs to check if the plugin's is running
+     * @param name the name of the plugin to check
+     * @param checkRunning whether to check if the plugin is running or not
      *
-     * @return if the plugin is enabled
+     * @return true if the plugin is not null and is enabled, if
+     *         checkRunning is true; false otherwise
      */
     public boolean isPluginEnabled(String name, boolean checkRunning) {
         Plugin plugin = Bukkit.getPluginManager().getPlugin(name);
@@ -38,27 +34,22 @@ public class Exceptions {
     }
 
     /**
-     * Checks if a plugin is enabled.
-     * Sure, you can just call the Bukkit method, but I like shorter methods.
+     * Checks if a plugin with the given name is enabled or not, assuming checkRunning is true.
      *
-     * @param name the plugin's name
-     * @return if the plugin is enabled
+     * @param name the name of the plugin to check
+     * @return true if the plugin is not null and is enabled, false otherwise
      */
     public boolean isPluginEnabled(String name) {
         return isPluginEnabled(name, true);
     }
 
     /**
-     * Checks if a plugin names' list are enabled.
+     * Checks if a collection of plugins are enabled or not, based on a boolean flag.
      *
-     * @param isInclusive
-     *      <p> if enabled, will return true if all plugins
-     *      are enabled, otherwise false;
-     *      <p> if false, will return true if at least one
-     *      plugin is enabled, otherwise false
-     * @param names the plugin names' list
+     * @param isInclusive whether to check if all plugins are enabled (true) or any plugin is enabled (false)
+     * @param names the collection of plugin names to check
      *
-     * @return the respective value
+     * @return true if the collection is not empty and the plugins match the isInclusive flag, false otherwise
      */
     public boolean arePluginsEnabled(boolean isInclusive, Collection<String> names) {
         if (names.size() == 0) return false;
@@ -82,28 +73,24 @@ public class Exceptions {
     }
 
     /**
-     * Checks if a plugin names' array are enabled.
+     * Checks if an array of plugins is enabled or not, based on a boolean flag.
      *
-     * @param isInclusive
-     *      <p> if enabled, will return true if all plugins
-     *      are enabled, otherwise false;
-     *      <p> if false, will return true if at least one
-     *      plugin is enabled, otherwise false
-     * @param names the plugin names' array
+     * @param isInclusive whether to check if all plugins are enabled (true) or any plugin is enabled (false)
+     * @param names the array of plugin names to check
      *
-     * @return the respective value
+     * @return true if the array is not empty and the plugins match the isInclusive flag, false otherwise
      */
     public boolean arePluginsEnabled(boolean isInclusive, String... names) {
-        return arePluginsEnabled(isInclusive, Lists.newArrayList(names));
+        return arePluginsEnabled(isInclusive, ArrayUtils.toList(names));
     }
 
     /**
-     * Checks if the player is null.
+     * Checks if a player is not null and returns it, otherwise throws a NullPointerException.
      *
-     * @param player a player
+     * @param player the player to check
      *
-     * @return the player
-     * @throws NullPointerException if player is null
+     * @return the player if it is not null
+     * @throws NullPointerException if the player is null
      */
     @NotNull
     public Player checkPlayer(Player player) {
@@ -111,26 +98,26 @@ public class Exceptions {
     }
 
     /**
-     * Returns the {@code Class} object of the method's caller in the current thread's
-     * stack trace at the specified index.
+     * Gets the caller class from the current thread's stack trace at a given index.
      *
-     * <p> The index 0 corresponds to the {@link Thread} class itself, 1 corresponds to
-     * the caller of this method, 2 corresponds to the caller of the method that called
-     * this method, and so on.
+     * @param index the index of the stack trace element to get the class from
      *
-     * @param index the index of the caller in the current thread's stack trace
-     *
-     * @return the {@code Class} object representing the class of the method's caller
-     * @throws ClassNotFoundException if the class of the method's caller cannot be found
-     *
-     * @see Thread#getStackTrace()
-     * @see StackTraceElement#getClassName()
+     * @return the class object of the caller class
+     * @throws ClassNotFoundException if the class name is not found
      */
     @NotNull
     public Class<?> getCallerClass(int index) throws ClassNotFoundException {
         return Class.forName(Thread.currentThread().getStackTrace()[index].getClassName());
     }
 
+    /**
+     * Checks if a class has access to the plugin, otherwise throws a throwable.
+     *
+     * @param clazz the class to check
+     * @param throwable the throwable to throw if the class does not have access
+     *
+     * @throws Throwable if the class does not have access to the plugin
+     */
     @SneakyThrows
     public void hasPluginAccess(Class<?> clazz, Throwable throwable) {
         Objects.requireNonNull(clazz);
@@ -146,10 +133,24 @@ public class Exceptions {
         throw throwable;
     }
 
+    /**
+     * Checks if a class has access to the plugin, otherwise throws an IllegalAccessException with a given message.
+     *
+     * @param clazz the class to check
+     * @param message the message to use for the exception
+     *
+     * @throws IllegalAccessException if the class does not have access to the plugin
+     */
     public void hasPluginAccess(Class<?> clazz, String message) {
         hasPluginAccess(clazz, new IllegalAccessException(message));
     }
 
+    /**
+     * Checks if a class has access to the plugin, otherwise throws an IllegalAccessException with a default message.
+     *
+     * @param clazz the class to check
+     * @throws IllegalAccessException if the class does not have access to the plugin
+     */
     public void hasPluginAccess(Class<?> clazz) {
         hasPluginAccess(
                 clazz,

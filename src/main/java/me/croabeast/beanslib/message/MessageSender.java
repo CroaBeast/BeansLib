@@ -368,7 +368,7 @@ public class MessageSender {
     private boolean sendWebhook(String s, boolean output) {
         MessageExecutor key = MessageExecutor.identifyKey(s);
 
-        if (key == MessageExecutor.WEBHOOK_EXECUTOR &&
+        if (key == MessageExecutor.WEBHOOK &&
                 isFlag(MessageFlag.WEBHOOK)) key.execute(getParser(), s);
 
         Beans.rawLog(formatString(getParser(), s));
@@ -432,7 +432,7 @@ public class MessageSender {
             StringApplier temp = StringApplier.simplified(applier);
             temp.apply(s -> formatString(getParser(), s));
 
-            if (shouldTrimSpaces() && ex == MessageExecutor.CHAT_EXECUTOR)
+            if (shouldTrimSpaces() && ex == MessageExecutor.CHAT)
                 temp.apply(TextUtils.STRIP_FIRST_SPACES);
 
             boolean b = ex.execute(t, parser, temp.toString());
@@ -509,8 +509,7 @@ public class MessageSender {
                 String  p = formatString(temp, s);
 
                 executed.add(e.execute(t, temp,
-                        shouldTrimSpaces()
-                                && e == MessageExecutor.CHAT_EXECUTOR ?
+                        shouldTrimSpaces() && e == MessageExecutor.CHAT ?
                         TextUtils.STRIP_FIRST_SPACES.apply(p) : p
                 ));
             }

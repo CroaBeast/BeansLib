@@ -1,7 +1,5 @@
-package me.croabeast.beanslib.builder;
+package me.croabeast.beanslib.message;
 
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import me.croabeast.beanslib.Beans;
 import me.croabeast.beanslib.applier.StringApplier;
 import me.croabeast.beanslib.utility.ArrayUtils;
@@ -34,6 +32,76 @@ public class ChatMessageBuilder {
 
     private final Map<Integer, ChatMessage> map = new LinkedHashMap<>();
     private int index = -1;
+
+    private void toURL(String s) {
+        Matcher urlMatcher = TextUtils.URL_PATTERN.matcher(s);
+        int end = 0;
+
+        while (urlMatcher.find()) {
+            String t = s.substring(end, urlMatcher.start());
+
+            if (t.length() > 0)
+                map.put(++index, new ChatMessage(t).applyColor());
+
+            if (parseURLs) {
+                final String url = urlMatcher.group();
+
+                ClickAction a = ClickAction.OPEN_URL;
+                ClickEvent c = new ClickEvent(a, url);
+
+                map.put(++index, new ChatMessage(url)
+                        .setClick(c)
+                        .applyColor());
+            }
+
+            end = urlMatcher.end();
+        }
+
+        if (end > (s.length() - 1)) return;
+
+        String temp = s.substring(end);
+        map.put(++index, new ChatMessage(temp).applyColor());
+    }
+
+    private void updateMessageMapping(String string) {
+        if (string == null) return;
+
+        if (string.length() < 1) {
+            map.put(++index, new ChatMessage(string));
+            return;
+        }
+
+        String line = StringApplier.simplified(string).
+                apply(s -> TextUtils.PARSE_INTERACTIVE_CHAT.apply(parser, s)).
+                apply(TextUtils.CONVERT_OLD_JSON).
+                apply(Beans::convertToSmallCaps).
+                apply(s -> Beans.createCenteredChatMessage(target, parser, s)).
+                toString();
+
+        Matcher match = TextUtils.FORMAT_CHAT_PATTERN.matcher(line);
+        int last = 0;
+
+        while (match.find()) {
+            String temp = line.substring(last, match.start());
+            if (temp.length() > 0) toURL(temp);
+
+            String[] args = match.group(1).split("[|]", 2);
+            String h = null, c = null;
+
+            for (String s : args) {
+                Matcher m = Pattern.compile("(?i)hover").matcher(s);
+                if (m.find()) h = s; else c = s;
+            }
+
+            ChatMessage message = new ChatMessage(match.group(7));
+            if (c != null || h != null) message.setHandler(c, h);
+
+            map.put(++index, message);
+            last = match.end();
+        }
+
+        if (last <= (line.length() - 1)) toURL(line.substring(last));
+    }
 
     /**
      * Creates a new builder with a target player, a parser player, and an initial string.
@@ -106,78 +174,6 @@ public class ChatMessageBuilder {
         index = builder.index;
     }
 
-    private String colorURL() {
-        return ++index > 0 ? map.get(index - 1).getLastColor() + "" : "";
-    }
-
-    private void toURL(String s) {
-        Matcher urlMatcher = TextUtils.URL_PATTERN.matcher(s);
-        int end = 0;
-
-        while (urlMatcher.find()) {
-            String t = s.substring(end, urlMatcher.start());
-            if (t.length() > 0) {
-                ChatMessage m = new ChatMessage(colorURL() + t);
-                map.put(index, m);
-            }
-
-            if (parseURLs) {
-                final String url = urlMatcher.group();
-
-                ClickEvent c = new ClickEvent(ClickAction.OPEN_URL, url);
-                ChatMessage m = new ChatMessage(colorURL() + url);
-
-                m.handler.setClick(c);
-                map.put(index, m);
-            }
-
-            end = urlMatcher.end();
-        }
-
-        if (end > (s.length() - 1)) return;
-        map.put(index, new ChatMessage(colorURL() + s.substring(end)));
-    }
-
-    private void updateMessageMapping(String string) {
-        if (string == null) return;
-
-        if (string.length() < 1) {
-            map.put(++index, new ChatMessage(string));
-            return;
-        }
-
-        String line = StringApplier.simplified(string).
-                apply(s -> TextUtils.PARSE_INTERACTIVE_CHAT.apply(parser, s)).
-                apply(TextUtils.CONVERT_OLD_JSON).
-                apply(Beans::convertToSmallCaps).
-                apply(s -> Beans.createCenteredChatMessage(target, parser, s)).
-                toString();
-
-        Matcher match = TextUtils.FORMAT_CHAT_PATTERN.matcher(line);
-        int last = 0;
-
-        while (match.find()) {
-            String temp = line.substring(last, match.start());
-            if (temp.length() > 0) toURL(temp);
-
-            String[] args = match.group(1).split("[|]", 2);
-            String h = null, c = null;
-
-            for (String s : args) {
-                Matcher m = Pattern.compile("(?i)hover").matcher(s);
-                if (m.find()) h = s; else c = s;
-            }
-
-            ChatMessage message = new ChatMessage(match.group(7));
-            if (c != null || h != null) message.setHandler(c, h);
-
-            map.put(++index, message);
-            last = match.end();
-        }
-
-        if (last <= (line.length() - 1)) toURL(line.substring(last));
-    }
-
     /**
      * Sets whether the builder should parse URLs from the string and create click
      * events for them.
@@ -200,11 +196,18 @@ public class ChatMessageBuilder {
      * @return the builder itself
      */
     public ChatMessageBuilder setHover(List<String> hover) {
-        if (index == -1 || hover == null || hover.isEmpty())
+        if (index < 0) return this;
+
+        try {
+            Objects.requireNonNull(hover);
+        } catch (Exception e) {
             return this;
+        }
+
+        if (hover.isEmpty()) return this;
 
         ChatMessage message = map.get(index);
-        message.handler.setHover(new HoverEvent(hover));
+        message.setHover(new HoverEvent(hover));
 
         map.put(index, message);
         return this;
@@ -237,11 +240,18 @@ public class ChatMessageBuilder {
      * @return the builder itself
      */
     public ChatMessageBuilder setHoverToAll(List<String> hover) {
-        if (index == -1 || hover == null || hover.isEmpty())
+        if (index < 0) return this;
+
+        try {
+            Objects.requireNonNull(hover);
+        } catch (Exception e) {
             return this;
+        }
+
+        if (hover.isEmpty()) return this;
 
         for (ChatMessage m : map.values())
-            m.handler.setHover(new HoverEvent(hover));
+            m.setHover(new HoverEvent(hover));
 
         return this;
     }
@@ -262,11 +272,17 @@ public class ChatMessageBuilder {
      * @return the builder itself
      */
     public ChatMessageBuilder setClick(ClickAction type, String action) {
-        if (index == -1 || type == null || action == null)
+        if (index < 0) return this;
+
+        try {
+            Objects.requireNonNull(type);
+            Objects.requireNonNull(action);
+        } catch (Exception e) {
             return this;
+        }
 
         ChatMessage message = map.get(index);
-        message.handler.setClick(new ClickEvent(type, action));
+        message.setClick(new ClickEvent(type, action));
 
         map.put(index, message);
         return this;
@@ -325,14 +341,20 @@ public class ChatMessageBuilder {
      * @return the builder itself
      */
     public ChatMessageBuilder setClickToAll(ClickAction type, String action) {
-        if (index == -1 || type == null || action == null)
+        if (index < 0) return this;
+
+        try {
+            Objects.requireNonNull(type);
+            Objects.requireNonNull(action);
+        } catch (Exception e) {
             return this;
+        }
 
         for (ChatMessage m : map.values()) {
             if (parseURLs && m.handler.click.type == ClickAction.OPEN_URL)
                 continue;
 
-            m.handler.setClick(new ClickEvent(type, action));
+            m.setClick(new ClickEvent(type, action));
         }
 
         return this;
@@ -603,34 +625,12 @@ public class ChatMessageBuilder {
         }
     }
 
-    @Setter
     private class ChatEventsHandler {
 
         private ClickEvent click = null;
         private HoverEvent hover = null;
 
         private ChatEventsHandler() {}
-
-        private ChatEventsHandler(String click, String hover) {
-            if (click != null) {
-                String[] array = click.split(":\"", 2);
-                String c = array[1];
-
-                try {
-                    this.click = new ClickEvent(
-                            ClickAction.fromString(array[0]),
-                            c.substring(0, c.length() - 1)
-                    );
-                } catch (Exception ignored) {}
-            }
-
-            if (hover == null) return;
-
-            String h = hover.split(":\"", 2)[1];
-            h = h.substring(0, h.length() - 1);
-
-            this.hover = new HoverEvent(Beans.splitLine(h));
-        }
 
         private boolean isEmpty() {
             return ChatEvent.isEmpty(click) && ChatEvent.isEmpty(hover);
@@ -642,17 +642,55 @@ public class ChatMessageBuilder {
         }
     }
 
-    @RequiredArgsConstructor
     private class ChatMessage {
 
-        @Setter @NotNull
-        private ChatEventsHandler handler = new ChatEventsHandler();
-        private final String message;
-
+        private final ChatEventsHandler handler;
+        private String message;
         private ChatColor color = null;
 
-        private void setHandler(String click, String hover) {
-            handler = new ChatEventsHandler(click, hover);
+        private ChatMessage(String message) {
+            this.message = message;
+            handler = new ChatEventsHandler();
+        }
+
+        private ChatMessage setClick(ClickEvent event) {
+            handler.click = event;
+            return this;
+        }
+
+        private ChatMessage setHover(HoverEvent event) {
+            handler.hover = event;
+            return this;
+        }
+
+        private ChatMessage applyColor() {
+            if (color == null) compile();
+
+            message = color.toString() + message;
+            return this;
+        }
+
+        private ChatMessage setHandler(String click, String hover) {
+            if (click != null) {
+                String[] array = click.split(":\"", 2);
+                String c = array[1];
+
+                try {
+                    handler.click = new ClickEvent(
+                            ClickAction.fromString(array[0]),
+                            c.substring(0, c.length() - 1)
+                    );
+                } catch (Exception ignored) {}
+            }
+
+            if (hover != null) {
+                String h = hover.split(":\"", 2)[1];
+                h = h.substring(0, h.length() - 1);
+
+                handler.hover = new HoverEvent(Beans.splitLine(h));
+            }
+
+            return this;
         }
 
         private BaseComponent[] compile() {
@@ -662,15 +700,11 @@ public class ChatMessageBuilder {
             ClickEvent c = handler.click;
             HoverEvent h = handler.hover;
 
-            if (parseURLs && urlMatch.find()) {
-                ClickEvent cl = new ClickEvent(ClickAction.OPEN_URL, message);
-                handler.setClick(cl);
-            }
+            if (parseURLs && urlMatch.find())
+                setClick(new ClickEvent(ClickAction.OPEN_URL, message));
 
             if (!ChatEvent.isEmpty(c)) comp.setClickEvent(c.createEvent());
-
-            if (!ChatEvent.isEmpty(h))
-                comp.setHoverEvent(h.createEvent());
+            if (!ChatEvent.isEmpty(h)) comp.setHoverEvent(h.createEvent());
 
             BaseComponent[] comps = new BaseComponent[] {comp};
 
@@ -680,11 +714,6 @@ public class ChatMessageBuilder {
 
         private List<BaseComponent> asComponents() {
             return ArrayUtils.toCollection(new LinkedList<>(), compile());
-        }
-
-        private ChatColor getLastColor() {
-            if (color == null) compile();
-            return color;
         }
 
         @Override

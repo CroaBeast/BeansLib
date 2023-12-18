@@ -1,18 +1,15 @@
 package me.croabeast.beanslib.message;
 
 import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Accessors;
 import me.croabeast.beanslib.Beans;
-import me.croabeast.beanslib.BeansLib;
-import me.croabeast.beanslib.builder.BossbarBuilder;
-import me.croabeast.beanslib.builder.ChatMessageBuilder;
+import me.croabeast.beanslib.applier.StringApplier;
 import me.croabeast.beanslib.discord.Webhook;
 import me.croabeast.beanslib.key.PlayerKey;
-import me.croabeast.beanslib.applier.StringApplier;
-import me.croabeast.beanslib.nms.ActionBarHandler;
-import me.croabeast.beanslib.nms.TitleHandler;
+import me.croabeast.beanslib.misc.BossbarBuilder;
 import me.croabeast.beanslib.misc.Regex;
+import me.croabeast.beanslib.reflect.ActionBarHandler;
+import me.croabeast.beanslib.reflect.TitleHandler;
+import me.croabeast.beanslib.utility.Exceptions;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.neoprismatic.NeoPrismaticAPI;
 import org.apache.commons.lang.StringUtils;
@@ -20,52 +17,58 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.intellij.lang.annotations.RegExp;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The {@code MessageExecutor} class manages how to identify a message type if it has
- * a respective registered prefix and an optional additional regex parameter to check
- * if more arguments will be needed to identify the message type.
+ * An abstract class that represents a message executor for different types of messages.
  *
- * <p> Each default instance of this class have a setter for the main key and the regex,
- * if It's necessary to change those values.
- * The default key and regex of each instance depends mostly on the {@link Beans#getLoaded()}.
+ * <p> A message executor can execute a message for a target player and a parser player,
+ * based on the message flag and the input string, can also format the input string by
+ * replacing keys, placeholders, and colors.
  *
  * <p> This class can not have more instances or child classes to avoid errors with the
  * existing keys.
  *
- * <p> See {@link MessageSender}, it uses the default instances to parse, format, and
- * send messages to players.
- *
- * @author CroaBeast
- * @since 1.4
+ * @see MessageFlag
+ * @see MessageSender
  */
-public abstract class MessageExecutor implements Cloneable {
+public abstract class MessageExecutor {
 
-    private static final HashMap<MessageFlag, MessageExecutor> MESSAGE_EXECUTOR_MAP, DEFAULT_EXECUTOR_MAP;
+    private static final Map<MessageFlag, MessageExecutor> MAP, DEFS;
+
+    private static String[] delimiters = {"[", "]"};
+    private static int[] titleTicks = {8, 50, 8};
 
     static {
-        MESSAGE_EXECUTOR_MAP = new LinkedHashMap<>();
-        DEFAULT_EXECUTOR_MAP = new LinkedHashMap<>();
+        MAP = new LinkedHashMap<>();
+        DEFS = new LinkedHashMap<>();
     }
 
     /**
-     * The {@link MessageExecutor} instance to identify action-bar messages.
+     * The {@link MessageFlag} object of this executor.
      */
-    public static final MessageExecutor ACTION_BAR_EXECUTOR = new MessageExecutor(MessageFlag.ACTION_BAR) {
+    @Getter
+    private final MessageFlag flag;
+    @Regex private String regex;
+
+    private boolean color = false;
+
+    /**
+     * A message executor for the action bar message flag.
+     *
+     * <p> It sends a message to the target player's action bar, which is the area above the hot bar.
+     * It also colorizes the input string.
+     */
+    public static final MessageExecutor ACTION_BAR = new MessageExecutor(MessageFlag.ACTION_BAR) {
         @Override
-        public boolean execute(Player t, Player p, String s) {
+        public boolean execute(Player target, Player parser, String input) {
             try {
-                ActionBarHandler.send(t, formatString(t, p, s));
-                return true;
+                return ActionBarHandler.send(target, formatString(target, parser, input));
             } catch (Exception e) {
                 e.printStackTrace();
                 return false;
@@ -74,21 +77,28 @@ public abstract class MessageExecutor implements Cloneable {
     }.doColor();
 
     /**
-     * The {@link MessageExecutor} instance to identify title and subtitle messages.
+     * A message executor for the title message flag.
      *
-     * <p> By default has a regex string to catch how many seconds the title will be displayed.
+     * <p> It sends a message to the target player's title, which is a large text that appears
+     * in the center of the screen for a short duration. It also colorizes the input string.
+     *
+     * <p> The input string can have an optional number after the flag, which specifies the
+     * duration of the title in seconds.
+     *
+     * <p> The input string can also have two lines, separated by a newline character, which
+     * represent the main title and the subtitle.
      */
-    public static final MessageExecutor TITLE_EXECUTOR = new MessageExecutor(MessageFlag.TITLE, "(:\\d+)?") {
+    public static final MessageExecutor TITLE = new MessageExecutor(MessageFlag.TITLE, "(:\\d+)?") {
         @Override
-        public boolean execute(Player t, Player p, String s) {
-            Matcher m1 = getPattern().matcher(s);
+        public boolean execute(Player target, Player parser, String input) {
+            Matcher m1 = getPattern().matcher(input);
             String tm = null;
 
             try {
                 if (m1.find()) tm = m1.group(1).substring(1);
             } catch (Exception ignored) {}
 
-            int[] a = Beans.getDefaultTitleTicks();
+            int[] a = titleTicks;
             int time = a[1];
 
             try {
@@ -96,11 +106,11 @@ public abstract class MessageExecutor implements Cloneable {
                     time = Integer.parseInt(tm) * 20;
             } catch (Exception ignored) {}
 
-            String[] temp = Beans.splitLine(formatString(t, p, s));
+            String[] temp = Beans.splitLine(formatString(target, parser, input));
             String sub = temp.length > 1 ? temp[1] : "";
 
             try {
-                return TitleHandler.send(t, temp[0], sub, a[0], time, a[2]);
+                return TitleHandler.send(target, temp[0], sub, a[0], time, a[2]);
             } catch (Exception e) {
                 e.printStackTrace();
                 return false;
@@ -109,57 +119,69 @@ public abstract class MessageExecutor implements Cloneable {
     }.doColor();
 
     /**
-     * The {@link MessageExecutor} instance to identify discord webhook messages.
+     * A message executor for the webhook message flag.
      *
-     * <p> By default has a regex string to catch the configuration path of the webhook.
+     * <p> It sends a message to a webhook, which is a URL that can receive and process data
+     * from other sources.
+     *
+     * <p> The input string can have an optional path after the flag, which specifies the
+     * configuration section in the BeansLib instance ({@link Beans#getWebhookSection()}).
+     *
+     * <p> If no path is specified, the first webhook section in the config file is used.
      */
-    public static final MessageExecutor WEBHOOK_EXECUTOR = new MessageExecutor(MessageFlag.WEBHOOK, "(:.+)?") {
+    public static final MessageExecutor WEBHOOK = new MessageExecutor(MessageFlag.WEBHOOK, "(:.+)?") {
         @Override
-        public boolean execute(Player t, Player p, String s) {
+        public boolean execute(Player target, Player parser, String input) {
             ConfigurationSection id = Beans.getWebhookSection();
             if (id == null) return false;
 
             List<String> list = new ArrayList<>(id.getKeys(false));
             if (list.isEmpty()) return false;
 
-            Matcher m3 = getPattern().matcher(s);
-            String line = formatString(t, p, s);
+            Matcher m3 = getPattern().matcher(input);
+            String line = formatString(target, parser, input);
 
             String path = list.get(0);
 
             if (m3.find()) {
-                String[] split = m3.group().
-                        replace(Beans.getKeysDelimiters()[0], "").
-                        replace(Beans.getKeysDelimiters()[1], "").
-                        split(":", 2);
+                String[] split = m3.group().replace(delimiters[0], "")
+                        .replace(delimiters[1], "").split(":", 2);
 
                 String temp = split.length == 2 ? split[1] : null;
                 if (temp != null) path = temp;
             }
 
-            id = id.getConfigurationSection(path);
-            if (id == null) return false;
-
-            new Webhook(id, line).send();
-            return true;
+            return (id = id.getConfigurationSection(path)) != null
+                    && new Webhook(id, line).send();
         }
     };
 
     /**
-     * The {@link MessageExecutor} instance to identify vanilla json messages.
+     * A message executor for the JSON message flag.
+     *
+     * <p> It sends a message to the target player that is formatted as a JSON object, which allows
+     * for advanced customization of the text, such as color, style, and click events.
+     *
+     * <p> The input string must be a valid JSON object that follows the Minecraft tellraw format.
+     *
+     * @see <a href="https://minecraft.wiki/w/Raw_JSON_text_format">Minecraft tellraw format</a>
      */
-    public static final MessageExecutor JSON_EXECUTOR = new MessageExecutor(MessageFlag.JSON) {
+    public static final MessageExecutor JSON = new MessageExecutor(MessageFlag.JSON) {
         @Override
-        public boolean execute(Player t, Player p, String s) {
-            if (StringUtils.isBlank(s)) return false;
+        public boolean execute(Player target, Player parser, String input) {
+            if (StringUtils.isBlank(input)) return false;
 
             try {
+                Exceptions.checkPlayer(target);
+
                 Bukkit.dispatchCommand(
                         Bukkit.getConsoleSender(), "minecraft:tellraw " +
-                        t.getName() + " " + formatString(t, p, s)
+                                target.getName() + " " +
+                                formatString(target, parser, input)
                 );
                 return true;
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 e.printStackTrace();
                 return false;
             }
@@ -167,16 +189,21 @@ public abstract class MessageExecutor implements Cloneable {
     };
 
     /**
-     * The {@link MessageExecutor} instance to identify minecraft bossbar messages.
+     * A message executor for the bossbar message flag.
      *
-     * <p> By default has a regex string to catch the configuration path of the custom bossbar,
-     * or to catch the arguments of the bossbar message.
+     * <p> It sends a message to the target player's boss bar, which is the area at the
+     * top of the screen that shows the health of a boss entity.
+     *
+     * <p> The input string can have an optional path after the flag, which specifies the
+     * configuration section in the BeansLib instance ({@link Beans#getBossbarSection()}).
+     *
+     * <p> If no path is specified, the input string is used as the text of the boss bar.
      */
-    public static final MessageExecutor BOSSBAR_EXECUTOR = new MessageExecutor(MessageFlag.BOSSBAR, "(:.+)?") {
+    public static final MessageExecutor BOSSBAR = new MessageExecutor(MessageFlag.BOSSBAR, "(:.+)?") {
         @Override
-        public boolean execute(Player t, Player p, String s) {
+        public boolean execute(Player target, Player parser, String input) {
             Plugin plugin = Beans.getPlugin();
-            Matcher m2 = Beans.getBossbarPattern().matcher(s);
+            Matcher m2 = Beans.getBossbarPattern().matcher(input);
 
             try {
                 if (m2.find()) {
@@ -186,12 +213,10 @@ public abstract class MessageExecutor implements Cloneable {
                     c = c.getConfigurationSection(m2.group(1));
                     if (c == null) return false;
 
-                    new BossbarBuilder(plugin, t, c).display();
-                    return true;
+                    return new BossbarBuilder(plugin, target, c).display();
                 }
 
-                new BossbarBuilder(plugin, t, s).display();
-                return true;
+                return new BossbarBuilder(plugin, target, input).display();
             } catch (Exception e) {
                 return false;
             }
@@ -199,24 +224,21 @@ public abstract class MessageExecutor implements Cloneable {
     };
 
     /**
-     * The {@link MessageExecutor} instance to identify default chat messages.
+     * A message executor for the chat message flag.
      *
-     * <p> It's not necessary to identify a string with this prefix; because
-     * if a string doesn't have a prefix, it will by default a chat message.
-     *
-     * <p> The setters of this instance will throw an {@link UnsupportedOperationException}.
+     * <p> It sends a message to the target player's chat window, which is the
+     * default type of message. It also colorizes the input string.
      */
-    public static final MessageExecutor CHAT_EXECUTOR = new MessageExecutor(MessageFlag.CHAT) {
-
+    public static final MessageExecutor CHAT = new MessageExecutor(MessageFlag.CHAT) {
         @Override
-        public MessageExecutor setRegex(String regex) {
+        public MessageExecutor setRegex(@Regex String regex) {
             throw new UnsupportedOperationException("Setter is not supported on this instance");
         }
 
         @Override
-        public boolean execute(Player t, Player p, String s) {
+        public boolean execute(Player target, Player parser, String input) {
             try {
-                return new ChatMessageBuilder(t, p, s).send();
+                return new ChatMessageBuilder(target, parser, input).send();
             } catch (Exception e) {
                 e.printStackTrace();
                 return false;
@@ -224,75 +246,79 @@ public abstract class MessageExecutor implements Cloneable {
         }
     }.doColor();
 
-    /**
-     * The flag of this object to identify the message and check if it's allowed.
-     */
-    @Getter
-    private final MessageFlag flag;
-    /**
-     * The optional regex string to catch more arguments.
-     */
-    @Accessors(chain = true)
-    @Setter @RegExp
-    private String regex;
-
-    private boolean color = false;
-
-    private MessageExecutor(MessageFlag flag, @RegExp String regex) {
+    private MessageExecutor(MessageFlag flag, @Regex String regex) {
         this.flag = flag;
         this.regex = regex;
 
-        MESSAGE_EXECUTOR_MAP.put(flag, this);
-        DEFAULT_EXECUTOR_MAP.put(flag, clone());
+        MAP.put(flag, this);
+        DEFS.put(flag, copy());
     }
 
     private MessageExecutor(MessageFlag flag) {
         this(flag, null);
     }
 
+    private MessageExecutor copy() {
+        final MessageExecutor parent = this;
+
+        return new MessageExecutor(parent.flag, parent.regex) {
+            @Override
+            public boolean execute(Player target, Player parser, String input) {
+                return parent.execute(target, parser, input);
+            }
+        };
+    }
+
     MessageExecutor doColor() {
         this.color = true;
 
-        DEFAULT_EXECUTOR_MAP.put(flag, clone());
+        DEFS.put(flag, copy());
         return this;
     }
 
     /**
-     * Creates and returns a copy of this key.
+     * Sets the regex for this message executor.
      *
-     * @return a clone of this instance
+     * <p> The regex is used to match the input string after the message flag and
+     * the delimiters.
+     *
+     * <p> The regex can be used to specify optional parameters or values for the
+     * message executor.
+     *
+     * @param regex the regex for this message executor
+     * @return this message executor with the new regex
      */
-    @NotNull
-    protected MessageExecutor clone() {
-        try {
-            return (MessageExecutor) super.clone();
-        } catch (Exception e) {
-            // this shouldn't happen, since keys are Cloneable
-            return this;
-        }
+    public MessageExecutor setRegex(@Regex String regex) {
+        this.regex = regex;
+        return this;
     }
 
     /**
-     * Executes the defined action of this representation.
+     * Executes the message for the target player and the parser player, based on the
+     * message flag and the input string.
      *
-     * @param target a target player
-     * @param parser a player to parse arguments
-     * @param string an input string
+     * @param target the player who receives the message
+     * @param parser the player who parses the message
+     * @param input the input string that contains the message
      *
-     * @return true if was executed, false otherwise
+     * @return true if the message was executed successfully, false otherwise
      */
-    public abstract boolean execute(Player target, Player parser, String string);
+    public abstract boolean execute(Player target, Player parser, String input);
 
     /**
-     * Executes the defined action of this representation.
+     * Executes the message for the same player as both the target and the parser, based
+     * on the message flag and the input string.
      *
-     * @param parser a player to parse arguments
-     * @param string an input string
+     * <p> This method is a convenience method that calls the execute method with the same
+     * player as both parameters.
      *
-     * @return true if was executed, false otherwise
+     * @param player the player who receives and parses the message
+     * @param input the input string that contains the message
+     *
+     * @return true if the message was executed successfully, false otherwise
      */
-    public boolean execute(Player parser, String string) {
-        return execute(parser, parser, string);
+    public boolean execute(Player player, String input) {
+        return execute(player, player, input);
     }
 
     @Regex
@@ -302,23 +328,21 @@ public abstract class MessageExecutor implements Cloneable {
         if (StringUtils.isNotBlank(regex))
             f += regex;
 
-        String[] del = Beans.getKeysDelimiters();
-
         @Regex
-        String d1 = Pattern.quote(del[0]),
-                d2 = Pattern.quote(del[1]);
+        String d1 = Pattern.quote(delimiters[0]),
+                d2 = Pattern.quote(delimiters[1]);
 
         return "(?i)^" + d1 + f + d2;
     }
 
     /**
-     * Returns a {@link Pattern} instance using the defined key and the
-     * optional defined regex.
+     * Returns the pattern for this message executor, based on the message flag,
+     * the regex, and the delimiters.
      *
-     * <p> It always checks the start of a string and adds the
-     * {@link BeansLib#keysDelimiters} on the start and end of the regex.
+     * <p> The pattern is used to match the input string and extract the relevant parts
+     * for the message executor.
      *
-     * @return the requested pattern
+     * @return the pattern for this message executor
      */
     public Pattern getPattern() {
         return Pattern.compile(getRegex());
@@ -346,16 +370,65 @@ public abstract class MessageExecutor implements Cloneable {
         return applier.toString();
     }
 
-    public static MessageExecutor fromFlag(MessageFlag flag) {
-        return MESSAGE_EXECUTOR_MAP.get(flag);
+    private static <T> T validate(Predicate<T> p, T t) {
+        if (p.test(t))
+            return Objects.requireNonNull(t);
+
+        throw new IllegalStateException();
     }
 
     /**
-     * Returns the key instance of an input key that could match with any existing
-     * defined key. If there is no match, will return the {@link #CHAT_EXECUTOR}.
+     * Returns the message executor that corresponds to the given message flag.
      *
-     * @param string an input string
-     * @return the requested message key
+     * @param flag the message flag to look for
+     * @return the message executor that matches the flag
+     */
+    public static MessageExecutor fromFlag(MessageFlag flag) {
+        return MAP.get(flag);
+    }
+
+    /**
+     * Sets the delimiters for the message executors.
+     *
+     * <p> The delimiters are used to enclose the message flag and the optional
+     * regex in the input string. The delimiters must not be blank.
+     *
+     * @param start the start delimiter
+     * @param end the end delimiter
+     */
+    public static void setDelimiters(String start, String end) {
+        delimiters = new String[] {
+                validate(StringUtils::isNotBlank, start),
+                validate(StringUtils::isNotBlank, end)
+        };
+    }
+
+    /**
+     * Sets the title ticks for the title message executor.
+     *
+     * <p> The title ticks are used to specify the duration of the title in ticks
+     * (1 tick = 0.05 seconds).
+     *
+     * <p> Must have three elements: fade-in time, stay time, and fade-out time.
+     * The stay time must be positive.
+     *
+     * @param in the fade-in time in ticks
+     * @param stay the stay time in ticks
+     * @param out the fade-out time in ticks
+     */
+    public static void setTitleTicks(int in, int stay, int out) {
+        titleTicks = new int[] {in, validate(i -> i > 0, stay), out};
+    }
+
+    /**
+     * Returns the message executor that matches the given string, based on the message
+     * flag name.
+     *
+     * <p> This method is used to convert a string to a message flag and then to a message
+     * executor.
+     *
+     * @param string the string to match
+     * @return the message executor that matches the string, or {@link #CHAT} if none
      */
     @NotNull
     public static MessageExecutor matchKey(String string) {
@@ -363,31 +436,35 @@ public abstract class MessageExecutor implements Cloneable {
     }
 
     /**
-     * Returns the key instance of an input string to check what message type
-     * is the string. If there is no defined type, will return the {@link #CHAT_EXECUTOR}.
+     * Returns the message executor that identifies the given string, based on the message
+     * flag pattern.
      *
-     * @param s an input string
-     * @return the requested message key
+     * <p> This method is used to find the message executor that has the pattern that matches
+     * the input string.
+     *
+     * @param string the string to identify
+     * @return the message executor that identifies the string, or {@link #CHAT} if none
      */
     @NotNull
-    public static MessageExecutor identifyKey(String s) {
-        if (StringUtils.isBlank(s)) return CHAT_EXECUTOR;
+    public static MessageExecutor identifyKey(String string) {
+        if (StringUtils.isBlank(string)) return CHAT;
 
-        for (MessageExecutor e : MESSAGE_EXECUTOR_MAP.values())
-            if (e.getPattern().matcher(s).find()) return e;
+        for (MessageExecutor e : MAP.values())
+            if (e.getPattern().matcher(string).find())
+                return e;
 
-        if (Beans.getBossbarPattern().
-                matcher(s).find()) return BOSSBAR_EXECUTOR;
+        if (Beans.getBossbarPattern()
+                .matcher(string).find()) return BOSSBAR;
 
-        return CHAT_EXECUTOR;
+        return CHAT;
     }
 
     /**
-     * Rollbacks any change in the default keys stored.
-     * <p> Usefully for reload methods that depend on cache.
+     * Sets the default values for the message executors. This method is used to restore
+     * the original values of the message executors.
      */
     public static void setDefaults() {
-        MESSAGE_EXECUTOR_MAP.clear();
-        MESSAGE_EXECUTOR_MAP.putAll(DEFAULT_EXECUTOR_MAP);
+        MAP.clear();
+        MAP.putAll(DEFS);
     }
 }

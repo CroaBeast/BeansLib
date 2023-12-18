@@ -263,6 +263,10 @@ public final class CollectionBuilder<T> {
         return new CollectionBuilder<>(Objects.requireNonNull(collection));
     }
 
+    public static <K, V> CollectionBuilder<Map.Entry<K, V>> of(Map<K, V> map) {
+        return of(map.entrySet());
+    }
+
     public static <T> CollectionBuilder<T> of(Iterator<T> iterator) {
         Objects.requireNonNull(iterator);
 

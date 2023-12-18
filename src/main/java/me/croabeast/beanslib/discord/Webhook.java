@@ -168,18 +168,20 @@ public class Webhook {
      * @param token a token
      * @param message a message if no message was declared in the constructor
      */
-    public void send(String token, String message) {
-        if (!enabled) return;
+    public boolean send(String token, String message) {
+        if (!enabled) return false;
 
         if (message != null && notRegistered)
             webhook = register(token, message);
 
-        if (webhook == null) return;
+        if (webhook == null) return false;
 
         try {
             webhook.execute();
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
     }
 
@@ -189,16 +191,16 @@ public class Webhook {
      *
      * @param message a message if no message was declared in the constructor
      */
-    public void send(String message) {
-        send("{message}", message);
+    public boolean send(String message) {
+        return send("{message}", message);
     }
 
     /**
      * Sends the webhook. If the webhook is null or isn't enabled, won't send anything.
      * <p> If any error happens when connecting to its url, will print an error in the console.
      */
-    public void send() {
-        send(null);
+    public boolean send() {
+        return send(null);
     }
 
     /**

@@ -1,11 +1,11 @@
-package me.croabeast.beanslib.nms;
+package me.croabeast.beanslib.reflect;
 
 import lombok.experimental.UtilityClass;
 import org.bukkit.entity.Player;
 
 import java.util.function.BiFunction;
 
-import static me.croabeast.beanslib.nms.ReflectionUtils.*;
+import static me.croabeast.beanslib.reflect.ReflectionUtils.*;
 
 @UtilityClass
 public class TitleHandler {

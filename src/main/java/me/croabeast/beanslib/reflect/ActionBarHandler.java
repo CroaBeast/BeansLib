@@ -1,4 +1,4 @@
-package me.croabeast.beanslib.nms;
+package me.croabeast.beanslib.reflect;
 
 import lombok.experimental.UtilityClass;
 import net.md_5.bungee.api.ChatMessageType;

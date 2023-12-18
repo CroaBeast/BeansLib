@@ -86,12 +86,4 @@ public final class CenteredMessage {
 
         return sb + output.substring(prefix.length());
     }
-
-    public static String toChat(Player parser, Player target, String string) {
-        return new CenteredMessage(parser, target).center(string);
-    }
-
-    public static String toMOTD(Player player, String string) {
-        return new CenteredMessage(player).setLimit(MOTD_LIMIT).center(string);
-    }
 }

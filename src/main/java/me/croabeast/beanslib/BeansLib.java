@@ -33,7 +33,8 @@ import java.util.regex.Pattern;
  * @author CroaBeast
  * @since 1.0
  */
-@Accessors(chain = true) @Getter @Setter
+@Accessors(chain = true)
+@Getter @Setter
 public class BeansLib {
 
     @Getter(AccessLevel.NONE)
@@ -413,7 +414,7 @@ public class BeansLib {
      * @return the centered chat message.
      */
     public String createCenteredChatMessage(Player target, Player parser, String string) {
-        return CenteredMessage.toChat(parser, target, string);
+        return new CenteredMessage(parser, target).center(string);
     }
 
     /**
