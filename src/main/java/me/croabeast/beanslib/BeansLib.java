@@ -131,29 +131,6 @@ public class BeansLib {
      */
     private ConfigurationSection bossbarSection = null;
 
-    /**
-     * In, stay and out ticks for a title message.
-     *
-     * <pre> {@code
-     * int[] ticks = defaultTitleTicks();
-     * // Respective values
-     * int fadeIn = ticks[0];
-     * int stay = ticks[1];
-     * int fadeout = ticks[2];
-     * } </pre>
-     */
-    @Setter(AccessLevel.NONE)
-    private int @NotNull [] defaultTitleTicks = {8, 50, 8};
-
-    /**
-     * The delimiters of all the messages keys to identify what type of
-     * message is a string to be displayed.
-     *
-     * <p> Example: default: [title] - custom: {{title}}
-     */
-    @Setter(AccessLevel.NONE)
-    private String @NotNull [] keysDelimiters = {"[", "]"};
-
     BeansLib(@Nullable Plugin plugin, boolean load) {
         this.plugin = plugin;
         logger = new BeansLogger(this);
@@ -197,36 +174,6 @@ public class BeansLib {
     @NotNull
     public Plugin getPlugin() throws NullPointerException {
         return Objects.requireNonNull(plugin, "Plugin instance can not be null");
-    }
-
-    /**
-     * Sets the default title ticks values.
-     *
-     * @param in in server ticks
-     * @param stay stay server ticks
-     * @param out out server ticks
-     *
-     * @return a reference of this object
-     */
-    public final BeansLib setTitleTicks(int in, int stay, int out) {
-        defaultTitleTicks = new int[] {in, stay, out};
-        return this;
-    }
-
-    /**
-     * Sets the delimiters for the messages keys to identify what type of
-     * message is a string to be displayed.
-     *
-     * <p> Example: default: [title] - custom: {{title}}
-     *
-     * @param start start delimiter string
-     * @param end end delimiter string
-     *
-     * @return a reference of this object
-     */
-    public final BeansLib setKeysDelimiters(String start, String end) {
-        keysDelimiters = new String[] {start, end};
-        return this;
     }
 
     /**

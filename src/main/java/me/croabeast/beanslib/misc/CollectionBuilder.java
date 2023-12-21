@@ -220,6 +220,14 @@ public final class CollectionBuilder<T> {
     }
 
     /**
+     * Converts the collection to an array.
+     * @return an array with the elements of the collection
+     */
+    public T[] toArray() {
+        return ArrayUtils.toArray(collection);
+    }
+
+    /**
      * Converts the collection to a list.
      * @return a list with the elements of the collection
      */

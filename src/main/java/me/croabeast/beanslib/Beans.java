@@ -99,35 +99,6 @@ public class Beans {
     }
 
     /**
-     * In, stay and out ticks for a title message.
-     *
-     * <pre> {@code
-     * int[] ticks = defaultTitleTicks();
-     * // Respective values
-     * int fadeIn = ticks[0];
-     * int stay = ticks[1];
-     * int fadeout = ticks[2];
-     * } </pre>
-     *
-     * @return the default title ticks array
-     */
-    public int @NotNull [] getDefaultTitleTicks() {
-        return lib.getDefaultTitleTicks();
-    }
-
-    /**
-     * The delimiters of all the messages keys to identify what type of
-     * message is a string to be displayed.
-     *
-     * <p> Example: default: [title] - custom: {{title}}
-     *
-     * @return tje keys delimiters array
-     */
-    public String @NotNull [] getKeysDelimiters() {
-        return lib.getKeysDelimiters();
-    }
-
-    /**
      * Creates a new {@link Pattern} instance using the defined char regex string.
      *
      * @return the requested pattern

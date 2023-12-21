@@ -19,8 +19,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-import java.util.function.Predicate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,11 +39,13 @@ import java.util.regex.Pattern;
  * @see MessageFlag
  * @see MessageSender
  */
-public abstract class MessageExecutor {
+public abstract class MessageExecutor implements Cloneable {
 
     private static final Map<MessageFlag, MessageExecutor> MAP, DEFS;
 
+    @Getter
     private static String[] delimiters = {"[", "]"};
+    @Getter
     private static int[] titleTicks = {8, 50, 8};
 
     static {
@@ -251,28 +255,26 @@ public abstract class MessageExecutor {
         this.regex = regex;
 
         MAP.put(flag, this);
-        DEFS.put(flag, copy());
+        DEFS.put(flag, clone());
     }
 
     private MessageExecutor(MessageFlag flag) {
         this(flag, null);
     }
 
-    private MessageExecutor copy() {
-        final MessageExecutor parent = this;
-
-        return new MessageExecutor(parent.flag, parent.regex) {
-            @Override
-            public boolean execute(Player target, Player parser, String input) {
-                return parent.execute(target, parser, input);
-            }
-        };
+    @Override
+    protected MessageExecutor clone() {
+        try {
+            return (MessageExecutor) super.clone();
+        } catch (CloneNotSupportedException e) {
+            return this;
+        }
     }
 
     MessageExecutor doColor() {
         this.color = true;
 
-        DEFS.put(flag, copy());
+        DEFS.put(flag, clone());
         return this;
     }
 

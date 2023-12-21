@@ -2,11 +2,11 @@ package me.croabeast.beanslib.message;
 
 import me.croabeast.beanslib.Beans;
 import me.croabeast.beanslib.applier.StringApplier;
+import me.croabeast.beanslib.misc.CollectionBuilder;
 import me.croabeast.beanslib.utility.ArrayUtils;
 import me.croabeast.beanslib.utility.Exceptions;
 import me.croabeast.beanslib.utility.TextUtils;
 import me.croabeast.neoprismatic.NeoPrismaticAPI;
-import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.StringUtils;
@@ -41,7 +41,7 @@ public class ChatMessageBuilder {
             String t = s.substring(end, urlMatcher.start());
 
             if (t.length() > 0)
-                map.put(++index, new ChatMessage(t).applyColor());
+                map.put(++index, new ChatMessage(t).applyLastColor());
 
             if (parseURLs) {
                 final String url = urlMatcher.group();
@@ -51,7 +51,7 @@ public class ChatMessageBuilder {
 
                 map.put(++index, new ChatMessage(url)
                         .setClick(c)
-                        .applyColor());
+                        .applyLastColor());
             }
 
             end = urlMatcher.end();
@@ -60,7 +60,7 @@ public class ChatMessageBuilder {
         if (end > (s.length() - 1)) return;
 
         String temp = s.substring(end);
-        map.put(++index, new ChatMessage(temp).applyColor());
+        map.put(++index, new ChatMessage(temp).applyLastColor());
     }
 
     private void updateMessageMapping(String string) {
@@ -439,12 +439,8 @@ public class ChatMessageBuilder {
             throw new IllegalStateException(m);
         }
 
-        List<BaseComponent> comps = new ArrayList<>();
-
-        for (ChatMessage message : map.values())
-            comps.addAll(message.asComponents());
-
-        return ArrayUtils.toArray(comps);
+        return CollectionBuilder.of(map.values())
+                .map(ChatMessage::compile).toArray();
     }
 
     /**
@@ -646,7 +642,6 @@ public class ChatMessageBuilder {
 
         private final ChatEventsHandler handler;
         private String message;
-        private ChatColor color = null;
 
         private ChatMessage(String message) {
             this.message = message;
@@ -663,10 +658,11 @@ public class ChatMessageBuilder {
             return this;
         }
 
-        private ChatMessage applyColor() {
-            if (color == null) compile();
+        private ChatMessage applyLastColor() {
+            ChatMessage chat = map.get(index - 1);
+            if (chat == null) return this;
 
-            message = color.toString() + message;
+            message = chat.compile().getColor() + message;
             return this;
         }
 
@@ -693,27 +689,24 @@ public class ChatMessageBuilder {
             return this;
         }
 
-        private BaseComponent[] compile() {
+        private BaseComponent compile() {
             Matcher urlMatch = TextUtils.URL_PATTERN.matcher(message);
+
+            if (parseURLs && urlMatch.find())
+                setClick(new ClickEvent(ClickAction.OPEN_URL, message));
+
             TextComponent comp = onlyComp(message);
 
             ClickEvent c = handler.click;
             HoverEvent h = handler.hover;
 
-            if (parseURLs && urlMatch.find())
-                setClick(new ClickEvent(ClickAction.OPEN_URL, message));
+            if (!ChatEvent.isEmpty(c))
+                comp.setClickEvent(c.createEvent());
 
-            if (!ChatEvent.isEmpty(c)) comp.setClickEvent(c.createEvent());
-            if (!ChatEvent.isEmpty(h)) comp.setHoverEvent(h.createEvent());
+            if (!ChatEvent.isEmpty(h))
+                comp.setHoverEvent(h.createEvent());
 
-            BaseComponent[] comps = new BaseComponent[] {comp};
-
-            color = comps[comps.length - 1].getColor();
-            return comps;
-        }
-
-        private List<BaseComponent> asComponents() {
-            return ArrayUtils.toCollection(new LinkedList<>(), compile());
+            return comp;
         }
 
         @Override
