@@ -1,6 +1,5 @@
 package me.croabeast.beanslib.utility;
 
-import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import lombok.var;
 import me.croabeast.beanslib.Beans;
@@ -12,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 /**
  * A utility class for handling various exceptions and plugin-related checks.
@@ -97,8 +97,21 @@ public class Exceptions {
         return Objects.requireNonNull(player, "Player can not be null");
     }
 
+    public <T> T validate(Predicate<T> predicate, T object) {
+        Objects.requireNonNull(object);
+
+        if (!predicate.test(object))
+            throw new IllegalStateException();
+
+        return object;
+    }
+
+    public <T> T validate(boolean b, T object) {
+        return validate(t -> b, object);
+    }
+
     /**
-     * Gets the caller class from the current thread's stack trace at a given index.
+     * Returns the caller class from the current thread's stack trace at a given index.
      *
      * @param index the index of the stack trace element to get the class from
      *
@@ -116,10 +129,10 @@ public class Exceptions {
      * @param clazz the class to check
      * @param throwable the throwable to throw if the class does not have access
      *
-     * @throws Throwable if the class does not have access to the plugin
+     * @param <T> the Throwable class
+     * @throws T if the class does not have access to the plugin
      */
-    @SneakyThrows
-    public void hasPluginAccess(Class<?> clazz, Throwable throwable) {
+    public <T extends Throwable> void hasPluginAccess(Class<?> clazz, T throwable) throws T {
         Objects.requireNonNull(clazz);
         Plugin plugin = null;
 
@@ -141,7 +154,7 @@ public class Exceptions {
      *
      * @throws IllegalAccessException if the class does not have access to the plugin
      */
-    public void hasPluginAccess(Class<?> clazz, String message) {
+    public void hasPluginAccess(Class<?> clazz, String message) throws IllegalAccessException {
         hasPluginAccess(clazz, new IllegalAccessException(message));
     }
 
@@ -151,7 +164,7 @@ public class Exceptions {
      * @param clazz the class to check
      * @throws IllegalAccessException if the class does not have access to the plugin
      */
-    public void hasPluginAccess(Class<?> clazz) {
+    public void hasPluginAccess(Class<?> clazz) throws IllegalAccessException {
         hasPluginAccess(
                 clazz,
                 clazz.getSimpleName() +

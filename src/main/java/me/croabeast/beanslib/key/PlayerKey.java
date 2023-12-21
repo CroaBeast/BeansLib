@@ -1,5 +1,6 @@
 package me.croabeast.beanslib.key;
 
+import lombok.SneakyThrows;
 import me.croabeast.beanslib.applier.StringApplier;
 import me.croabeast.beanslib.misc.CollectionBuilder;
 import me.croabeast.beanslib.misc.Rounder;
@@ -51,6 +52,7 @@ public final class PlayerKey<T> {
         loadKey0("{playerPitch}", fromLoc(Location::getPitch));
     }
 
+    @SneakyThrows
     private PlayerKey(String key, Function<Player, T> function) {
         Exceptions.hasPluginAccess(PlayerKey.class);
 

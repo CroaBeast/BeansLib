@@ -4,18 +4,18 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import lombok.var;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.net.ssl.HttpsURLConnection;
+import java.awt.*;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.*;
 
 /**
  * A class that represents a raw webhook for sending messages to a Discord channel.
@@ -121,23 +121,20 @@ public class RawWebhook {
         return this;
     }
 
-    static JSONObject of() {
-        return new JSONObject();
-    }
-
     private JSONObject registerContent(JSONObject json) {
         if (embeds.isEmpty()) return json;
-        var embedObjects = new ArrayList<JSONObject>();
+        List<JSONObject> embedObjects = new ArrayList<>();
 
-        for (var embed : embeds) {
-            var jsonEmbed = of().
+        for (EmbedObject embed : embeds) {
+            JSONObject jsonEmbed = new JSONObject().
                     put("description", embed.getDescription()).
                     put("url", embed.getUrl()).
                     put("title", embed.getTitle());
 
             if (embed.getColor() != null) {
-                var color = embed.getColor();
+                Color color = embed.getColor();
                 int rgb = color.getRed();
+
                 rgb = (rgb << 8) + color.getGreen();
                 rgb = (rgb << 8) + color.getBlue();
 
@@ -149,24 +146,27 @@ public class RawWebhook {
                     image = embed.getImage(),
                     thumbnail = embed.getThumbnail();
 
-            var author = embed.getAuthor();
-            var fields = embed.getFields();
+            EmbedObject.Author author = embed.getAuthor();
+            List<EmbedObject.Field> fields = embed.getFields();
 
-            if (footerText != null || footerIcon != null) {
+            if (footerText != null || footerIcon != null)
                 jsonEmbed.put("footer", new JSONObject().
                         put("text", footerText).
                         put("icon_url", footerIcon)
                 );
-            }
 
             if (image != null)
-                jsonEmbed.put("image", of().put("url", image));
+                jsonEmbed.put("image",
+                        new JSONObject().put("url", image)
+                );
 
             if (thumbnail != null)
-                jsonEmbed.put("thumbnail", of().put("url", thumbnail));
+                jsonEmbed.put("thumbnail",
+                        new JSONObject().put("url", thumbnail)
+                );
 
             if (author != null) {
-                jsonEmbed.put("author", of().
+                jsonEmbed.put("author", new JSONObject().
                         put("name", author.getName()).
                         put("url", author.getUrl()).
                         put("icon_url", author.getIconUrl())
@@ -175,7 +175,7 @@ public class RawWebhook {
 
             if (!fields.isEmpty()) {
                 jsonEmbed.put("fields", fields.stream().map(f ->
-                        of().
+                        new JSONObject().
                                 put("inline", f.isInLine()).
                                 put("name", f.getName()).
                                 put("value", f.getValue())
@@ -198,7 +198,7 @@ public class RawWebhook {
         if (content == null)
             throw new NullPointerException("Set a content in the embed");
 
-        var json = new JSONObject().
+        JSONObject json = new JSONObject().
                 put("avatar_url", avatarUrl).
                 put("content", content).
                 put("username", username).
@@ -206,8 +206,8 @@ public class RawWebhook {
 
         json = registerContent(json);
 
-        var url = new URL(this.url);
-        var c = (HttpsURLConnection) url.openConnection();
+        URL url = new URL(this.url);
+        HttpsURLConnection c = (HttpsURLConnection) url.openConnection();
 
         c.addRequestProperty("Content-Type", "application/json");
         c.addRequestProperty("User-Agent",
@@ -216,7 +216,7 @@ public class RawWebhook {
         c.setDoOutput(true);
         c.setRequestMethod("POST");
 
-        var stream = c.getOutputStream();
+        OutputStream stream = c.getOutputStream();
 
         stream.write((json + "").getBytes(StandardCharsets.UTF_8));
         stream.flush();
@@ -242,12 +242,12 @@ public class RawWebhook {
         @Override
         public String toString() {
             StringBuilder builder = new StringBuilder();
-            var entrySet = map.entrySet();
+            Set<Map.Entry<String, Object>> entrySet = map.entrySet();
 
             builder.append("{");
             int i = 0;
 
-            for (var entry : entrySet) {
+            for (Map.Entry<String, Object> entry : entrySet) {
                 builder.append(quote(entry.getKey())).append(":");
                 Object val = entry.getValue();
 
@@ -262,7 +262,7 @@ public class RawWebhook {
                     int len = Array.getLength(val);
 
                     for (int j = 0; j < len; j++) {
-                        var temp = Array.get(val, j).toString();
+                        String temp = Array.get(val, j).toString();
                         builder.append(temp).append(j != len - 1 ? "," : "");
                     }
                     builder.append("]");

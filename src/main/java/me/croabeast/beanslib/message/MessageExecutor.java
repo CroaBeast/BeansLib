@@ -370,13 +370,6 @@ public abstract class MessageExecutor {
         return applier.toString();
     }
 
-    private static <T> T validate(Predicate<T> p, T t) {
-        if (p.test(t))
-            return Objects.requireNonNull(t);
-
-        throw new IllegalStateException();
-    }
-
     /**
      * Returns the message executor that corresponds to the given message flag.
      *
@@ -398,8 +391,8 @@ public abstract class MessageExecutor {
      */
     public static void setDelimiters(String start, String end) {
         delimiters = new String[] {
-                validate(StringUtils::isNotBlank, start),
-                validate(StringUtils::isNotBlank, end)
+                Exceptions.validate(StringUtils::isNotBlank, start),
+                Exceptions.validate(StringUtils::isNotBlank, end)
         };
     }
 
@@ -417,7 +410,7 @@ public abstract class MessageExecutor {
      * @param out the fade-out time in ticks
      */
     public static void setTitleTicks(int in, int stay, int out) {
-        titleTicks = new int[] {in, validate(i -> i > 0, stay), out};
+        titleTicks = new int[] {in, Exceptions.validate(i -> i > 0, stay), out};
     }
 
     /**

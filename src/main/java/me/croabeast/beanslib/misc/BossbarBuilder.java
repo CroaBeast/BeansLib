@@ -22,8 +22,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.regex.Matcher;
 
-import static me.croabeast.beanslib.misc.Rounder.round;
-
 @Accessors(chain = true)
 @Setter
 public final class BossbarBuilder {
@@ -68,6 +66,10 @@ public final class BossbarBuilder {
         s = section.isSet(s) ? s : path;
 
         return TextUtils.toList(section, s);
+    }
+
+    private static <N extends Number> N round(N number) {
+        return Rounder.round(number);
     }
 
     public BossbarBuilder(Plugin plugin, Player player, ConfigurationSection section) {
@@ -299,10 +301,14 @@ public final class BossbarBuilder {
         run = new BukkitRunnable() {
             @Override
             public void run() {
-                if (initial[0] <= 0.0) { unregister(); cancel(); return; }
+                if (initial[0] <= 0.0) {
+                    unregister();
+                    cancel();
+                    return;
+                }
 
-                final double interval = round(4, total / time);
-                initial[0] = round(4, initial[0] - interval);
+                final double interval = Rounder.round(4, total / time);
+                initial[0] = Rounder.round(4, initial[0] - interval);
 
                 if (decrease)
                     bar.setProgress(Math.max(initial[0], 0.0));
@@ -358,5 +364,9 @@ public final class BossbarBuilder {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public static Set<BossbarBuilder> getBuilders(Player player) {
+        return BOSSBAR_MAP.getOrDefault(player, new HashSet<>());
     }
 }
